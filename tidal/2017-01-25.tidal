@@ -1,0 +1,50 @@
+cps 0.55
+
+hush
+
+d1 $ density 4 $ stack [gain "[1 0] 0.95 0.9 0.95", gain "{~ [~ [~ ~ ~ 0.9] ~ ~]}%1" |*| cutoff "0.25"] # sound "808bd:18" |*| gain "0.9" # cutoff "1000" # cut "100" |*| speed "1.111 1.25 1 1.25" |*| shape "0.2" # orbit "0"
+d1 $ silence
+
+d2 $ gain "[~ 1]*4" # sound "808:4" # cut "100" # speed "0.667" |*| gain "0.8" # hcutoff "1500" # orbit "2"
+
+d3 $ gain "[1 0.9 ~ ~]*4" # sound "808:1" # speed "0.88" |*| gain "0.75" # nudge "-0.005" # cut "0" # orbit "1"
+
+let basspat = "{1 2 1.111}%8"
+let basspat = "{1 {1.3333 1.1111 1.5 {1 1 0}%1}%1}%8"
+
+d4 $ stack [
+  gain "0 ~ ~ [~ 1] 1 [0 1] [0 1] [1 ~]" # sound "live:5" # cut "400" # speed "0.03125" |*| gain "0.9" |*| speed basspat # cutoff "500" # resonance "0.1" |*| (cutoff $ scale 1 2 $ slow 2 sine1) # shape "0.1" # begin "0.39" |-| begin "{0 0 0.002 0}%1" |*| speed "1.333",
+  gain "0 ~ ~ [~ 1] 1 [0 1] [0 1] [1 ~]" # sound "808:2" # cut "800" # speed "0.025" |*| gain "0.5" |*| speed basspat # cutoff "250" # resonance "0.1" |*| (cutoff $ scale 1 2 $ slow 2 sine1) # shape "0.5",
+  gain "[~ 0] ~ ~ [~ 1] 1 [~ 1] [~ 1] [1 ~]" # sound "live:2" # cut "700" # speed "0.03125" |*| gain "0.7" |*| speed basspat # cutoff "1500" # resonance "0.05" |*| (cutoff $ scale 1 2 $ slow 2 sine1) # shape "0.5" |+| begin "0.3" |*| speed "2" |+| (begin $ scale 0 0.001 $ slow 8 sine1) # nudge "-0.01" # hcutoff "500"
+  ] |*| speed "1.3333" # orbit "0"
+
+d5 $ gain "1*16" # sound "808:5" # cut "500" # speed "0.75" |*| gain "0.8" |*| speed "{1 2 1.333 1 2}%8" # cutoff "2000" # (pan $ scale 0.4 0.7 $ density 4 saw1) |*| cutoff "{1 0.5 1 0.25 1}%8" # (nudge $ scale 0.005 0.01 $ density 1 sine1) # orbit "1"
+
+d6 $ gain "[~ 1 1 1]*4" # sound "808:5" # cut "600" # speed "0.8" |*| gain "0.8" |*| speed "{1 1 1.5 1}%8" # cutoff "2000" # (pan $ scale 0.5 0.2 $ density 4 saw1) |+| (nudge $ scale (-0.003) 0.003 rand) |*| (cutoff $ scale 0.5 1 $ slow 2 sine1) # orbit "1"
+
+d9 $ gain "~ 0.9 ~ 1" # stack [sound "808:4" |*| gain "0.6" # nudge "-0.02", sound "808:5"] # cut "900" # orbit "2"
+
+hush
+
+d4 $ stack [cut "400", cut "700"] # sound "bd" # gain "0" # orbit "0"
+
+-------------------
+
+cps 0.5
+
+d1 $ stack [gain "[1 0.9 ~] [0.9 0.85 0.9 0.95]", gain "[~ [~ ~ 0.0 0.85]] ~" |*| cutoff "0.25"] # (accelerate $ scale (-0.5) 0.2 $ slow 1 sine1) # sound "808bd:18" |*| gain "0.85" # cutoff "2600" # cut "100" |*| speed "{1 [1 [1.5 1.1111]] 1 [1 [1 1.5 1.5 1.5]]}%1" |*| shape "0.3" # resonance "0.05"
+d1 $ silence
+
+d2 $ gain "~ 1" # stack [sound "808:4", sound "808:3" # speed "4", sound "808:1"] # cut "0" |*| speed "1" |*| gain "0.85" # hcutoff "300" # shape "0.5" # cutoff "12000" # resonance "0.05" # orbit "1"
+
+d3 $ gain "[~ 1] {1 [~ ~ ~ 1] ~}%1 [~ 1] [~ 1]" # sound "808:4" # cut "330" # speed "1" |*| gain "0.75" # hcutoff "3000" # shape "0.5" # nudge "-0.02" # orbit "1"
+
+d4 $ gain "~ 0.9 ~ 1" # stack [sound "808:0" |*| gain "0.6" # speed "1.5" # nudge "-0.015", sound "808:5"] # cut "400" # orbit "1"
+
+d5 $ every 4 (density 3) $ every 5 (density 0.5) $ gain "[~ 1 1 1]*4" # sound "808:5" # cut "500" # speed "0.8" |*| gain "0.6" |*| speed "{1 1 1.5 1}%8" # cutoff "1300" # (pan $ scale 0.5 0.1 $ density 3 saw1) |+| (nudge $ scale (-0.003) 0.003 rand) |*| (cutoff $ scale 0.5 1 $ slow 2 sine1) # resonance "0.15" # shape "0.3" # orbit "2"
+
+d6 $ density 1 $ gain "1*16" # sound "808:5" # cut "600" # speed "0.75" |*| gain "0.6" |*| speed "{1 2 1.333 1 2}%8" # cutoff "1950" # (pan $ scale 0.4 0.7 $ density 4 saw1) |*| cutoff "{1 0.5 1 0.25 1}%8" # (nudge $ scale 0.005 0.01 $ density 1 sine1) # resonance "0.1" # shape "0.2" # orbit "2"
+
+d7 $ shape "[[0.55 0.4 0.45 0.5] [0.9 0.4 0.45 0.5]]*2" # sound "808:3" # speed "1.222 1.333 1.111" # orbit "1" # gain "0.9"
+
+hush

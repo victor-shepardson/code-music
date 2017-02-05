@@ -1,0 +1,75 @@
+let log2 x = (log x) / (log 2)
+let escale l u p = exp <$> (scale (log l) (log u) p)
+
+cps 0.54
+cps 0.45
+let epoch = 32
+
+cps 0.36
+let epoch = 16
+
+let kickpat 0 = "{0.9 1 ~ 0.9 1 ~}%4"
+    kickpat 1 = "1 0.9 0.85 0.95"
+    kickpat _ = "1"
+
+hush
+
+--d1 $ gain "1 0.9 0.85 0.95" # sound "bd" # cut "100" # resonance "0.05" # speed "0.8"
+d1 $ gain (kickpat 1) # sound "bd" # cut "100" # resonance "0.05" # speed "0.8"
+  |*| (gain $ scale 0.9 0.7 $ slow epoch saw1)
+  # (shape $ scale 0.5 0.9 $ slow epoch saw1)
+  # (cutoff $ escale 90 1000 $ slow epoch saw1)
+  # (hcutoff $ scale 20 90 $ slow epoch saw1)
+  |*| cutoff "1 0.75 0.5 0.75"
+
+d2 $ every (epoch `div` 2) (density 3) $ gain "{[~ 1] [~ 1] [~ 1*3] [~ 1] [~ 1] [~ 1]}%4"
+  # sound "hh:1" # cut "100" # cutoff "1700" # resonance "0.1" # shape "0.8" # speed "2" # nudge "-0.03"
+  |*| (gain $ scale 0.8 1 $ slow 1 saw1)
+  |*| (gain $ scale 0.7 1 $ slow epoch saw1)
+  |*| (speed $ escale 1 4 $ slow epoch saw1)
+  |*| (speed $ escale 1 1.125 $ slow 2 sine1)
+
+d3 $ gain (mask (slow (epoch/8) "{~ 1}%1"::Pattern Bool) "{0 1 0 1 0 1 0 1 0 1 0 [1 ~ ~ 1]}%4") # nudge "0.005"
+  # sound "sn:7" # speed "0.333" # cut "200" |*| gain "0.8" # resonance "0.1" # hcutoff "200"
+  |*| (cutoff $ escale 3000 4000 $ slow epoch saw1)
+  # (shape $ scale 0 0.7 $ slow epoch saw1)
+
+d4 $ gain "{~ ~ [~ ~ ~ [~ 1 ~ ~]] ~ ~}%1" # sound "sn:7"
+  # speed "0.5" |*| gain "0.8" # resonance "0.1" # hcutoff "200" # pan "0.4" # cut "200"
+  |*| (cutoff $ scale 2000 3000 $ slow epoch saw1)
+  # (shape $ slow (epoch/8) "{0 0.5}%1")
+
+d5 $ gain (mask (slow (epoch/4) "{~ 1}%1"::Pattern Bool) "{1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ ~}%16")
+  # sound "metal" # speed "4" # resonance "0.3" |*| gain "0.8"
+  |*| (cutoff $ escale 2000 6000 $ slow epoch saw1)
+  |*| (pan $ scale 0.1 0.9 $ density 4 saw1)
+
+d6 $ gain (mask (slow (epoch/4) "{~ 1}%1"::Pattern Bool) "{~ 1 1 ~ 1 1 ~ 1}%8")
+  # sound "metal" # speed "4" # resonance "0.3" |*| gain "0.75"
+  |*| (cutoff $ escale 4000 12000 $ slow epoch saw1)
+  |*| (pan $ scale 0.9 0.1 $ density 2 saw1)
+
+d7 $ gain "{[~ ~ ~ 1] 0 ~ ~ ~ ~ [~ 1] 0 ~}%4" # sound "bd" # resonance "0.05" # speed "1.2" # pan "0.4" # cut "700"
+  |*| (gain $ scale 0.7 0.9 $ slow epoch saw1)
+  # (shape $ scale 0 0.5 $ slow epoch saw1)
+  # (cutoff $ escale 200 2000 $ slow epoch saw1)
+  # (hcutoff $ escale 30 200 $ slow epoch saw1)
+
+d9 $ gain "[1 ~ 0.4 ~ ~]*32" # sound "hh:8"
+  # pan "[0.5 0.6]*8" # cut "-1" # speed "[0.5 0.5 0.47 0.5]*4" # cutoff "4000" # resonance "0.05"
+  |*| (gain $ scale 1 0.6 $ density 4 saw1)
+  |*| (cutoff $ scale 0.25 1 $ slow epoch saw1)
+  |*| gain "[0.9 1]*2"
+  |*| cutoff "[1 1.25]*2"
+
+hush
+
+------------------------
+
+d4 $ every epoch (density 1) $ gain "{~ 1 1 ~ 1 ~ ~}%5" # sound "tok" # speed "16" # cut "200" # resonance "0.3" # shape "0.9" |*| gain "0.8" # pan "0.6"
+  |*| (cutoff $ scale 3000 4000 $ slow epoch saw1)
+
+d4 $ silence
+
+d8 $ every epoch (density 1) $ slow 2 $ gain "{~ 1 ~ 1 ~ 1}%11" # sound "tok" # speed "6" # resonance "0.3" # shape "0.9" |*| gain "0.65" # pan "0.7"
+  |*| (cutoff $ scale 6000 2000 $ slow epoch saw1)

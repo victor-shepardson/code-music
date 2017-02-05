@@ -1,0 +1,25 @@
+let escale l u p = exp <$> (scale (log l) (log u) p)
+
+cps 0.55
+
+hush
+
+d1 $ n "{0 ~ 4 ~ 6 9}%16" # s "supersaw" # (attack $ escale 0.01 0.1 $ slow 8 sine1) # (release $ escale 0.1 0.5 $ slow 8.5 sine1) # gain "0.4" # cutoff "3000" # shape "0.9" |-| n "0" # orbit "1" # cut "100"
+
+d2 $ n "{0 ~ 2 7 9}%16" # s "supersaw" # (attack $ escale 0.01 0.1 $ slow 8 sine1) # (release $ escale 0.1 0.5 $ slow 8.5 sine1) # gain "0.4" # cutoff "3000" # shape "0.9" |+| n "12" # orbit "1" # cut "200"
+
+d2 $ n "{0 4 6 9 11}%8" # s "inr" # gain "1" # cut "200" # (attack $ escale 0.03 0.25 $ slow 8 sine1) # (release $ escale 0.05 0.25 $ slow 8.5 sine1) |-| n "0" # orbit "1"
+
+d3 $ n "{~ ~ 2 ~ ~ 7 ~}%16" # s "inr" # gain "1" # cut "200" # (attack $ escale 0.02 0.125 $ slow 8 sine1) # (release $ escale 0.03 0.125 $ slow 8.5 sine1) |-| n "0" # orbit "1" # nudge "-0.03"
+
+d4 $ mask (slow 8 "1 1 1 ~"::Pattern Bool) $ n "3 3 3 [3 {3 ~ ~}%1 ~ ~]" # s "super808" # gain "0.8" # voice "0.0" # speed "1.5" # sustain "0.5" # cut "400" # orbit "0"
+d4 $ silence
+
+d6 $ gain "[~ 1]*4" # sound "808:4" # cut "300" # speed "0.889" |*| gain "0.8" # hcutoff "3000" # orbit "1"
+
+d7 $ gain "[0.7 0.9 ~ 0.65]*4" # sound "808:1" # speed "0.889" |*| gain "0.75" # nudge "0.005" # cut "700" # orbit "2"
+
+d9 $ gain "~ 0.9 ~ 1" # stack [sound "808:4" |*| gain "0.6" # nudge "-0.02", sound "808:5"] |*| speed "2" # cut "900" # orbit "2"
+
+
+hush

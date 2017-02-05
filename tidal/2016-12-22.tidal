@@ -1,0 +1,58 @@
+cps 0.57
+
+d1 $ slow 4 $ (stack $ map (\i ->
+    (gain $ ((i/8) <~) "[0 1 0 0] 1 [0 1] 1")
+    # (speed $ atom $ fromRational (1/i))
+    # (cut $ atom $ floor i+100 )
+    # (pan $ scale 0.3 0.7 $ slow (i+7) sine1)
+    |+| (begin $ scale 0.25 0.2 $ slow (5+i) sine1)
+    |-| (gain $ atom $ fromRational i/60 )
+    ) [3..6] )
+    # sound "live:2"
+    |*| gain "0.9"
+    # cutoff "17000"
+    # hcutoff "1000"
+
+d1 $ (stack $ map (\i ->
+    gain "[0]*4"
+    # (cut $ atom $ floor i+100 )
+    ) [1..12] )
+    # sound "live:2"
+
+d2 $ gain "9 ~ ~ 7 ~ ~ 8 ~ ~ 7 ~ ~ 8 ~ ~ 7" # sound "bd:0" # cutoff "2060" # resonance "0.2" # hcutoff "170" |*| gain "0.11" # pan "{0.5 0.7 0.3}%8" # speed "2" # shape "0.6" |*| (cutoff $ scale 0.7 1.1 $ slow 3.1 $ sine1)
+d2 $ silence
+
+d3 $ gain "6 7 9 7 6 7 8 6" # sound "bd:0" # cutoff "270" # speed "0.75" # resonance "0.1" # hcutoff "140" |*| gain "0.12" # pan "{0.3 0.7 0.5}%8"
+d3 $ silence
+
+d4 $ gain "8 6 9 6" # sound "bd:0" # cutoff "90" # speed "0.5" # resonance "0.1" # hcutoff "50" |*| gain "0.11"
+d4 $ silence
+
+d5 $ every 4 (density 2) $ gain "[0.8 ~ 0.9]*4" # sound "bd:0" # cutoff "540" # resonance "0.1" # hcutoff "300" # pan "0.1 0.9" # speed "1"
+d5 $ silence
+
+d6 $ every 6 (density 2) $ cutoff "{0 2 4}%16" # sound "live:2" |*| cutoff "500" # cut "600" |+| begin "0.103" # hcutoff "300" # pan "{0.35 0.8}%6" |*| (speed $ slow 5 sine1) # resonance "0.05" # gain "0.9" |+| speed "0.125"
+d6 $ gain "0" # sound "live:2" # cut "600"
+
+d7 $ every 5 (density 3) $ cutoff "{2 4 0}%8" # sound "live:2" |*| cutoff "400" # cut "700" |+| begin "0.097" # hcutoff "300" # pan "{0.65 0.2}%4" |*| (speed $ slow 4 sine1) # resonance "0.05" # gain "0.9" |+| speed "0.125"
+d7 $ gain "0" # sound "live:2" # cut "700"
+
+d8 $ (stack $ map (\i ->
+    (speed $ ((i/8) <~) "{0 4 5 0 4 3 0}%16")
+    # (cutoff $ ((i/8) <~) "{1300 2000 900 2200 1700}%4")
+    # gain "6"
+    # (cut $ atom $ floor i+800 )
+    |+| begin "0.888" # hcutoff "120" |+| (begin $ slow ((i+3)/3) $ scale 0 0.0015 saw1)
+    # resonance "0.1"
+    # (pan $ scale 0.45 0.55 $ slow (i+7) sine1)
+    |*| (speed $ (fromRational i /) <$> "{16 12 18}%1")
+    |*| gain "0.11"
+    # shape "0.6"
+    ) [1..4] )
+    # sound "live:2"
+
+d8 $ (stack $ map (\i ->
+    gain "[0]"
+    # (cut $ atom $ floor i+800 )
+    ) [1..8] )
+    # sound "live:2"

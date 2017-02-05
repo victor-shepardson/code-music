@@ -1,0 +1,110 @@
+d1 $ n "0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ 0 ~" # s "bd" # speed "0.6" # shape "0.1" # cutoff "5000" # resonance "0.2" # cut "0"
+d1 $ n "0 ~ 0 ~ 0 0 ~ 0 ~ 0 ~ 0 0 ~ 0 ~"# s "bd" # shape "0.4" # cutoff "4000" # resonance "0.2" # cut "0"
+d1 $ silence
+
+d2 $ n "8*16" # s "hh" # cutoff "[3000 16000]*8" # gain "1.8" # cut "-1"
+d2 $ every 4 (|+| speed "0.667") $ n "8*16" # s "hh" # cutoff "[3000 16000]*8" # gain "1.8" # cut "-1"
+d2 $ n "8" # s "hh" # cutoff "[3000 16000]*8" # gain "2.5" # cut "-1"
+d2 $ silence
+
+d3 $ silence
+
+d4 $ every 3 (density 0.5) $ every 4 (0.25 <~) $ n "0 0 0 0 0 0 0 0 0 0 0 ~ " # s "tok" # speed "4" # pan "[0 1]*6" # vowel "[a e]*4"
+d4 $ every 3 (density 0.5) $ every 4 (0.25 <~) $ n "0 0 0 0 0 0 0 ~ " # s "tok" # speed "4" # pan "[0 1]*4" # vowel "[a e]*4"
+d4 $ every 3 (density 0.5) $ every 4 (0.25 <~) $ n "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ~ " # s "tok" # speed "4" # pan "[0 1]*8" # vowel "[a e]*5"
+d4 $ silence
+
+d5 $ every 4 ((1/6) ~>) $ n "0 0 0 0 0 0 0 0 [0 0] [0 0] 0 0" # s "tok" # speed "7" # cutoff "[2000 1000]*6"
+d5 $ every 4 ((1/8) ~>) $ n "0 0 0 0 0 0 [0 0] 0" # s "tok" # speed "7" # cutoff "[2000 1000]*4"
+d5 $ silence
+
+d6 $ n "0 0 0 0" # s "bd" # speed "0.6" # shape "0.15" # cutoff "150" # resonance "0.2" # cut "-1"
+d6 $ n "0 ~ 0 ~" # s "bd" # speed "0.6" # shape "0.15" # cutoff "150" # resonance "0.2" # cut "-1"
+d6 $ n "0 0 0 0 0 0" # s "bd" # speed "0.4" # shape "0.15" # cutoff "120" # resonance "0.2" # cut "-1"
+d6 $ n "0 0 0" # s "bd" # speed "0.4" # shape "0.15" # cutoff "120" # resonance "0.2" # cut "-1"
+d6 $ silence
+
+d1 $ n "0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ 0 ~" # s "live" # speed "0.5" # shape "0.9" # cut "1" # begin "0.307"
+
+d1 $ begin "0.804 [0.5 0.9]" # sound "live" # speed "0.25" # cut "1" |*| speed "0.5"
+d2 $ density 0.75 $ begin "0.804*3 [0.5 0.9]" # sound "live" # speed "0.33333" # cut "2" |+| (begin $ scale 0 (-0.01) $ slow 4 saw1) |*| speed "0.5"
+d3 $ density 4 $ begin "0.9" # sound "live" # speed "0.333" # cut "3" |*| speed "2" |+| (begin $ scale (0.03) (0.0) $ slow 8 sine1)
+d4 $ density 1 $ begin "[0.804 [0.52 0.64] 0.6] [0.06]" # sound "live" # speed "0.25" # cut "4" |*| speed "0.5" |+| (begin $ scale (0.01) (0.0) $ slow 8 saw1)
+
+cps 1
+d1 $ density 4 $ begin "0.9" # sound "live" # speed "0.333" # cut "1" |*| speed (slow 48 "6") |+| (begin $ scale (0.05) (0.0) $ slow 3 saw1) # hcutoff "400" # pan (slow 8 saw1) # cutoff "1500"
+
+d3 $ density 4 $ begin "0.9" # sound "live" # speed "0.333" # cut "3" |*| speed "2" |+| (begin $ scale (0.03) (0.0) $ slow 16 sine1)
+
+
+
+d1 $ n "0 ~ 0 ~" # s "bd" # speed "0.6" # shape "0.0" # cutoff "300" # resonance "0.0" # cut "0" # gain "1.2" # hcutoff "70"
+d1 $ silence
+
+d2 $ slow 2 $ n "0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ ~ 0 ~ 0 ~" # s "bd" # speed "1.2" # shape "0.1" # cutoff "2300" # resonance "0.1" # cut "0"
+d2 $ every 8 (|+| begin "0.0205") $ every 8 (|*| speed "2") $ density 2 $ begin "0.9" # sound "live" # speed "0.5" # cut "2" |*| speed "1" |+| (begin $ scale (0.05) (0.0) $ slow 2 saw1) # cutoff "4000" # hcutoff "90" # gain "0.95"
+d9 $ every 8 (|+| begin "0.0205") $ every 8 (|*| speed "0.5") $ density 4 $ begin "0.9" # sound "live" # speed "0.5" # cut "9" |*| speed "6" |+| (begin $ scale (0.05) (0.0) $ slow 1 saw1) # cutoff "7000" # hcutoff "90" # gain "0.95"
+
+d3 $ every 8 (density 0.6667) $ n "8*12" # s "hh" # cutoff "[1500 12000 1000]*2" # gain "1.75" # cut "-1" # speed "1.2" # (pan $ scale 0.2 0.5 saw1)
+d3 $ silence
+
+d4 $ n "[~ 0]*2" # s "sn" # speed "1.5" |+| n "6"
+d4 $ n "[~ 0] [~  [0 0 0 ~]]" # s "sn" # speed "2" |+| n "3"
+d4 $ silence
+
+d5 $ density 2.0 $ every 8 (density 3) $ gain "1 0 1 1 0 1 0 ~" # n "0" # s "live" # cut "5" # begin "0.602" |+| (begin $ scale (0.5) (0.0) $ slow 1 saw1) # speed "4" # hcutoff "50" # (cutoff $ slow 4 $ scale 3000 9000 saw1) # (pan $ scale 0.4 0.7 (slow 6 sine1)) |*| gain "0.95"
+d6 $ density 2.0 $ every 8 (density 3) $ gain "1 0 1 1 0 1 0 ~" # n "0" # s "live" # cut "6" # begin "0.602" |+| (begin $ scale (0.5) (0.0) $ slow 1.5 saw1) # speed "2" # hcutoff "50" # (cutoff $ slow 6 $ scale 3000 9000 saw1) # (pan $ scale 0.5 0.8 (slow 7 sine1)) |*| gain "0.95"
+d7 $ density 2 $ every 8 (density 3) $ gain "1 0 1 1 0 1 0 ~" # n "0" # s "live" # cut "7" # begin "0.602" |+| (begin $ scale (0.5) (0.0) $ slow 1.2 saw1) # speed "3" # hcutoff "50" # (cutoff $ slow 5 $ scale 3000 9000 saw1) # (pan $ scale 0.2 0.5 (slow 5 sine1)) |*| gain "0.95"
+
+d6 $ slow 2 $ gain "1 1 ~ 0 1 0" # n "0" # s "live" # cut "6" # speed "2" # begin "0.605" |+| (begin $ scale (0.05) (0.0) $ slow 2 sine1) # pan (slow 4 sine1) # cutoff (scale 500 2000 (slow 8 sine1)) # resonance "0.1" # hcutoff "100" |*| gain "0.9"
+d7 $ slow 2 $ gain "1 1 ~ 0 1 0" # n "0" # s "live" # cut "7" # speed "3" # begin "0.605" |+| (begin $ scale (0.05) (0.0) $ slow 2 sine1) # pan (slow 5 sine1) # cutoff (scale 800 5000 (slow 8 sine1)) # resonance "0.1" # hcutoff "100" |*| gain "0.8"
+d8 $ slow 2 $ gain "[1 1 0] [0 1]" # n "0" # s "live" # cut "8" # speed "5" # begin "0.605" |+| (begin $ scale (0.05) (0.0) $ slow 2 sine1) # pan (slow 4 sine1) # cutoff (scale 1500 8000 (slow 8 sine1)) # resonance "0.1" # hcutoff "100" |*| gain "0.75"
+
+d8 $ (every 8 (const $ n "0 ~ ~ 0") $every 6 (const $ n "0 ~ 0 0") $ n "0 0 0 0") # s "bd" # speed "3.6" # shape "0.7" # cutoff "5500" # resonance "0.2" # cut "0" # gain "0.95"
+
+d1 $ stack [cut "1", cut "10", cut "11", cut "12", cut "13", cut "14", cut "15", cut "16", cut "17", cut "18"] # gain "0"
+d2 $ stack [cut "2", cut "20", cut "21", cut "22"] # gain "0"
+d3 $ stack [cut "3", cut "30", cut "31", cut "32"] # gain "0"
+d4 $ sound "live*4" # gain "0" # cut "4"
+d5 $ sound "live*4" # gain "0" # cut "5"
+d6 $ sound "live*4" # gain "0" # cut "6"
+d7 $ sound "live*4" # gain "0" # cut "7"
+d8 $ sound "live*4" # gain "0" # cut "8"
+d9 $ sound "live*4" # gain "0" # cut "9"
+
+cps 0.75
+
+let proc l = zipWith (\x i -> x
+            # (pan $ slow (16+i) saw1)
+            |*| (speed $ atom $ fromRational ((i - 1)/3 + 1))-- (speed $ (* fromRational i) <$> slow (32*i) sine1)
+            |+| (begin $ scale 0.05 0.0 $ slow (64+i) sine1)
+            # (cut $ (+ floor i) <$> "10")
+            # (cutoff $ (fromRational 2 **) <$> (scale 9 13 $ slow (4+i) sine1))
+            ) l [1..] in
+d1 $ density 16 $ (stack $ proc [gain "{1 ~ 0 ~ 0 ~}%1", gain "{~ 1 ~ 0 ~ 0}%1", gain "{~ 0 ~ 0 ~ 1 ~}%1", gain "{0 ~ 0 ~ 1}%1"]) # sound "live:1" |*| gain "0.95" |*| speed "0.333" # hcutoff "200" |+| begin "0.65" |*| pan "0.3" |+| pan "0.35"
+
+let rpan l = zipWith (\x i -> x # (pan $ slow i rand)) l [1..] in
+d2 $ density 4 $ (stack $ rpan [sound "bd*2", sound "sn:4", sound "hh:8*3"]) # speed "0.333" # cut "-1" # gain "0.9" # (cutoff $ (fromRational 2 **) <$> (scale 9 14 $ slow 24 sine1)) # (hcutoff $ (fromRational 2 **) <$> (scale 4 7 $ slow 192 sine1))
+
+cps 0.55
+d1 $ density 4 $ gain "1 ~ 1" # n "1" # s "live" # cut "1" # begin "0" |+| (begin $ scale (0.95) (0.8) $ slow 8 saw1) # speed "0.125" # hcutoff "30" # (pan $ scale 0.4 0.6 (slow 4 sine1)) |*| gain "0.95" |*| (slow 8 $ speed "1 2 3 4") # cutoff "8000" |*| (slow 16 $ cutoff "1 0.125")
+d2 $ density 6 $ gain "1 ~ 1 ~" # n "1" # s "live" # cut "2" # begin "0" |+| (begin $ scale (0.95) (0.8) $ slow 4 saw1) # speed "3" # hcutoff "30" # (cutoff $ slow 13 $ scale 1700 2000 sine1) # (pan $ scale 0.6 0.8 (slow 5 sine1)) |*| gain "0.9" |*| (slow 8 $ speed "1 1 1 0.5")
+d3 $ density 2 $ gain "1 ~ 1" # n "1" # s "live" # cut "3" # begin "0" |+| (begin $ scale (0.95) (0.8) $ slow 4 saw1) # speed "2" # hcutoff "30" # (cutoff $ slow 11 $ scale 1700 2000 sine1) # (pan $ scale 0.4 0.2 (slow 5 sine1)) |*| gain "0.9" |*| (slow 8 $ speed "1 1 1 0.5")
+
+cps 0.6
+d5 $ n "0*2" # s "bd" # speed "0.6" # shape "0.0" # cutoff "300" # resonance "0.0" # cut "0" # gain "0.95" # hcutoff "150"
+d6 $ n "[0 ~ ~ 0]*2" # s "bd" # speed "0.4" # shape "0.0" # cutoff "70" # resonance "0.05" # cut "0" # gain "0.8" # hcutoff "20"
+d7 $ density 2 $ n "{0 [0 0] 0 0 [~ 0] 0 0}%4" # s "bd" # speed "1.8" # shape "0.2" # cutoff "{2000 2050 1950}%8" # resonance "{0.5 0.4 0.3 0.2 0.1}%4" # cut "0" # gain "0.7" # hcutoff "400" # (pan $ scale 0.3 0.6 $ slow 3 sine1)
+d8 $ density 1 $ n "[0 ~ 0]*4" # s "bd" # speed "0.15" # shape "0.3" # cutoff "[1000 1700]*4" # resonance "0.3" # cut "0" # gain "0.5" # hcutoff "100" # (pan $ scale 0.5 0.8 $ slow 1 sine1)
+
+cps 0.4
+d1 $ gain "1" # sound "live:1" # cut "1" |+| begin "0.5" |*| gain "1" # speed "0.125" # cutoff "5000" # accelerate "2" |*| (slow 4 $ speed "1 2 5 4")
+d2 $ sound "live:1" # cut "2" |+| begin "0.5" # gain "1" # speed "1.6667" # cutoff "5000" # accelerate "2"
+
+d1 $ slow 8 $ stack [speed "0.125*8" # cut "10", speed "0.16667*2" # cut "11", speed "0.25*12" # cut "12"] # gain "0.95" # sound "live:1" # begin "0.41" |*| gain "1" # cutoff "4000" |*| (speed "{1 2 5 4 1 [2 ~ 5] 4}%4") # accelerate "0.1" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 24 sine1) # pan "0.4" |*| speed "0.5"
+d2 $ slow 1 $ stack [speed "0.125*4" # cut "20", speed "0.16667*4" # cut "21", speed "0.25*4" # cut "22"] # gain "1" # sound "live:1" # begin "0.41" |*| gain "1" # cutoff "5000" |*| (speed "{3 ~ 2 5}%4") # accelerate "0.1" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 5 sine1) |*| speed "0.125"
+d3 $ density 4 $ stack [speed "0.125*2" # cut "30" # (pan $ slow 30 sine1), speed "0.16667*12" # cut "31" # (pan $ slow 24 sine1), speed "0.25*4" # cut "32" # (pan $ slow 32 saw1)] # gain "1" # sound "live:1" # begin "0.41" |*| gain "0.85" # cutoff "6000" |*| (speed "{5 0 3 2 4}%4") # accelerate "0" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 32 saw1) |*| speed "4" |*| pan "0.4" |+| pan "0.3"
+
+d3 $ density 2 $ gain "{1 0 1}%8" # sound "live:1" # cut "3" # begin "0.41" |*| gain "1" # speed "1.5" # cutoff "1300" |*| (speed "2") # accelerate "1" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 3 saw1) # pan rand
+d4 $ slow 0.5 $ gain "{1 0 1 0 1 0 1}%8" # sound "live:1" # cut "4" # begin "0.41" |*| gain "1" # speed "2.5" # cutoff "1100" |*| (speed "1") # accelerate "1" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 5 sine1) # pan "0.8"
+d9 $ slow 0.5 $ gain "{1 0 1 0 1 0 1 0 1}%8" # sound "live:1" # cut "9" # begin "0.41" |*| gain "1" # speed "2" # cutoff "1100" |*| (speed "1") # accelerate "1" # hcutoff "50" # resonance "0.3" |+| (begin $ scale 0 0.01 $ slow 4 sine1) # pan "0.2"

@@ -1,0 +1,134 @@
+let log2 x = (log x) / (log 2)
+let escale l u p = exp <$> (scale (log l) (log u) p)
+
+-- cps 0.54
+cps 0.43
+let epoch = 32
+
+-- cps 0.36
+-- let epoch = 16
+
+let kickpat 0 = "[[1 1 ~] 1]*2"
+    kickpat 1 = "[[1 0] 0.85 0.8 0.9]*4"
+    kickpat _ = "1"
+
+hush
+
+--kick
+d1 $ gain (kickpat 1) # sound "bd:1" # cut "100" # resonance "0.0" |*| speed "1.6" # accelerate "-0.5" # nudge "[0 0.01]*2"
+  |*| speed "[[1 0.75 1] 1]*2"
+  |*| (gain $ scale 0.9 0.8 $ slow epoch saw1)
+  # (cutoff $ escale 900 4000 $ slow epoch saw1)
+  # (hcutoff $ scale 20 90 $ slow epoch saw1)
+  |*| cutoff "0.75 1 0.75 0.5"
+--kick accent
+d7 $ gain "{0 [~ [~ [~ [~ ~ ~ 1]]]]}%1" # sound "808bd:1" # resonance "0.05" # speed "1.2" # cut "700" # orbit "1"
+  |*| (gain $ scale 0.7 0.8 $ slow epoch saw1)
+  # (shape $ scale 0 0.5 $ slow epoch saw1)
+  # (cutoff $ escale 200 1000 $ slow epoch saw1)
+  # (hcutoff $ escale 30 200 $ slow epoch saw1)
+--hat variant 0
+d2 $ gain "[[0.4 0.7 ~] [0.7 0.55]]*2" |*| speed "[1 1.0625]*2" # orbit "0 2"
+  # sound "808:7" # cut "100" # cutoff "7000" # resonance "0.0" # shape "0.95" |*| speed "0.75" # nudge "-0.013" |*| gain "0.6"
+--hat variant 1
+d2 $ gain "[0.7 0.5]*8" # pan "[0.3 0.5]*8"
+  |*| (speed $ escale 1 1.0625 $ density 2 sine1) # orbit "0 2"
+  # sound "808:7" # cut "100" # cutoff "7000" # resonance "0.03" # shape "0.97" |*| speed "0.75" # nudge "-0.013" |*| gain "0.6"
+
+d2 $ silence
+--aux perc
+d4 $ gain "{0.9*3 1*3 1 1 [1 0.6 ~ ~] 1 1 1 0.8}%16" # sound "909" # orbit "0"
+  # speed "2.4" |*| gain "0.5" # resonance "0.5" # hcutoff "200" # pan "0.1" # cut "400"
+  # (cutoff $ escale 5000 2000 $ slow epoch saw1)
+  |*| (cutoff $ escale 1.11 1 $ slow 2 sine1)
+  # (shape $ slow (epoch/8) "{0 0.5}%1")
+  |*| (speed $ escale 2 0.5 $ density 8 saw1)
+  |+| (pan $ scale 0 0.5 $ density 8 saw1)
+
+d4 $ silence
+--clap
+d9 $ gain "[1 ~ 0.4 ~ ~]*24" # sound "808:3" # orbit "0"
+  # pan "[0.7 0.55]*6" # cut "-1" # speed "[0.5 0.5 0.47 0.5]*4" # cutoff "4000" # resonance "0.05" # nudge "-0.01" |*| gain "0.75"
+  |*| (gain $ scale 1 0.6 $ density 4 saw1)
+  |*| (cutoff $ scale 0.125 1 $ slow epoch saw1)
+  # (shape $ scale 0 0.5 $ slow epoch saw1)
+  |*| gain "[0.9 1]*2"
+  |*| cutoff "[1 1.25]*2"
+
+d9 $ silence
+--embers
+d5 $ mask (slow (epoch/4) "{~ 1}%1"::Pattern Bool)
+  $ stack [
+    gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1}%32"
+    # sound "metal" |*| speed "2" # resonance "0.1" |*| gain "0.5" # cut "500"
+    |*| (pan $ scale 0.1 0.9 $ density 4 saw1)
+    |*| speed "{1.5 1.333 1.25 1.2 1.1667 1.1429 1.125}%16"
+    |*| (cutoff $ escale 20000 4000 $ slow epoch saw1),
+    gain "{~ 1 1 ~ 1 1 ~}%24"
+    # sound "metal" |*| speed "2" # resonance "0.1" |*| gain "0.5" # cut "501" # nudge "0.01"
+    |*| (pan $ scale 0.9 0.1 $ density 2 saw1)
+    |*| speed "{1.5 1.333 1.25 1.2 1.1667 1.1429}%8"
+    |*| (cutoff $ escale 10000 3000 $ slow epoch saw1)]
+    # orbit "1"
+
+d5 $ silence
+--sax loop variant 0
+d3 $ stack [
+    speed "[[1 -1 ~] 1]*2" # sound "less" |*| speed "1" # begin "[[0.1 0 ~] 0.05]*2" # cut "300"
+      |*| (gain $ scale 0.9 0.7 $ slow epoch saw1)
+      # (hcutoff $ escale 20 200 $ slow epoch saw1),
+    speed "[[1 -1 ~] 1]*2" # sound "sax" |*| speed "1" # begin "[[0.1 0 ~] 0.05]*2" # cut "301" |*| gain "0.9",
+    speed "[[1 -1 ~] 1]*2" # sound "sax" |*| speed "0.75" # begin "[[0.1 0 ~] 0.05]*2" # cut "302" |*| gain "0.85"
+      |*| speed "{1 1 1 [1 1 0.88888]}%1"
+    ]
+  |-| (begin $ scale 0 0.1 $ slow (epoch/2) sine1)
+  # orbit "2"
+--sax loop variant 1
+d3 $ stack [
+    speed "[1.5 -1]*4" # sound "less" |*| speed "1" |+| begin "[0.1 0.8]*8" # cut "300" |*| gain "0.7"
+      |*| (gain $ scale 0.9 0.7 $ slow epoch saw1)
+      # (hcutoff $ escale 20 200 $ slow epoch saw1),
+    speed "[~ -1]*8" # sound "sax" |*| speed "1" |+| begin "[0.1 0]*8" # cut "301" |*| gain "0.9",
+    speed "[~ -1]*8" # sound "sax" |*| speed "0.75" |+| begin "[0.1 0]*8" # cut "302" |*| gain "0.85" # nudge "0.01"
+      |*| speed "{1 1 1 [1 1 1 0.88888]}%1"
+    ]
+  |-| (begin $ scale 0 0.1 $ slow (epoch/2) sine1)
+  # shape "0.5"
+  # orbit "2"
+
+d3 $ silence
+--extra sax variant 0
+d6 $ stack [
+  speed "{-1.25}%1" # sound "sax" # gain "0.65",
+  slow 1.25 $ speed "{-1 ~}%1" # sound "sax" # gain "0.7" # pan "0.1",
+  gain "[1 ~ 0.6]*12" # speed "{-2.25*12}%1" # sound "sax" |*| gain "0.95" # cut "602" # pan "[0.2 0.5]*6"
+    |*| speed "{1 1 1 [1 1 0.88888]}%1"
+  ]
+  # orbit "2"
+--extra sax variant 1
+d6 $ stack [
+  speed "{-1.25}%1" # sound "sax" # gain "0.65",
+  slow 1.25 $ speed "{-1 ~}%1" # sound "sax" # gain "0.7" # pan "0.1",
+  gain "[1]*16" # speed "[-2.25 -2.5]*8" # sound "sax" |*| gain "1" # cut "602" # pan "[0.2 0.5]*6"
+    |*| speed "{1 1 1 [1 1 1 0.88888]}%1"
+  ]
+  # orbit "2"
+
+d6 $ silence
+--sax tones
+d8 $ stack [
+  speed "{1 1.25 ~ 1.1111 1.3333}%6" # sound "sax" # pan "{0.5 0.9}%6" # cut "{800 810}%6"
+    |*| gain "{0.8 1}%6",
+  speed "{1 1.25 ~ 1.1111 1.3333}%4" # sound "sax" # pan "{0.4 0.6}%4" # cut "{801 811}%4"
+    |*| gain "{1 0.8}%4"
+  ]
+  |+| begin "0.35" |*| gain "0.7" # hcutoff "300" # resonance "0.05"
+  # (cutoff $ escale 2000 5000 $ slow epoch saw1)
+  |*| speed "1.5"
+  # orbit "2"
+
+d8 $ silence
+
+hush
+
+------------------------

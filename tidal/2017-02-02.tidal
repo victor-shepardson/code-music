@@ -1,0 +1,62 @@
+--utility
+let sgn n | n >= 0 = 1 | otherwise = (-1)
+let log2 x = log x / log 2
+let octave r = floor $ log2 r -- octave of a ratio with octave 0 being the interval [1..2)
+let to8ve r dest_octave = 2^^(dest_octave - octave r) * r
+
+let nth n i = (i+n)/n -- the ith nth centered around 1: nth n n = 1, nth 3 4 = 7/3
+let ninth = nth 9
+
+
+--tidal
+let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
+let scalify s degree octave = fn <$> degree <*> octave where fn i j = to8ve (s i) j
+let tmap fn l = stack $ map fn l -- map a function fn which produces patterns over the list l and stack
+
+to8ve (ninth 6) (-2)
+
+cps 0.58
+cps 0.3967
+cps 0.29
+
+hush
+
+let metal 0 = slow 2 $ gain "1 [~ 1 1 1]" # sound "live:0" # stack [begin "0.71" # cut "200" # hcutoff "2000", begin "0.73" # cut "201" # speed "1" # hcutoff "250"] |*| gain "0.75" # release "0.5" # orbit "1"
+    metal 1 = slow 2 $ gain "1 [~ [~ {~ 0.9}%1] [~ 0.9] [~ 0.9]]" # sound "live:0" # stack [begin "0.742" # cut "901" # speed "3"] |*| gain "0.7" # release "0.5" # orbit "1" # pan "0.45" # cutoff "3000" # hcutoff "500"
+
+d2 $ tmap metal [0..1]
+d2 silence
+
+d9 $ speed "[1.1111 1.2222]*8" # sound "live:0" # stack [begin "0.71" # cut "900" # hcutoff "2000", begin "0.73" # cut "901" # speed "1" # hcutoff "500"] |*| gain "0.75" # release "0.2" # orbit "0" |*| ((0) ~> (gain $ escale 0.6 0.95 $ density 0.5 saw1)) |+| begin "0.015"
+
+let chord 0 = speed (scalify (nth 3) "{1 2}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "300" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1700" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ ~}%2"
+    chord 1 = speed (scalify (nth 9) "{1 2 45}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "301" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1300" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 ~}%2"
+    chord 2 = speed (scalify (nth 9) "{0 7 18 0 31}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "302" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "2000" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 1 1 ~ ~ 1 1 1 ~ ~ ~}%2"
+
+d3 $ tmap chord [0..2] # hcutoff "300"
+
+d4 $ speed (scalify (/9) "{9 10 11 12 11 10 11}%16" "{2 1}%16") # sound "live:0" |*| gain "0.65" # orbit "0" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "400" # shape "0.6" |*| speed "{0.5}%1" # release "0.7" # cutoff "2300" # hcutoff "130" # resonance "0.05" # pan "0.2"
+
+d5 $ speed (scalify (/9) "{9 10 11 12 ~}%8" "{0 1 2 1}%8") # sound "live:0" |*| gain "0.7" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "500" # shape "0.8" |*| speed "{0.5}%1" # release "1" # cutoff "4300" # hcutoff "130" # resonance "0.05" # pan "0.5"
+
+d6 $ ((2/32) ~>) $ speed (scalify (/3) "{3 4 5}%8" "{1 2 ~ 1 2 ~ 2}%8") # sound "live:0" |*| gain "0.7" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "500" # shape "0.65" |*| speed "{0.5}%1" # release "0.3" # cutoff "3300" # hcutoff "130" # resonance "0.05" # pan "0.55"
+
+hush
+
+let basspat = "0.9 0.9 [0 0.95] 0 1 ~ ~ [~ 0.85]"
+let basspit = (scalify (/9) "{9 9 5 11}%1" "{ -1 -1 -1 -1}%1")::Pattern Double
+
+let bass 0 = gain basspat # sound "live:0" |*| gain "0.9" # orbit "0" |+| begin "0.05" |+| (begin $ scale 0 0.05 $ slow 4 sine) # cut "100" # shape "0.8" |*| speed basspit # release "1.5" # cutoff "1000"
+    bass 1 = gain basspat # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.06" |+| (begin $ scale 0 0.06 $ slow 4 sine) # cut "101" # shape "0.9" |*| speed basspit # release "1" # cutoff "1300" # resonance "0.2" # pan "0.3" # hcutoff "200" |*| speed "{1 1 1 0.5}%1"
+    bass 2 = gain basspat # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.04" |+| (begin $ scale 0 0.04 $ slow 4 sine) # cut "102" # shape "0.9" |*| speed basspit # release "1" # cutoff "800" # resonance "0.2" # pan "0.7" # hcutoff "200" |*| speed "{1 1 1 0.5}%1"
+
+d1 $ slow 2 $ bass 0
+d1 $ slow 2 $ tmap bass [0..2]
+
+d7 $ mask (slow 8 "1 1 1 ~"::Pattern Bool) $ n "3 3 3 {3 3 [3 ~ ~ 3] 3 3 [~ ~ 3 3]}%1" # s "super808" # gain "0.8" # voice "0.0" # speed "1.5" # sustain "0.5" # cut "0" # orbit "0"
+
+d8 $ gain "[0.85*4 0.75*4] [1 0.7 0.8 0.7 0.8 0.75 0.8 0.75]" # stack [(pan $ density 2 sine1) # sound "808:3" |*| speed "2", (pan $ density 4 sine1) # sound "808:4" |*| speed "1"] # orbit "2" |*| gain "0.95" |*| (speed $ slow 16 $ escale 0.5 4 saw1) |*| (speed $ slow 2 $ escale 0.9 1.1 sine1) # hcutoff "300"
+
+d9 $ gain "~ 0.9 ~ 1" # stack [sound "808:4" |*| gain "0.6" # nudge "-0.02", sound "808:5"] # cut "900" # orbit "2"
+
+hush

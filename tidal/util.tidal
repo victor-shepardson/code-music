@@ -1,0 +1,14 @@
+--utility
+let sgn n | n >= 0 = 1 | otherwise = (-1)
+let log2 x = log x / log 2
+let octave r = floor $ log2 r -- octave of a ratio with octave 0 being the interval [1..2)
+let to8ve r dest_octave = 2^^(dest_octave - octave r) * r
+
+--tidal
+let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
+let scalify s degree octave = fn <$> degree <*> octave where fn i j = to8ve (s i) j
+let tmap fn l = stack $ map fn l -- map a function fn which produces patterns over the list l and stack
+let ezmask s x = mask (slow s x::Pattern Bool)
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+let err period mag = (nudge $ scale 0 mag $ slow period ((*) <$> sine1 <*> rand))

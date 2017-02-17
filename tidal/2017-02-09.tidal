@@ -1,0 +1,37 @@
+--utility
+let sgn n | n >= 0 = 1 | otherwise = (-1)
+let log2 x = log x / log 2
+let octave r = floor $ log2 r -- octave of a ratio with octave 0 being the interval [1..2)
+let to8ve r dest_octave = 2^^(dest_octave - octave r) * r
+
+--tidal
+let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
+let scalify s degree octave = fn <$> degree <*> octave where fn i j = to8ve (s i) j
+let tmap fn l = stack $ map fn l -- map a function fn which produces patterns over the list l and stack
+
+cps 0.58
+cps 0.3967
+cps 0.29
+
+hush
+
+d1 $ slow 4.125 $ gain "1" # cut "100" # sound "live:0" |+| (begin $ slow 127 $ scale 0.1 0.9 $ sine1) |*| gain "0.7" # orbit "2" # release "3"
+
+d7 $ mask (slow 2 "{1 1 1 ~}%1"::Pattern Bool) $ n "3 3 3 {3 3 [3 ~ 3 ~] 3 3 [~ ~ 3 3]}%1" # s "super808" # gain "0.9" # voice "0.05" # speed "1.5" # sustain "0.5" # cut "0" # orbit "0" # cutoff "300"
+d7 $ silence
+
+d8 $ mask (slow 6 "{1 1 1 ~}%1"::Pattern Bool) $ gain "[1]*4" # sound "808:4" |*| gain "0.85" # orbit "1" # pan "0.7"
+
+d9 $ mask (slow 10 "{1 1 1 ~}%1"::Pattern Bool) $ speed "[~ ~ 0.7778 0.5]*4" # (density 3 $ pan saw1) # sound "808:4" |*| gain "0.8" # orbit "2"
+
+let chord 0 = speed (scalify (/3) "{1 4 8}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "300" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1700" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ ~}%2"
+    chord 1 = speed (scalify (/3) "{2 5 9 11}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "301" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1300" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 ~}%2"
+    chord 2 = speed (scalify (/3) "{3 7 10 13 14}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "302" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "2000" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 1 1 ~ ~ ~ 1 1 ~ 1 1 ~ ~}%2"
+
+d3 $ slow 2 $ tmap chord [0..2] # hcutoff "300" # orbit "2" |*| speed "0.5" # pan "0.3"
+d3 silence
+
+d4 $ mask ("{[1 1 1 ~] [1 1 1 ~] [1 1 1 ~] ~ ~}%1"::Pattern Bool) $ density 16 $ tmap chord [0..1] |*| speed "0.25" # orbit "1" |+| cut "100" |*| release "0.25" |*| cutoff "2"
+d4 silence
+
+hush

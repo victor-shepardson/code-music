@@ -1,0 +1,44 @@
+let ezmask s x = mask (slow s x::Pattern Bool)
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+let err period mag = (nudge $ scale 0 mag $ slow period ((*) <$> sine1 <*> rand))
+
+cps 0.5
+
+hush
+
+let lfop = 8 in
+d1 $ slow 2 $ stack [
+      gain "[1 1 1 1?]*4" |*| (gain $ ezsine 0.5 0.85 lfop 0) # err 4 0.02,
+      gain "[1? 1 1? 1]*4" # (pan $ scale 0.3 0.7 $ density 3 saw1) |*| (gain $ ezsine 0.5 0.85 lfop (1/4)) |*| speed "0.8889" # err 4.1 0.02,
+      gain "[1 1? 1 1?]*2" # (pan $ scale 0.1 0.9 $ density 4 saw1) |*| (gain $ ezsine 0.5 0.85 lfop (1/2)) |*| speed "0.7778" # err 4.2 0.02 ,
+      gain "[1 1 1? 1]*2" # (pan $ scale 0.8 0.2 $ density 5 saw1) |*| (gain $ ezsine 0.5 0.85 lfop (3/4)) |*| speed "0.6667" # err 4.3 0.02
+      ] # orbit "0" # hcutoff "400" |*| gain "0.9" # sound "808:5" # vowel "a" # shape "0.3"
+
+let lfop = 16 in
+d2 $ slow 3 $ ezmask 4 "{1}%1" $ stack [
+      gain "[1 ~ 1? 1?]*6" # (cutoff $ ezsine 300 2000 lfop 0) # cut "200" # pan "0.1" # vowel "e",
+      gain "[1? 1? 1 ~]*6" # (cutoff $ ezsine 300 2000 lfop (1/4)) # cut "201" # pan "0.9" # vowel "o",
+      gain "[1? 1 ~ 1?]*6" # (cutoff $ ezsine 300 2000 lfop (1/2)) # cut "202" # pan "0.1" # vowel "e",
+      gain "[~ 1? 1? 1]*6" # (cutoff $ ezsine 300 2000 lfop (3/4)) # cut "203" # pan "0.9" # vowel "o"
+      ] # sound "808:3" |*| gain "0.7" # orbit "1" # release "0.02" # shape "0.8" # speed "2" # resonance "0.25" # hcutoff "300"
+
+d3 $ slow 4 $ stack [
+      gain "[1 [~ 1?] [~ 1?] ~]*4" |*| gain "0.9" # speed "0.5" # cut "300",
+      gain "[[~ 1?] ~ 1 [~ 1?]]*4" |*| gain "0.75" # speed "0.3333" # cut "300",
+      gain "[1 [~ 1?] [~ 1?] ~]*8" |*| gain "0.8" # speed "0.4444" # cut "302",
+      gain "[[~ 1?] ~ 1 [~ 1?]]*8" |*| gain "0.85" # speed "0.5556" # cut "302"
+      ] # cutoff "2700" # hcutoff "100" # shape "0.5" # sound "live:4" |*| gain "1"
+      # orbit "0" # release "0.3" |+| begin "0.262" |*| speed "0.25" |+| (begin $ ezsine 0 0.0008 8 0) # resonance "0.1"
+
+d4 $ ezmask 8 "{1}%1" $ stack [
+      gain (degrade "[1 0.9 0.8 0.9]*4") # (pan $ scale 0.3 0.7 rand) # sound "808bd:4" |*| gain "0.6" # orbit "0" # speed "1.5" # cut "400",
+      gain "[1 ~ 0.95 [~ 0.9?]]*2" # sound "808bd:1" |*| gain "0.9" # orbit "0" # speed "1" # cut "401"
+      ] # cutoff "1200" # resonance "0.05" # release "0.4"
+
+d5 $ slow 1 $ stack [
+      speed "{0.5 0.3333 0.4444 0.5556 ~}%8" |*| gain "0.9" # cut "500"
+      ] # cutoff "2200" # hcutoff "100" # shape "0.2" # sound "live:4" |*| gain "1"
+      # orbit "0" # release "0.2" |+| begin "0.262" |*| speed "0.25" |+| (begin $ ezsine 0 0.0008 8 (1/4)) # resonance "0.1" # pan "0.2"
+
+hush

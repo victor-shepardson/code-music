@@ -1,0 +1,57 @@
+let fader v = cutoff (escale 300 20000 v) # hcutoff (escale 300 20 v) |*| gain ((**0.25) <$> v)
+let qtrig d p = do { now <- getNow; d $ ((nextSam now) ~>) $ p}
+let trig d p = do { now <- getNow; d $ (now ~>) $ (0.125 ~>) $ p}
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+
+hush
+
+cps 0.51
+
+d1 $ stack [
+  fader "[0.9 0.9 0.8 {0.9 0.9 0.9 [~ 0.9]}%1]" # release "0.2" |*| cutoff "0.2" |*| gain "0.7" # speed "1.16667" # resonance "0.05" # cut "100",
+  fader "[0.75 0.7 0.8 {0.7 0.7 0.7 [~ 0.7]}%1]" # speed "1" # release "1.5" |*| cutoff "0.05" |*| hcutoff "0.1"
+  ] # sound "808bd:21" |*| gain "0.95"
+
+d1 silence
+
+d2 $ gain "~ 1 ~ ~" # stack [sound "808:5" # nudge "-0.02" # speed "2", sound "808:3" # speed "4"] # cut "900" # fader "0.97" |*| speed "0.8333"
+
+d3 $ gain "[~ ~ ~ 1] [~ ~ ~ 1] [~ ~ ~ 1] {[~ 1 ~ ~] ~}%1" # sound "808:4" # cut "00" |*| (gain $ ezsine 0.5 0.6 4 0.75) # speed "1" # pan "0.55" # hcutoff "3000" # cutoff "8000"
+
+d4 $ gain "[~ 0.9 1 ~]*4" # pan "[~ ~ 0.5 0.4]*4" # sound "808:1" # cut "00" # speed "1.7777" # (fader $ ezsine 0.75 0.9 1 0.25) |*| hcutoff "2" |*| gain "0.9"
+
+d5 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "2" # pan "[0.5 0.2]*4"
+qtrig d8 $ density 1.003 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "2.5" # pan "[0.5 0.2]*4"
+qtrig d9 $ density 0.99 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "3" # pan "[0.6 0.7]*4"
+
+d6 $ gain "1 [~ 1 ~] [~ 1] 1" # sound "grain" # end "0.4" # shape "0.5" # gain "0.8" # accelerate "82" # speed "0.02"
+hush
+
+let loop 1 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.085" # cut "701" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
+    loop 2 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.1" # cut "702" # hcutoff "200" # release "8" # shape "0.3" |*| speed "0.75"
+    loop 3 = fader "[~ ~ 0.8]*4" # sound "live:8" |+| begin "0.27" # cut "703" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
+    loop 4 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.27" # cut "704" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
+    loop 5 = fader "[0.8]*6" # sound "live:8" |+| begin "0.29" # cut "705" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
+    loop 6 = fader "[~ 0.8]*4" # sound "live:8" |+| begin "0.29" # cut "706" # hcutoff "200" # release "8" # shape "0.6" |*| speed "1"
+    loop 7 = fader "[~ 0.8]*2" # sound "live:8" |+| begin "0.418" # cut "707" # hcutoff "200" # release "3" # shape "0.1" |*| speed "1"
+    loop 8 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.429" # cut "708" # hcutoff "200" # release "3" # shape "0.1" |*| speed "1"
+    loop 9 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.526" # cut "709" # hcutoff "200" # release "2.5" # shape "0.1" |*| speed "1"
+    loop 10 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.586" # cut "710" # hcutoff "200" # release "2" # shape "0.0" |*| speed "0.5"
+
+d7 $ fader "[0.75]*24" |+| (begin $ ezsaw 0 0.1 2 0) # sound "live:8" |+| begin "0.62" # hcutoff "200" # release "0.12" # shape "0.0" |*| cutoff "0.25" # stack [cut "700" |*| speed "0.83333", cut "701" |*| speed "1.5"]
+
+d7 $ loop 10
+d7 $ stack [loop 7 # pan "0.1", loop 8 # pan "0.9"] |*| speed "1"
+d7 $ stack [loop 9 # pan "0.2", loop 10 # pan "0.4", loop 6 # pan "0.9"] |*| speed "1"
+d7 silence
+
+---------------
+
+d6 $ gain "[~ 1 ~ ~ ~ ~ 0 ~] [~ 1 ~ ~ ~ ~ ~ 0] 1 [[~ 0] {1 ~ 1 ~}%1 {~ ~ ~ 1}%1 {~ 1 ~ ~}%1]" |*| fader "0.9 1 1 0.7" # sound "808:0" # speed "0.125" # cut "600" # attack "1 1 2 0.01" # hcutoff "50" # shape "0.0" |*| speed "1 1 1.125 1.25" |*| cutoff "0.01 0.02" |*| speed "1" # release "1"
+
+d7 $ gain "[~ 1*2] [~ 1] ~ [1]" # sound "808:2" # cutoff "3000" # release "0.7" |+| begin "0.003" # stack [
+  cut "700" # hcutoff "300" # speed "1.333" |*| speed "1 0.8333 1 1" # shape "0.2",
+  cut "701" # hcutoff "700" # speed "2.25 2 2.25 2.25" |*| speed "1 0.8333 1 1" # attack "0.2" # pan "0.3",
+  cut "702" # hcutoff "500" # speed "1.77777" |*| speed "1 0.8333 1 1" # shape "0.3" # attack "0.3" # pan "0.7"
+  ] |*| speed "0.25" |*| gain "0.95"

@@ -1,3 +1,10 @@
+let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let fader v = cutoff (escale 300 20000 v) # hcutoff (escale 300 20 v) |*| gain ((**0.25) <$> v)
+let octave r = floor $ log2 r -- octave of a ratio with octave 0 being the interval [1..2)
+let scalify s degree octave = fn <$> degree <*> octave where fn i j = to8ve (s i) j
+
+
 cps 1
 
 hush
@@ -8,13 +15,32 @@ d9 $ density 0.375 $ gain "1" # sound "live:6" # cut "900" # release "8" |+| beg
 d9 $ degradeBy 0.1 $ density 6 $ gain "1" # sound "live:6" # cut "900" # release "16" |+| begin "0.736" # orbit "0" |*| speed "0.25" # pan "0.5" # shape "0.7" # cutoff "600"
 d9 silence
 
+let p = 256 in
+d9 $ density 4 $ gain "1" # sound "live:6" # release "16" |+| begin "0.736" # orbit "0" |*| speed "0.25" # pan "0.5" # shape "0.7" # cutoff "600" # stack [cut "900" # (gain $ ezsine 0 1 p 0) # orbit "0", cut "901" # (gain $ ezsine 0 1 p 0.25) # orbit "1", cut "902" # (gain $ ezsine 0 1 p 0.5) # orbit "2"]
+
 d2 $ degradeBy 0.25 $ density 6.01 $ gain "1" # sound "live:6" # cut "200" # release "8" |+| begin "0.708" # orbit "0" |*| speed "0.5" # pan "0.8" # shape "0.0" # hcutoff "2000"
+
+let p = 17 in
+d2 $ slow 32 $ gain "1" # sound "live:6" # release "8" |+| begin "0.708" |*| speed "0.5" # shape "0.3" # stack [cut "200" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.8", cut "201" # (fader $ ezsine 0 1 p 0.25) # orbit "1" # pan "0.3", cut "202" # (fader $ ezsine 0 1 p 0.5) # orbit "2" # pan "0.6"] |*| hcutoff "4"
 
 d6 $ degradeBy 0.25 $ density 3.03 $ gain "1" # sound "live:6" # cut "600" # release "0.2" |+| begin "0.72595" # orbit "1" |*| speed "0.0625" # pan "0.2" # shape "0.3" # hcutoff "500" # cutoff "3000"
 
+let p = 283 in
+d6 $ density 4 $ gain "1" # sound "live:6" # release "0.2" |+| begin "0.72595" |*| speed "0.0625" # shape "0.7" # stack [cut "600" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.2", cut "601" # (fader $ ezsine 0 1 p 0.15) # orbit "1" # pan "0.5", cut "602" # (fader $ ezsine 0 1 p 0.3) # orbit "2" # pan "0.8"] |*| hcutoff "2" |*| cutoff "0.2"
+
+let p = 223 in
+d3 $ density 4 $ gain "~ 1" # sound "live:6" # release "0.2" |+| begin "0.72595" |*| speed "0.0625" # shape "0.7" # stack [cut "300" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.2", cut "301" # (fader $ ezsine 0 1 p 0.2) # orbit "1" # pan "0.5", cut "302" # (fader $ ezsine 0 1 p 0.4) # orbit "2" # pan "0.8"] |*| speed "0.7778" |*| hcutoff "1.5" |*| cutoff "0.1"
+
+
 d8 $ degradeBy 0.25 $ density 3 $ gain "1" # sound "live:6" # cut "800" # release "8" |+| begin "0.7286" # orbit "1" |*| speed "0.25" # pan "0.6" # shape "0.5"
 
+let p = 93 in
+d8 $ density 2 $ gain "1" # sound "live:6" # release "8" |+| begin "0.7286" |*| speed "0.25" # shape "0.5" # stack [cut "800" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.4", cut "801" # (fader $ ezsine 0 1 p 0.25) # orbit "1" # pan "0.6", cut "802" # (fader $ ezsine 0 1 p 0.5) # orbit "2" # pan "0.9"]
+
 d1 $ degradeBy 0.05 $ density 6 $ gain "~ 1" # sound "live:6" # cut "100" # release "1" |+| begin "0.701" # orbit "1" # shape "0.4" # hcutoff "5000"
+
+let p = 157 in
+d1 $ density 8 $ gain "~ 1" # sound "live:6" # cut "100" # release "0.2" |+| begin "0.701" # orbit "1" # shape "0.1" # stack [cut "100" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.2", cut "101" # (fader $ ezsine 0 1 p 0.15) # orbit "1" # pan "0.5", cut "102" # (fader $ ezsine 0 1 p 0.3) # orbit "2" # pan "0.8"] |+| hcutoff "4000" |*| cutoff "0.5" |*| gain "0.9"
 
 d3 $ density 1.51 $ gain "1" # sound "live:6" # cut "300" # release "0.5" |+| begin "0.714" # orbit "2" |*| speed "0.25" # pan "0.5" # shape "0.9" # cutoff "2000" # hcutoff "300"
 
@@ -23,6 +49,21 @@ d7 silence
 
 d4 $ degradeBy 0.25 $ density 0.75 $ gain "1" # sound "live:6" # cut "400" # release "8" |+| begin "0.721" # orbit "2" |*| speed "0.25" # pan "0.3" # shape "0.6" # cutoff "3000"
 
+let p = 83 in
+d4 $ density 0.5 $ gain "1" # sound "live:6" # release "3" |+| begin "0.721" |*| speed "0.25" # shape "0.6" |*| cutoff "0.15" # stack [cut "400" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.2", cut "401" # (fader $ ezsine 0 1 p 0.25) # orbit "1" # pan "0.8", cut "402" # (fader $ ezsine 0 1 p 0.5) # orbit "2" # pan "0.3"] # nudge "0.06"
+
 d5 $ degradeBy 0.25 $ density 0.75 $ gain "~ 1" # sound "live:6" # cut "500" # release "1" |+| begin "0.723" # orbit "1" |*| speed "0.25" # pan "0.7" # shape "0.4" # cutoff "5000"
+
+let p = 77 in
+d5 $ density 0.5 $ gain "~ 1" # sound "live:6" # release "1" |+| begin "0.723" |*| speed "0.25" # shape "0.4" |*| cutoff "0.25" # stack [cut "500" # (fader $ ezsine 0 1 p 0) # orbit "0" # pan "0.4", cut "501" # (fader $ ezsine 0 1 p 0.25) # orbit "1" # pan "0.2", cut "502" # (fader $ ezsine 0 1 p 0.5) # orbit "2" # pan "0.7"]
+
+let s = 10 in
+d1 $ density 0.5 $ stack [
+  speed (scalify (/s) "{9 ~ 11 ~ 12 ~ 10}%16" "{2 1}%16") # cut "100" # shape "0.6" |*| gain "0.65" |*| speed "{0.5}%1" # release "0.7" # cutoff "2300" # hcutoff "130" # resonance "0.05" # pan "0.35",
+  speed (scalify (/s) "{9 10 11 12 ~}%8" "{0 1 2 1}%8") |*| gain "0.7" # cut "101" # shape "0.8" |*| speed "{0.5}%1" # release "1" # cutoff "4300" # hcutoff "130" # resonance "0.05" # pan "0.5",
+  ((2/32) ~>) $ speed (scalify (/(s/3)) "{3 4 5}%8" "{1 2 ~ 1 2 ~ 2}%8") |*| gain "0.7" # cut "101" # shape "0.65" |*| speed "{0.5}%1" # release "0.3" # cutoff "3300" # hcutoff "130" # resonance "0.05" # pan "0.55"
+  ] # sound "live:0" # orbit "0" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine)
+
+d7 $ n "{3 ~ 3 ~}%2" # s "super808" # gain "0.8" # voice "{0.3 0.2 0 0.1}%2" # speed "1.5" # sustain "0.5" # cut "0" # orbit "0" # cutoff "200"
 
 hush

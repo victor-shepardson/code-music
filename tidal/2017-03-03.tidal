@@ -1,0 +1,28 @@
+let log2 x = log x / log 2
+let octave r = floor $ log2 r -- octave of a ratio with octave 0 being the interval [1..2)
+let to8ve r dest_octave = 2^^(dest_octave - octave r) * r
+
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+let scalify s degree oct = fn <$> degree <*> oct where fn i j = to8ve (s i) j
+
+hush
+
+cps 0.55
+
+d1 $ slow 4 $ attack "~ 4 ~" # release "2" # sound "live:7" |+| begin "0.51" # cut "100" |+| (begin $ ezsaw 0 0.01 8 0) |*| speed "0.25" # orbit "1" # shape "0.5" # cutoff "3000"
+
+d2 $ slow 4 $ attack "4 ~ ~" # release "2" # sound "live:7" |+| begin "0.51" # cut "200" |+| (begin $ ezsaw 0 0.01 8 0.15) |*| speed "0.25" |*| speed "1.3333" # pan "0.3" # orbit "1" # shape "0.5" # cutoff "3000"
+
+d3 $ slow 4 $ attack "~ ~ 4" # release "2" # sound "live:7" |+| begin "0.51" # cut "300" |+| (begin $ ezsaw 0 0.01 8 0.3) |*| speed "0.25" |*| speed "1.5" # orbit "1" # pan "0.7" # shape "0.5" # cutoff "3000"
+
+d4 $ slow 5 $ attack "5" # release "3" # sound "live:7" |+| begin "0.51" # cut "400" |+| (begin $ ezsaw 0 0.01 8 0.3) |*| speed "0.25" |*| speed "1.6667" # orbit "1" # pan "0.1"
+
+d5 $ slow 7 $ attack "5" # release "3" # sound "live:7" |+| begin "0.51" # cut "500" |+| (begin $ ezsaw 0 0.01 8 0.3) |*| speed "0.25" |*| speed "1.2" # orbit "1" # pan "0.9"
+
+
+d6 $ density 2 $ (speed $ scalify (1.5**) "{0 4 ~ 8 4 ~ 0 ~}%12" "{[-5] [-4] ~ [-2] [-1] ~ 0 ~}%12") # sound "live:7" # release "0.05" # hold "0.05" # cut "600" |+| begin "0.1" # orbit "0" # shape "0.5" # cutoff "1300" |*| release "{16 8 ~ 4 2 ~ 1 ~}%12"
+
+d7 $ density 2 $ (speed $ scalify (1.5**) "{2 6 ~ 10 ~ 6 ~}%12" "{[-5] [-4] ~ [-2] ~ [-1] ~}%12") # sound "live:7" # release "0.05" # hold "0.03" # cut "700" |+| begin "0.1" # orbit "2" # pan "0.3" |*| release "{8 4 ~ 2 ~ 1 ~}%12" # shape "0.5" # cutoff "1500"
+
+hush

@@ -29,6 +29,7 @@ d2 $ tmap metal [0..1] |*| gain "0.85" |+| (begin $ scale 0 (-0.004) rand)
 d2 silence
 
 d9 $ ((1/2) <~) $ mask (slow 2 "[~ ] 1 1 1"::Pattern Bool) $ speed "[1.1111 1.2222]*8" # sound "live:0" # stack [begin "0.71" # cut "900" # hcutoff "2000", begin "0.73" # cut "901" # speed "1" # hcutoff "500"] |*| gain "0.65" # release "0.2" # orbit "0" |*| ((0) ~> (gain $ escale 0.6 0.95 $ density 0.5 saw1)) |+| begin "0.015" |+| (begin $ scale 0 0.003 rand) # nudge "-0.02"  |*| speed "0.5"
+d9 $ silence
 
 let chord 0 = speed (scalify (nth 3) "{1 2}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "300" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1700" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ ~}%2"
     chord 1 = speed (scalify (nth 9) "{1 2 45}%1" "{0 0 1 2 2}%1") # sound "live:0" |*| gain "0.6" # orbit "1" |+| begin "0.05" |+| (begin $ scale 0 0.01 $ slow 8 sine) # cut "301" # shape "0.8" |*| speed "{2}%1" # release "3" # cutoff "1300" # hcutoff "130" # resonance "0.05" |*| gain "{1 1 ~ 1 1 ~ 1 1 ~ 1 ~}%2"

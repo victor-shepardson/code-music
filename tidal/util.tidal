@@ -6,12 +6,28 @@ let to8ve r dest_octave = 2^^(dest_octave - octave r) * r
 
 --tidal
 let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
-let scalify s degree octave = fn <$> degree <*> octave where fn i j = to8ve (s i) j
+let scalify s degree oct = fn <$> degree <*> oct where fn i j = to8ve (s i) j
 let tmap fn l = stack $ map fn l -- map a function fn which produces patterns over the list l and stack
 let ezmask s x = mask (slow s x::Pattern Bool)
 let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
 let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+let ezrand lo hi h = scale lo hi (slow h rand)
 let err period mag = (nudge $ scale 0 mag $ slow period ((*) <$> sine1 <*> rand))
 let fader v = cutoff (escale 300 20000 v) # hcutoff (escale 300 20 v) |*| gain ((**0.25) <$> v)
 let qtrig d p = do { now <- getNow; d $ ((nextSam now) ~>) $ p}
 let trig d p = do { now <- getNow; d $ (now ~>) $ (0.125 ~>) $ p}
+let pwedge p p1 p2 = p >>= (\t -> wedge t p1 p2)
+
+--new dirt params:
+let (tilt, tilt_p) = pF "tilt" (Just (0))
+let (index, index_p) = pF "index" (Just (0))
+let (partials, partials_p) = pI "partials" (Just (1))
+let (stiff, stiff_p) = pF "stiff" (Just (0))
+let (bounce, bounce_p) = pF "bounce" (Just (0))
+let (ratio, ratio_p) = pF "ratio" (Just (1))
+let (formant1, formant1_p) = pF "formant1" (Just (0.5))
+let (formant2, formant2_p) = pF "formant2" (Just (0.5))
+let (glide, glide_p) = pF "glide" (Just (0.5))
+
+--pattern monad example:
+d1 $ "{2 4 8 16}%1" >>= (flip density $ sound "bd")

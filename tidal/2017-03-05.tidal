@@ -1,31 +1,109 @@
+let escale l u p = exp <$> (scale (log l) (log u) p) -- tidal scale but with exponential curve. positive l,u only
 let fader v = cutoff (escale 300 20000 v) # hcutoff (escale 300 20 v) |*| gain ((**0.25) <$> v)
 let qtrig d p = do { now <- getNow; d $ ((nextSam now) ~>) $ p}
 let trig d p = do { now <- getNow; d $ (now ~>) $ (0.125 ~>) $ p}
 let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
 let ezsaw lo hi period phase = (scale lo hi $ slow period $ phase <~ saw1)
+let ezmask s x = mask (slow s x::Pattern Bool)
+let ezrand lo hi h = scale lo hi (slow h rand)
+let swing sig depth = nudge (ezsine 0 depth (1/sig) 0.75)
+
+let (tilt, tilt_p) = pF "tilt" (Just (0))
+let (index, index_p) = pF "index" (Just (0))
+let (partials, partials_p) = pI "partials" (Just (1))
+let (stiff, stiff_p) = pF "stiff" (Just (0))
+let (bounce, bounce_p) = pF "bounce" (Just (0))
+let (ratio, ratio_p) = pF "ratio" (Just (1))
+let (formant1, formant1_p) = pF "formant1" (Just (0.5))
+let (formant2, formant2_p) = pF "formant2" (Just (0.5))
+let (glide, glide_p) = pF "glide" (Just (0.5))
+
+
+let pwedge p p1 p2 = p >>= (\t -> wedge t p1 p2)
+
+d3 $ density 2 $ stack [
+  (pwedge ("{1%2 1%3 1%4 1%6 1%8}%1") (sound "808:5*4" # speed "4") (sound "808:5*4" # speed "4.5")) # pan "0" # cutoff "1300" # gain "0.8",
+  (pwedge ("{1%2 2%3 3%4 5%6}%1"::Pattern Time) (sound "808:5*4" # speed "5") (sound "808:5*4" # speed "3.5")) # pan "1" # cutoff "1300" # gain "0.8"
+]
 
 hush
 
-cps 0.51
+cps 0.52
 
-d1 $ stack [
+d1 $ slow 1 "{1 1 1 [2 3] [1 3 1]}%1" >>= (flip density $ stack [
   fader "[0.9 0.9 0.8 {0.9 0.9 0.9 [~ 0.9]}%1]" # release "0.2" |*| cutoff "0.2" |*| gain "0.7" # speed "1.16667" # resonance "0.05" # cut "100",
   fader "[0.75 0.7 0.8 {0.7 0.7 0.7 [~ 0.7]}%1]" # speed "1" # release "1.5" |*| cutoff "0.05" |*| hcutoff "0.1"
-  ] # sound "808bd:21" |*| gain "0.95"
+  ] # sound "808bd:21" |*| gain "0.95")
+
+d1 $ stack [
+  fader "[0.9 0.9 0.8 {0.9 0.9 0.9 [~ 0.9]}%1]" # release "0.2" |*| cutoff "0.17" |*| gain "0.7" # speed "1.16667" # resonance "0.1" # cut "100",
+  fader "[0.75 0.7 0.8 {0.7 0.7 0.7 [~ 0.7]}%1]" # speed "1" # release "1.5" |*| cutoff "0.05" |*| hcutoff "0.1" |*| gain "0.9" # resonance "0.1"
+  ] # sound "808bd:21" |*| gain "1"
+
+d1 $ stack [
+  fader "[0.9 0.9 0.8 0.9]" # release "0.2" |*| cutoff "0.17" |*| gain "0.7" # speed "1.16667" # resonance "0.1" # cut "100",
+  fader "[0.75 0.7 0.8 0.7]" # speed "1" # release "0.7" |*| cutoff "0.05" |*| hcutoff "0.1" |*| gain "0.9" # resonance "0.1"
+  ] # sound "808bd:21" |*| gain "0.95" # shape "0.2"
 
 d1 silence
 
-d2 $ gain "~ 1 ~ ~" # stack [sound "808:5" # nudge "-0.02" # speed "2", sound "808:3" # speed "4"] # cut "900" # fader "0.97" |*| speed "0.8333"
+d2 $ gain "~ 1 ~ ~" # stack [sound "808:5" # nudge "-0.02" # speed "2", sound "808:3" # speed "4"] # cut "200" # fader "0.95" |*| speed "0.8333" # orbit "2"
+d2 $ gain "1*8" # stack [sound "808:5" # nudge "-0.02" # speed "2", sound "808:3" # speed "4"] # cut "200" # fader "[0.5 0.3 0.95 0.4]*2" |*| speed "0.8333" # orbit "1" |+| swing 4 0.02 |*| gain "{0.7 0.85 1}%8"
+d2 $ gain "[~ 0.8? ~ [0.4*2 0.7?]?] 1 ~ 0.9?" # pan "{0.3 0.45 0.55}%16" # stack [sound "808:5" # nudge "-0.02" # speed "2", sound "808:3" # speed "4" |+| nudge (ezrand 0 0.03 7896)] # cut "200" # (fader $ ezsine 0.5 0.95 9 0.25) |*| speed "0.8333" # orbit "2" |+| swing 4 0.02 # resonance "0.05"
+d2 silence
 
-d3 $ gain "[~ ~ ~ 1] [~ ~ ~ 1] [~ ~ ~ 1] {[~ 1 ~ ~] ~}%1" # sound "808:4" # cut "00" |*| (gain $ ezsine 0.5 0.6 4 0.75) # speed "1" # pan "0.55" # hcutoff "3000" # cutoff "8000"
+d3 $ gain "[~ ~ ~ 1] [~ ~ ~ 1] [~ ~ ~ 1] {[~ 1 ~ ~] ~}%1" # sound "808:4" # cut "00" |*| (gain $ ezsine 0.5 0.6 4 0.75) # speed "1" # pan "0.55" # hcutoff "3000" # cutoff "8000" # orbit "2"
+d3 $ speed "~ 1 1 [1 ~ ~ 0.777]" # swing 4 0.02 # pan "{0.5 0.6 0.7}%8" # sound "808:4" # cut "00" |*| (gain $ ezsine 0.5 0.6 4 0.75) |*| speed "1.333" # hcutoff "3000" # cutoff "6000" # pan "0.45" # orbit "0" # shape "0.95" # hold "0.03" # release "0.003"
 
-d4 $ gain "[~ 0.9 1 ~]*4" # pan "[~ ~ 0.5 0.4]*4" # sound "808:1" # cut "00" # speed "1.7777" # (fader $ ezsine 0.75 0.9 1 0.25) |*| hcutoff "2" |*| gain "0.9"
+d3 $ silence
 
-d5 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "2" # pan "[0.5 0.2]*4"
-qtrig d8 $ density 1.003 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "2.5" # pan "[0.5 0.2]*4"
-qtrig d9 $ density 0.99 $ gain "[1 0.7]*4" # sound "808:5" # cut "00" |*| (fader $ ezsine 0.5 0.7 1 0) # speed "3" # pan "[0.6 0.7]*4"
+d4 $ gain "[~ 1]*4" # (fader $ ezsine 0.7 0.9 8 0.25) # swing 4 0.02 # pan "{0.5 0.4 0.45}%4" # sound "808:1" # cut "00" # speed "1.7777" |*| hcutoff "2" |*| gain "[0.5 0.6 0.7 0.9]*4" # shape "0.5" # orbit "1"
+d4 $ palindrome $ gain "[1]*16" # fader "[0.2 0.45 0.7 0.85]*4" # swing 4 0.02 # pan "{0.5 0.4 0.45}%4" # sound "808:1" # cut "00" # speed "1.7777" |*| hcutoff "2" # shape "0.3" # orbit "1"
 
-d6 $ gain "1 [~ 1 ~] [~ 1] 1" # sound "grain" # end "0.4" # shape "0.5" # gain "0.8" # accelerate "82" # speed "0.02"
+d4 silence
+
+d5 $ gain "1*8" # (fader $ ezsine 0.5 0.7 1 0) |*| gain "[1 0.8]*4" # pan "[0.5 0.35]*4" # speed "2" |*| gain "0.8" # swing 4 0.02 # sound "808:5"
+qtrig d8 $ density 1.003 $ gain "1*8" # (fader $ ezsine 0.5 0.7 1 0) |*| gain "[1 0.8]*4" # pan "[0.4 0.2]*4" # sound "808:5" # speed "2.5" |*| gain "0.8" # swing 4 0.02
+qtrig d9 $ density 0.99 $ gain "1*8" # (fader $ ezsine 0.5 0.7 1 0) |*| gain "[1 0.8]*4" # speed "3" # pan "[0.6 0.7]*4" |*| gain "0.8" # swing 4 0.02 # sound "808:5"
+d8 silence
+d9 silence
+
+d6 $ gain "{[0.9 [~ 1 ~] [~ 0.9] 1] [0.9 ~ ~ 1]}%1" # tilt "0 -1 2 2" # sound "grain" # shape "0.8 0.5" |*| gain "0.8" # pitch1 "82" # pitch2 "0.1" # pitch3 "-0.9" # speed "1.5" # orbit "0" # hcutoff "60"
+d6 $ gain "[1 1] {[1 1] [1 1] [1 1] [0 ~]}%1" # index "2 3 2 1" # attack "0.17 0.01 0.2 0.3" # shape "0.4 0.5 0.3 0.1" # release "0.2 1 0.7 0.7" # pan "0.5 0.45 0.5 0.4" # sound "fm" |*| gain "0.8" # pitch1 "164" # pitch2 "82" # orbit "0" # tilt "-0.2" # hcutoff "150" # cut "100" # cutoff "700" # nudge "0.003"
+d6 $ gain "[1 1] {[1 1] [1 1] [1 1] [0 ~]}%1" # index "2 3 2 1" # attack "0.17 0.01 0.2 0.3" # shape "0.4 0.5 0.3 0.1" # release "0.2 1 0.7 0.7" # pan "0.5 0.45 0.5 0.4" # sound "fm2" |*| gain "0.8" # pitch1 "164" # pitch3 "0.5" # orbit "1" # tilt "-0.3" # hcutoff "150" # cut "100" # cutoff "700" # nudge "0.003" # ratio "0.5" |*| pitch1 "0.25" |*| index "1"
+d6 $ gain "[1 1] {[1 1] [1 1] [1 1] [0 ~]}%1" # index "1.5 2 1.5 1" # attack "0.17 0.001 0.2 0.3" # shape "0.4 0.5 0.3 0.1" # decay "-4 0.7 6 1.5" # pan "0.5 0.45 0.5 0.4" # sound "fm3" |*| gain "0.8" # pitch1 "164" # pitch3 "0" # orbit "0" # hcutoff "150" # cut "100" # nudge "0.003" # ratio "0.5" |*| pitch1 "1 0.5 1 1.5" |*| index "2" # partials "1" # bounce "0.03" # unit "c" # formant1 "0.3" # formant2 "0.5" # glide "-0.5" # release "4"
+d6 silence
+
+d6 $ slow 2 $ gain "[1 1] {[1 1] [1 1] [1 1] [0 ~]}%1" # index "2 3 2 1" # attack "0.17 0.01 0.2 0.3" # shape "0.3 0.4 0.2 0.0" # release "0.5 2 1 1" # pan "0.5 0.45 0.5 0.4" # sound "fm2" |*| gain "0.8" # pitch1 "164" # pitch3 "0.5" # orbit "1" # tilt "-0.3" # hcutoff "150" # cut "100" # cutoff "700" # nudge "0.003" # ratio "0.5" |*| pitch1 "0.5" |*| index "1" |*| release "2"
+
+let cycpat = "[1 [~ 1] [~ 1] ~]*2"
+let cycpat = "[1 [~ 1] [~ 1] ~]*1"
+let cycpat = "1*4"
+d6 $ gain cycpat # index (ezrand 0 2 1) # decay (ezrand (12) 6 2)  # formant1 (ezrand 0 1 3) # formant2 (ezrand 0 1 4) # glide (ezrand (-0.5) 0.5 5) # sound "fm3" |*| gain "0.85" # pitch1 "164" # pitch3 "0" # orbit "0" # cut "0" # nudge "0.003" # ratio "3" # partials "1" # bounce "0.03" # unit "c" # shape "0.1"
+d7 $ ((6/16) ~>) $ gain cycpat # index (ezrand 0 2 2) # decay (ezrand (12) 6 3) # formant1 (ezrand 0.5 1.5 4) # formant2 (ezrand 0.5 1.5 5) # glide (ezrand (-0.5) 0.5 6) # sound "fm3" |*| gain "0.85" # pitch1 "164" # pitch3 "0" # orbit "0" # cut "0" # nudge "0.003" # ratio "0.5" # partials "1" # bounce "0.03" # unit "c" |*| pitch1 "2" # shape "0.0" # pan "0.6"
+d8 $ ((9/16) ~>) $ gain cycpat # index (ezrand 0 0.5 3) # decay (ezrand (20) 8 4) # formant1 (ezrand 1 2 5) # formant2 (ezrand 1 2 6) # glide (ezrand (-0.5) 0.5 7) # sound "fm3" |*| gain "0.8" # pitch1 "164" # orbit "0" # cut "0" # nudge "0.003" # ratio "2" # partials "1" # bounce "0.03" # unit "c" |*| pitch1 "3" # shape "0.3" # pan "0.8"
+d9 $ ((15/16) ~>) $ gain cycpat # index (ezrand 0 0.5 4) # decay (ezrand (24) 12 5) # formant1 (ezrand 1.5 2.5 6) # formant2 (ezrand 1.5 2.5 7) # glide (ezrand (-0.5) 0.5 8) # sound "fm3" |*| gain "0.85" # pitch1 "164" # orbit "0" # cut "0" # nudge "0.003" # ratio "4" # partials "1" # bounce "0.03" # unit "c" |*| pitch1 "1.75" # shape "0.5" # pan "0.3"
+
+hush
+
+d3 $ gain "[~ 1]*4" # tilt "[1 0]*2" # sound "buzzgrain" # shape "0.92" |*| gain "0.75" # pitch1 "41" # pitch2 "0.1" # pitch3 "-0.9" # speed "4" # orbit "0" # hcutoff "40" # partials "2"
+d3 $ gain "1 [~ 1] [~ 1] 1" # tilt "[1 0]*2" # sound "buzzgrain" # shape "0.92" |*| gain "0.75" # pitch1 "61.5" # pitch2 "0.1" # pitch3 "-0.9" # speed "4" # orbit "0" # hcutoff "40" # partials "7" # swing 4 0.02
+
+
+d7 $ gain "[1 1 1 ~]*4" # stiff "{0 8 32}%16" |*| pitch1 "{1 1.5 2}%16" # nudge (ezrand (-0.005) 0.005 2) # index "1" # pan "0.45" # sound "fm" |*| gain "0.8" # pitch1 "328" # pitch2 "164" # orbit "0" # tilt "10" # hcutoff "80" # unit "c" # speed "1" # cut "{700 701}%16" # orbit "1"
+d8 $ gain "[1 [~ 1] 1 ~]*4" # stiff "{0 8 32}%16" |*| pitch1 "{1 2 1.5}%16" # nudge (ezrand (-0.005) 0.005 1) # index "1.5" # pan "0.2" # sound "fm" |*| gain "0.77" # pitch1 "328" # pitch2 "164" # orbit "0" # tilt "14" # hcutoff "30" # unit "c" # speed "1" # cut "{800 801}%16" # orbit "1" |*| pitch1 "1.5" |*| pitch2 "3" # cutoff "4000"
+d9 $ gain "[1 1 [~ 1] ~]*4" # stiff "{0 32 128 64 16}%16" |*| pitch1 "{1.5 2 1}%16" # nudge (ezrand (-0.005) 0.005 1) # index "0.7" # pan "0.5" # sound "fm" |*| gain "0.8" # pitch1 "328" # pitch2 "164" # orbit "0" # tilt "15" # hcutoff "180" # unit "c" # speed "1" # cut "{900 901}%16" # orbit "1" |*| pitch1 "2.5" |*| pitch2 "5"
+
+d8 $ gain "[1 1 1? ~]*4" # pitch2 "{0 8 32}%16" |*| pitch1 "{1 1.5 2}%16" # nudge (ezrand (-0.002) 0.003 1) # index "1" # pan "0.4" # sound "fm2" |*| gain "0.8" # pitch1 "328" # ratio "0.5" # orbit "0" # tilt "10" # hcutoff "80" # unit "c" # speed "1" # cut "{800 801}%16" # orbit "1" # bounce "0.02" # vowel "o" # pitch3 "1"
+d7 $ gain "[1? ~ 1 ~]*4" # pitch2 "{0 8 32}%16" |*| pitch1 "{1 2 1.5}%16" # nudge (ezrand (-0.0035) 0.0035 1) # index "1.3" # pan "0.3" # sound "fm2" |*| gain "0.77" # pitch1 "328" # ratio "0.667" # orbit "0" # tilt "14" # hcutoff "30" # unit "c" # speed "1" # cut "{700 701}%16" # orbit "1" |*| pitch1 "1.5" # pitch3 "3" # bounce "-0.05" # vowel "a"
+d9 $ gain "[1 1? [~ 1] ~]*4" # pitch2 "{0 32 1024 24 16}%16" # (pitch3 $ ezrand 1 50 1182) |*| pitch1 "{1.5 2 1}%16" # nudge (ezrand (-0.003) 0.003 1) # index "1" # pan "0.6" # sound "fm2" |*| gain "0.8" # pitch1 "328" # ratio "1" # orbit "0" # tilt "15" # hcutoff "180" # unit "c" # speed "1" # cut "{900 901}%16" # orbit "1" |*| pitch1 "1.25" # bounce "0.05" # vowel "u"
+
+d7 $ ezmask 4 "{[~ 1] 1 ~}%1" $ ezmask 1 "[~ 1 1 1]*4" $ iter 4 $ palindrome $ density 4 $ gain "[1 1] {[1 1] [1 1] [1 1] [0 ~]}%1" # index "1.5 2 1.5 1" # attack "0.17 0.01 0.2 0.3" # shape "0.3 0.4 0.2 0.0" # release "0.2 1 0.3 0.5" # pan "[0.55 0.5]*2" # sound "fm" |*| gain "0.75" # pitch1 "164" # pitch2 "82" # orbit "0" # tilt "-0.5" # hcutoff "700" # cut "700" # cutoff "2700" # nudge "0.01" |*| (pitch1 "[2.66667]") # speed "4"
+
+d8 $ gain "1 1 ~ 1" # tilt "0" # partials "3 4 5 2" # sound "buzzgrain" # shape "0" |*| gain "0.8" # pitch1 "82" # pitch2 "0" # pitch3 "1" # speed "0.7" # orbit "0" # hcutoff "120" # orbit "1"
+
+d3 $ slow 1 $ gain "1*4 ~" # pan (ezsine 0.1 0.9 1.5 0) # tilt "0" # partials "10" # sound "buzzgrain" # shape "0" |*| gain "0.8" # pitch1 "82" # pitch2 "3" # pitch3 "-1" # speed "0.125" # orbit "0" # hcutoff "180" |*| pitch1 (slow 8 "1 3") # vowel "i"
+
 hush
 
 let loop 1 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.085" # cut "701" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
@@ -33,25 +111,32 @@ let loop 1 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.085" # cut "701" # 
     loop 3 = fader "[~ ~ 0.8]*4" # sound "live:8" |+| begin "0.27" # cut "703" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
     loop 4 = fader "[~ 0.8]*6" # sound "live:8" |+| begin "0.27" # cut "704" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
     loop 5 = fader "[0.8]*6" # sound "live:8" |+| begin "0.29" # cut "705" # hcutoff "200" # release "8" # shape "0.3" |*| speed "1"
-    loop 6 = fader "[~ 0.8]*4" # sound "live:8" |+| begin "0.29" # cut "706" # hcutoff "200" # release "8" # shape "0.6" |*| speed "1"
+    loop 6 = fader "[0.8]*4" # sound "live:8" |+| begin "0.29" # cut "706" # hcutoff "200" # release "2" # shape "0.7" |*| speed "1"
     loop 7 = fader "[~ 0.8]*2" # sound "live:8" |+| begin "0.418" # cut "707" # hcutoff "200" # release "3" # shape "0.1" |*| speed "1"
     loop 8 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.429" # cut "708" # hcutoff "200" # release "3" # shape "0.1" |*| speed "1"
     loop 9 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.526" # cut "709" # hcutoff "200" # release "2.5" # shape "0.1" |*| speed "1"
     loop 10 = fader "[~ 0.8 ~ ~]*2" # sound "live:8" |+| begin "0.586" # cut "710" # hcutoff "200" # release "2" # shape "0.0" |*| speed "0.5"
 
-d7 $ fader "[0.75]*24" |+| (begin $ ezsaw 0 0.1 2 0) # sound "live:8" |+| begin "0.62" # hcutoff "200" # release "0.12" # shape "0.0" |*| cutoff "0.25" # stack [cut "700" |*| speed "0.83333", cut "701" |*| speed "1.5"]
+qtrig d7 $ degradeBy 0.05 $ fader "[~ 0.5 0.8]*16" |+| (begin $ ezsaw 0 0.1 2 0) # (pan $ ezsaw 0.5 0.7 4 0) # sound "live:8" |+| begin "0.62" # hcutoff "200" # release "0.12" # shape "0.0" |*| cutoff "0.25" # stack [cut "700" |*| speed "0.83333", cut "701" |*| speed "1.5"] |*| gain "0.8" # nudge (ezrand (-0.002) 0.002 101)
 
-d7 $ loop 10
-d7 $ stack [loop 7 # pan "0.1", loop 8 # pan "0.9"] |*| speed "1"
-d7 $ stack [loop 9 # pan "0.2", loop 10 # pan "0.4", loop 6 # pan "0.9"] |*| speed "1"
+qtrig d7 $ fader "{~ 0.5 0.8}%8" |+| (begin $ ezsaw 0 0.1 2 0) # (pan $ ezsaw 0.5 0.7 4 0) # sound "live:8" |+| begin "0.62" # hcutoff "200" # release "0.5" # shape "0.0" |*| cutoff "0.25" # stack [cut "700" |*| speed "0.83333", cut "701" |*| speed "1.5"] |*| gain "0.8" # nudge (ezrand (-0.002) 0.002 101)
+
+d7 $ loop 7 |*| speed "0.885 [1 {2 4 16 8}%1]" # orbit "2"
+d8 $ loop 7 |*| speed "[1 {2 4 8}%1] 0.885" |+| cut "100" |*| speed "1.5" # orbit "1"
+d9 $ ((1/8) ~>) $ loop 7 |*| speed "[1 {2 4}%1] 0.885" |+| cut "100" |*| speed "1.2" # orbit "1"
+
+d7 $ stack [
+  loop 3 # accelerate "-2" |*| speed "1" # pan "0.1",
+  loop 6 # accelerate "-2" |*| speed "0.5" |*| cutoff "0.25",
+  density 1.003 $ loop 5 # accelerate "-2" |*| speed "1" |*| cutoff "1" # pan "0.7"
+  ] # orbit "1"
+
+d7 $ stack [loop 6 # pan "0.1", loop 3 # pan "0.9"] |*| speed "1"
+d7 $ slow 2 $ stack [loop 9 # pan "0.2", loop 10 # pan "0.4", loop 6 # pan "0.9"] |*| speed "1"
 d7 silence
 
----------------
+d6 $ gain "[~ 1 ~ ~ ~ ~ 0 ~] [~ 1 ~ ~ ~ ~ ~ 0] 1 [[~ 0] {1 ~ 1 ~}%1 {~ ~ ~ 1}%1 {~ 1 ~ ~}%1]" |*| fader "0.9 1 1 0.7" # sound "808:0" # speed "0.125" # cut "600" # attack "1 1 2 0.01" # hcutoff "50" # shape "0.0" |*| speed "1 1 1.125 1.25" |*| cutoff "0.01 0.02" |*| speed "1" # release "1" # orbit "0"
 
-d6 $ gain "[~ 1 ~ ~ ~ ~ 0 ~] [~ 1 ~ ~ ~ ~ ~ 0] 1 [[~ 0] {1 ~ 1 ~}%1 {~ ~ ~ 1}%1 {~ 1 ~ ~}%1]" |*| fader "0.9 1 1 0.7" # sound "808:0" # speed "0.125" # cut "600" # attack "1 1 2 0.01" # hcutoff "50" # shape "0.0" |*| speed "1 1 1.125 1.25" |*| cutoff "0.01 0.02" |*| speed "1" # release "1"
+d6 $ gain "[~ 1 ~ ~ ~ ~ 0 ~] [~ 1 ~ ~ ~ ~ ~ 0] 1 [[~ 0] {1 ~ 1 ~}%1 {~ ~ ~ 1}%1 {~ 1 ~ ~}%1]" |*| pitch1 "1 1 1.125 1.25" |*| pitch2 "1 1 1.125 1.25" # tilt "1 1 2 2" # index "1 1 0.5 1.5" # attack "0.5 0.5 0.7 0.01" # sound "fm" # cut "600" # hcutoff "90" # shape "0.0" # unit "c" # speed "1" # pitch1 "97" # pitch2 "48" # release "1" # cutoff "700 900" |*| gain "0.85"
 
-d7 $ gain "[~ 1*2] [~ 1] ~ [1]" # sound "808:2" # cutoff "3000" # release "0.7" |+| begin "0.003" # stack [
-  cut "700" # hcutoff "300" # speed "1.333" |*| speed "1 0.8333 1 1" # shape "0.2",
-  cut "701" # hcutoff "700" # speed "2.25 2 2.25 2.25" |*| speed "1 0.8333 1 1" # attack "0.2" # pan "0.3",
-  cut "702" # hcutoff "500" # speed "1.77777" |*| speed "1 0.8333 1 1" # shape "0.3" # attack "0.3" # pan "0.7"
-  ] |*| speed "0.25" |*| gain "0.95"
+hush

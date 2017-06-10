@@ -82,7 +82,7 @@ d3 $ stack [
       |*| speed "{1 1 1 [1 1 0.88888]}%1"
     ]
   |-| (begin $ scale 0 0.1 $ slow (epoch/2) sine1)
-  # orbit "2"
+  # orbit "0"
 --sax loop variant 1
 d3 $ stack [
     speed "[1.5 -1]*4" # sound "less" |*| speed "1" |+| begin "[0.1 0.8]*8" # cut "300" |*| gain "0.7"

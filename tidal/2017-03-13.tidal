@@ -1,0 +1,36 @@
+let ezsine lo hi period phase = (scale lo hi $ slow period $ phase <~ sine1)
+let ezrand lo hi h = scale lo hi (slow h rand
+
+cps 1
+
+hush
+
+let period = 256 in
+let phase = 0.75 in
+d1 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "live:9*16" # cut "100" # release (ezsine 4 0.5 period (phase+0.25)) |+| begin "0.41" |*| speed "4" |+| begin (ezrand 0 0.03 1) # fader (ezsine 0 0.7 period (phase+0.5)) |*| gain "0.85")
+
+let period = 256 in
+let phase = 0 in
+d2 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "live:9*16" # pan (ezrand 0.4 0.6 2) # cut "200" # release (ezsine 8 0.5 period (phase+0.25)) |+| begin "0.01" |*| speed "2" |+| begin (ezrand 0 0.03 2) # fader (ezsine 0 1 period (phase+0.5)) # shape "0.2")
+
+let period = 256 in
+let phase = 0.25 in
+d3 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "live:9*16" # cut "300" # pan (ezsine 0.3 0.7 31 0) # release (ezsine 2 0.25 period (phase+0.25)) |+| begin "0.91" |*| speed "1" |+| begin (ezrand 0 0.03 3) # fader (ezsine 0 0.9 period (phase+0.5)) |*| gain "0.95")
+
+let period = 128 in
+let phase = 0.5 in
+d4 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "live:9*16" # pan (ezsaw 0.1 0.9 period (phase+0.75)) # cut "400" # release (ezsine 2 0.25 period (phase+0.25)) |+| begin "0.81" |*| speed "0.5" |+| begin (ezrand 0 0.03 4) # fader (ezsine 0.1 1 period (phase+0.5)) |*| gain "1")
+
+let period = 128 in
+let phase = 0 in
+d5 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "[live:9]*16" # pan (ezsaw 0.1 0.9 period (phase+0.75)) # cut "500" # release (ezsine 2 0.25 period (phase+0.25)) |+| begin "0.81" |*| speed "0.667" |+| begin (ezrand 0 0.03 5) # fader (ezsine 0.1 1 period (phase+0.5)) |*| gain "1")
+
+let period = 128 in
+let phase = 0.25 in
+d6 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "[~ live:9]*16" # pan (ezsaw 0.9 0.1 period (phase+0.75)) # cut "600" # release (ezsine 2 0.25 period (phase+0.25)) |+| begin "0.81" |*| speed "0.778" |+| begin (ezrand 0 0.03 6) # fader (ezsine 0.1 1 period (phase+0.5)) |*| gain "1")
+
+let period = 128 in
+let phase = 0.75 in
+d7 $ (ezsine 0 1 period phase) >>= (flip degradeBy $ sound "[~ live:9]*16" # pan (ezsaw 0.9 0.1 period (phase+0.75)) # cut "700" # release (ezsine 2 0.25 period (phase+0.25)) |+| begin "0.81" |*| speed "0.889" |+| begin (ezrand 0 0.03 7) # fader (ezsine 0.1 1 period (phase+0.5)) |*| gain "1")
+
+hush

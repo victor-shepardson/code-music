@@ -25,6 +25,8 @@ s.waitForBoot({
 })
 )
 
+~dirt.loadSoundFiles("/home/victor/audio/sample");
+
 (
 // v-deep frequency modulation of h-wide sine wave clusters
 ~wiggle = {|in, amt=0.001, rate=1, h=4, v=2, hratio=0.125pi, hdecay=0.5, vratio=32, shape=1|
@@ -161,83 +163,26 @@ for(0,~dirtorbits-1,{|i|
 	p[id] = {InBus.ar(~dirtbus, ~dirtchannels, ~dirtchannels*i)};
 });
 
-p[\cps] = 0.51;
-p[\dtime0] = 1/p[\cps]/4;
-p[\dtime1] = 1/p[\cps]/2;
-p[\dtime2] = 1/p[\cps]/1;
-p[\damt] = 0.7;
-
-/*p[\env0].ar(1);
-p[\env0] = {~change.(p[\orbit0].ar)};
-p[\env0].scope;*/
-
-p[\amp0].ar(1);
-p[\amp0] = {Amplitude.ar(Mix.ar(p[\orbit0].ar),  p[\dtime1], p[\dtime1])};
-p[\fb0].kr(1);
-p[\fb0] = {1-exp(p[\amp0].kr**2*(0-200))};
-/*
-p[\amp1].kr(1);
-p[\amp1] = {Amplitude.kr(Mix.ar(p[\orbit1].ar), p[\dtime2], p[\dtime2])};
-p[\fb1].kr(1);
-p[\fb1] = {1-exp(p[\amp1].kr**2*(0-200))};
-
-p[\amp2].kr(1);
-p[\amp2] = {Amplitude.kr(Mix.ar(p[\orbit2].ar), p[\dtime0], p[\dtime0])};
-p[\fb2].kr(1);
-p[\fb2] = {1-exp(p[\amp2].kr**2*(0-200))};*/
-
-// p[\dorbit0].ar(2);
-// p[\dorbit0] = {FreqShift.ar(p[\orbit0].ar+DelayC.ar(~fader.(p[\dorbit0].ar, p[\damt]), 10, p[\dtime0]), 0+100*p[\fb1].kr)};
-//
-// p[\dorbit1].ar(2);
-// p[\dorbit1] = {FreqShift.ar(p[\orbit1].ar+DelayC.ar(~fader.(p[\dorbit1].ar, p[\damt]), 10, p[\dtime1]), 0-33*p[\fb2].kr)};
-//
-// p[\dorbit2].ar(2);
-// p[\dorbit2] = {FreqShift.ar(p[\orbit2].ar+DelayC.ar(~fader.(p[\dorbit2].ar, p[\damt]), 10, p[\dtime2]), 0-67*p[\fb0].kr)};
-
-p[\verb1].ar(2);
-p[\verb1in] = p[\orbit1];
-p[\verb1] = {FreeVerb.ar(~tanh.(p[\verb1in].ar, 8*(1-p[\fb0].ar)), mix:1, room:p[\fb0].ar, damp: 1)};
-
-p[\verb2].ar(2);
-p[\verb2in] = p[\orbit2];
-p[\verb2] = {FreeVerb.ar(~tanh.(p[\verb2in].ar, 8), mix:1, room:0.8, damp:0.8)*(p[\fb0].ar*0.7+0.3)};
-
-
-
 p[\worbit0].ar(2);
 p[\worbit0] = {~wiggle.(p[\orbit0].ar, amt:0.002, rate:5)};
-//
+
 p[\worbit1].ar(2);
-p[\worbit1] = {~wiggle.(p[\orbit1].ar+(0.2*p[\verb1]), amt:0.01, rate:0.25)};
-//
+p[\worbit1] = {FreeVerb.ar(
+	~wiggle.(p[\orbit1].ar+(0.2*p[\verb1]), amt:0.01, rate:0.25),
+mix:0.19, room:0.9, damp:0.2)};
+
 p[\worbit2].ar(2);
 p[\worbit2] = {~wiggle.(p[\orbit2].ar, amt:0.04, rate:1)};
-//
-//
-// p[\shifted].ar(2);
-// p[\shifted] = {FreqShift.ar(p[\in].ar, Amplitude.ar(p[\in].ar.reverse)*20)};
+
 
 p[\preout] = p[\worbit0] + p[\worbit1] + p[\worbit2] + (0.2*p[\verb2]);
-// p[\preout] = p[\orbit0] + p[\orbit1] + p[\orbit2];
-// p[\preout] = p[\shifted];
-// p[\preout] = p[\in];
 
-// p[\preout] = {FreeVerb.ar(Convolution.ar(p[\orbit0].ar, p[\in].ar, 8192, 0.5)) + p[\dorbit1].ar + p[\worbit2].ar};
-
-// p[\preout] = {Convolution.ar(p[\orbit0].ar, p[\in].ar, 8192, 0.5) + p[\dorbit1].ar + p[\worbit2].ar};
-
-p[\out] = {FreeVerb.ar(Limiter.ar(BHiPass4.ar(p[\preout].ar, 20, 1.5)), mix:0.07, room:0.75, damp:0.2)};
-// p[\out] = {Limiter.ar(BHiPass4.ar(p[\preout].ar, 20, 1.5)), mix:0.1, room:0.75, damp:0.2};
+p[\out] = {FreeVerb.ar(Limiter.ar(2*BHiPass4.ar(p[\preout].ar, 20, 1.5)), mix:0.09, room:0.8, damp:0.2)};
 
 p[\aux] = p[\preout];
 )
 
 
-// r = p.record(\out, "~/.local/share/SuperCollider/downloaded-quarks/Dirt-Samples/live/7.wav".standardizePath, "wav", "int16");
-// r.unpause
-// r.pause
-// r.close
 b = Buffer.alloc(s, 262144, 2);
 b.write("~/.local/share/SuperCollider/downloaded-quarks/Dirt-Samples/live/7.wav".standardizePath, "wav", "int16", 0, 0, true);
 p[\disk] = {DiskOut.ar(b, p[\out].ar)};

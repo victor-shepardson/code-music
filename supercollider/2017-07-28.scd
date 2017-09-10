@@ -11,7 +11,7 @@ s.options.numInputBusChannels = 0; // set this to your hardware input channel si
 
 s.waitForBoot({
 	~dirtchannels = 2;
-	~dirtorbits = 4;
+	~dirtorbits = 3;
 	~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
 
 	//start SuperDirt
@@ -72,7 +72,7 @@ p.push(s);
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0005)};
 ~fx1 = ~orbit1;
 ~fx2 = {f[\wiggle].(~orbit2, rate:2, amt:0.005)};
-~fx3 = {f[\wigglechorus].(~orbit3, rate:1, amt:0.01)};
+// ~fx3 = {f[\wigglechorus].(~orbit3, rate:1, amt:0.01)};
 
 ~amb0 = {
 	GVerb.ar(
@@ -98,7 +98,7 @@ p.push(s);
 		drylevel:0, mul:0.1
 )};
 
-~preout = ~fx0 + ~fx1 + ~fx2 + ~fx3 + ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 /*+ ~fx3*/ + ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

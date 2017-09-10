@@ -1,6 +1,7 @@
 include("SuperDirt")
 s.quit
 
+
 (
 s.options.numBuffers = 1024 * 16; // increase this if you need to load more samples
 s.options.memSize = 8192 * 64; // increase this if you get "alloc failed" messages
@@ -23,31 +24,33 @@ s.waitForBoot({
 
 	//create a proxyspace
 	p = ProxySpace.new;
-
-	//create a proxy for each orbit
-	for(0,~dirtorbits-1,{|i|
-		var id = ['orbit', i].join.asSymbol;
-		id.postln;
-		p[id].ar(~dirtchannels);
-		p[id] = {InBus.ar(~dirtbusses[i], ~dirtchannels)};
-	});
 });
 )
 
 (
 f = Environment.new;
-f[\wiggle] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0|
+f[\wiggle] = {|in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
+	var waveform = {|r, m| var freq = r*(2**m);
+		SinOsc.kr(freq) + LFNoise1.kr(freq*2) / 2;
+	},
+	wave = 0;
+	for (0, rates.size-1, { |i|
+		wave = waveform.(rate*rates[i], wave*shape);
+	});
+	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
+};
+/*f[\wiggle] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0|
 	var norm = all{:hdecay**i, i<-(0..h-1)}.sum,
 	cluster = {|r, m| Mix.fill(h, {|i|
 		SinOsc.kr(r*(hratio**i)*(2**m),0,hdecay**i)
 	})/norm},
 	wave = 0, z = 0;
-	for (0,v-1,{ |i|
-		wave = cluster.(rate*(vratio**(i-v+1)), wave*shape);
+	for (1,v,{ |i|
+		wave = cluster.(rate*(vratio**(i-v)), wave*shape);
 	});
 	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
-};
-f[\wigglechorus] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0.5|
+};*/
+/*f[\wigglechorus] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0.5|
 	var norm = all{:hdecay**i, i<-(0..h-1)}.sum,
 	cluster = {|r, m| Splay.kr(Array.fill(h, {|i|
 		SinOsc.kr(r*(hratio**i)*(2**m),0,hdecay**i)
@@ -57,10 +60,21 @@ f[\wigglechorus] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5,
 		wave = cluster.(rate*(vratio**(i-v+1)), wave*shape);
 	});
 	dry*in + Splay.ar(DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4)).flatten)
-};
+};*/
 )
 
 (
+p.clear;
+p.pop;
+
+//create a proxy for each orbit
+for(0,~dirtorbits-1,{|i|
+	var id = ['orbit', i].join.asSymbol;
+	id.postln;
+	p[id].ar(~dirtchannels);
+	p[id] = {InBus.ar(~dirtbusses[i], ~dirtchannels)};
+});
+
 p.push(s);
 ~preout.ar(2);
 ~out.ar(2);
@@ -76,7 +90,7 @@ p.push(s);
 
 ~amb0 = {
 	GVerb.ar(
-		Mix.new(~orbit0.ar+~fx3.ar),
+		Mix.new(~orbit0.ar),
 		roomsize:30, revtime:1, damping:0.2, spread:5,
 		earlyreflevel: 0.3,
 		drylevel:0, mul:0.07
@@ -85,7 +99,7 @@ p.push(s);
 ~amb1 = {
 	GVerb.ar(
 		HPF.ar(Mix.new(~orbit1.ar), freq:300),
-		roomsize:10, revtime:3, damping:0.6, spread:1,
+		roomsize:120, revtime:2, damping:0.6, spread:1,
 		earlyreflevel: 0.4,
 		drylevel:0, mul:0.05
 )};
@@ -98,7 +112,7 @@ p.push(s);
 		drylevel:0, mul:0.1
 )};
 
-~preout = ~fx0 + ~fx1 + ~fx2 /*+ ~fx3*/ + ~amb0 + ~amb1 + ~amb2;
-// ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 /*+ ~fx3*/ + ~amb0;// + ~amb1 + ~amb2;
+//~preout = ~orbit0 + ~orbit1 + ~orbit2;// + ~amb0 + ~amb1 + ~amb2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

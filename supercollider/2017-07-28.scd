@@ -11,7 +11,7 @@ s.options.numInputBusChannels = 0; // set this to your hardware input channel si
 
 s.waitForBoot({
 	~dirtchannels = 2;
-	~dirtorbits = 3;
+	~dirtorbits = 4;
 	~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
 
 	//start SuperDirt
@@ -36,16 +36,27 @@ s.waitForBoot({
 
 (
 f = Environment.new;
-f[\wiggle] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1|
-	var norm = Array.fill(h, {|i| hdecay**i}).sum,
+f[\wiggle] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0|
+	var norm = all{:hdecay**i, i<-(0..h-1)}.sum,
 	cluster = {|r, m| Mix.fill(h, {|i|
-		SinOsc.ar(r*(hratio**i)*(2**m),0,hdecay**i)
+		SinOsc.kr(r*(hratio**i)*(2**m),0,hdecay**i)
 	})/norm},
 	wave = 0, z = 0;
 	for (0,v-1,{ |i|
 		wave = cluster.(rate*(vratio**(i-v+1)), wave*shape);
 	});
-	DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
+	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
+};
+f[\wigglechorus] = {|in, amt=0.001, rate=1, h=3, v=2, hratio=0.25pi, hdecay=0.5, vratio=32, shape=1, dry=0.5|
+	var norm = all{:hdecay**i, i<-(0..h-1)}.sum,
+	cluster = {|r, m| Splay.kr(Array.fill(h, {|i|
+		SinOsc.kr(r*(hratio**i)*(2**m),0,hdecay**i)
+	}))/norm},
+	wave = 0, z = 0;
+	for (0,v-1,{ |i|
+		wave = cluster.(rate*(vratio**(i-v+1)), wave*shape);
+	});
+	dry*in + Splay.ar(DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4)).flatten)
 };
 )
 
@@ -57,12 +68,18 @@ p.push(s);
 )
 
 (
+
+~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0005)};
+~fx1 = ~orbit1;
+~fx2 = {f[\wiggle].(~orbit2, rate:2, amt:0.005)};
+~fx3 = {f[\wigglechorus].(~orbit3, rate:1, amt:0.01)};
+
 ~amb0 = {
 	GVerb.ar(
-		Mix.new(~orbit0.ar),
+		Mix.new(~orbit0.ar+~fx3.ar),
 		roomsize:30, revtime:1, damping:0.2, spread:5,
 		earlyreflevel: 0.3,
-		drylevel:0, mul:0.08
+		drylevel:0, mul:0.07
 )};
 
 ~amb1 = {
@@ -81,11 +98,7 @@ p.push(s);
 		drylevel:0, mul:0.1
 )};
 
-~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0007)};
-~fx1 = ~orbit1;
-~fx2 = {f[\wiggle].(~orbit2, rate:2, amt:0.005)};
-
-~preout = ~fx0 + ~fx1 + ~fx2 + ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 + ~fx3 + ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

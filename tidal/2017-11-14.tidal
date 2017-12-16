@@ -1,0 +1,89 @@
+-- useful functions
+let trim = ifp (< 0) (\x -> silence) id
+    retrig d p = do now <- getNow
+                    d $ (nextSam now) `rotR` p
+    trigin c d p = retrig d $ c ~> (trim p)
+    trig = trigin 0
+    -- continuous nonperiodic patterns
+    cosdecay = (\x -> cos (x*pi) *0.5 +0.5) <$> envL
+    ease begin end dur = (scale end begin $ slow dur $ cosdecay)
+    time = sig fromRational
+    cyc = sig (fromIntegral.floor)
+    -- better filters, fader
+    linquart x = x**5 + x*(1-x*x)/4
+    quadquart x = x**5 + x*(1-x)*x*x/4
+    ucutoff p = cutoff (scale 20 20000 $ quadquart <$> p)
+    uhcutoff p = hcutoff (scale 20 20000 $ quadquart <$> p)
+    fader p p2 = p2 # ucutoff (scale 0.3 1 p) # uhcutoff (scale 0.7 0 p) |+| shape (scale 0 0.2 p) |*| gain (scale 0.6 1 p)
+    -- convenience
+    fade b e d = fader (ease b e d)
+    cosine = ((1/4) <~ sine)
+    -- timing
+    cswing n amt = nudge (scale amt 0 $ fast n cosine)
+    lead n x = (n/128) <~ x
+    drag n = lead (-n)
+
+let kicks = ["ab:4", "ab:5", "auto:5", "dr:37", "dr_few:0", "dr_few:4", "drumtraks:6", "hh27:5", "ifdrums:0"]
+    basses = ["bass1:2", "bass1:4", "bass2:1", "bass2:2", "bass3:2", "bass3:5", "bass3:6", "bass3:8", "cosmicg:12", "jazz:5"]
+    crashes = ["cc:3"]
+    rides = ["dr:2", "dr:20", "drumtraks:7"]
+    snares = ["db:11", "drum:0", "e:6", "east:1", "glitch:7", "jazz:7"]
+    skins = ["dr:25"]
+    hats = ["dr:0"]
+    rattles = ["drumtraks:10", "fire:0", "hand:2", "industrial:2"]
+    toms = ["drumtraks:11", "drumtraks:12", "gretsch:15", "ht:6"]
+
+cps 0.51
+
+hush
+
+let offbass = legato "[~ [1 2]]*4" # stack [sound (basses!!4) # nudge "0.03", sound (basses!!5) # up "5" # gain 0.5] # cswing 4 0.01 # accelerate "<[0 0.04 0.01 -0.05] [0 0 0.1 0]>" |*| up "-1" # shape 0.1 # cutoff "<600>" |*| gain 0.8 # release "0.5" # orbit 0
+    bass = legato "<[<1 1 1 1 1 1 1 1*2> ~ 1*2 ~]*2 [[1*2 ~] 1 4 [1 [2? 1]]]>" |*| legato 1 # stack [sound (basses!!4) # nudge "0.03", sound (basses!!5) # up "5" # gain 0.8] |*| up "<0*4 [0 0 <-12 -12 -12 12> [<10 ~> [22 <~ 10>]]]>" # cswing 4 0.01 # orbit 2 # accelerate "<[0 0.04 0.01 -0.05] [0 0 0.1 0]>" |*| up "-1" # shape 0.1 # cutoff "<[2000 1200 700 400] [700 1200 2000 3000]>" |*| gain "<[1 0.95] [0.95 1]>" # hcutoff (scale 200 600 $ slow 8 sine) |*| up 12 # release "0.5"
+    kick = gain "1*4" # accelerate "0 -0.2 0 0" |*| speed "1 1 1 1.03" |*| gain "1" # stack [sound (kicks!!4), sound (kicks!!7)] # cswing 2 0.005 # shape "0.1" # cutoff 5000
+    snare = gain "~ ~ 1 ~" |*| gain "1" # sound (snares!!1) # shape "0.2" # cswing 2 0.005 # orbit 1 # cutoff 3000
+
+do
+  trig d3 $ gain "[0.8 1]*4 [<1 [0.7 1] [0.7 1]*3> [0.8 1 ~ 1/4]]" |*| gain "0.9" # stack [sound (rattles!!2) # pan 0.2, sound (rattles!!1) # pan 0.8 # attack 1 # begin "[0.03 0.09]*4"] # speed 1 # cswing 4 0.01 # orbit 2 # cutoff "8000" # legato 3 |+| begin (scale 0 0.01 $ slow 32 saw)
+  trig d1 $ gain "~ 1 [~ 1] ~" # accelerate "{-0.1 0 -0.2 0}%2" |*| gain 0.9 # sound (stack [snares!!3, snares!!1]) # shape 0.5 # cswing 2 0.01 # orbit 0 # cutoff 2000 |*| speed 0.667
+
+do
+  let chordvoice n period pn = begin (scale 0 0.0025 $ slow period cosine) # cutoff (scalex 4000 80 $ slow period cosine) # pan pn # up n
+  trig d8 $ gain "[~ 1 ~ ~ ]*4" # stack [
+    chordvoice 0 21 0.5,
+    chordvoice 10 32 0.4,
+    chordvoice 15 25 0.2,
+    chordvoice 24 17 0.55
+    ] # cswing 2 0.02 |*| gain "0.8" # sound "live:9" # legato 3 |*| speed "0.941" # orbit 1 # attack 0.7 |*| up (-12) # hcutoff 80 |+| begin 0.6
+
+do
+  trig d7 $ offbass |*| up "{0 2 3 7 10}%8"
+  trig d4 $ gain "[~ 1]*4" |*| gain "0.8" # stack [sound (hats!!0), sound (rides!!0) # speed 1.5] # legato 0.6 # cswing 2 0.02 # orbit 1 # release 0.4
+
+do
+  trig d2 $ stack [kick, snare]
+  d9 $ gain "[1 0.95 0.85 0.95]*2" # sound (hats!!0) |*| gain 0.9 # hcutoff 4000 # pan "{0.5 0.45 0.35}%8"
+
+do
+  trig d1 $ bass
+
+do
+  d1 silence
+  d2 silence
+
+do
+  trig d2 $ stack [kick, snare]
+  trig d5 $ gain "[1 0.9 0.8 0.7]*2 [0.9 0.7? 0.75 0.8 0.85 ~ 0.95 0.9]" # sound (toms!!3) # legato 0.5 # speed "{1 1.5 1.333}%16" # cutoff 1300 # shape 0.1 |*| speed "0.0625" # orbit 0 # hcutoff 150 # pan "{0.45 0.6 0.75}%8" |*| speed (scale 1 2 $ slow 16 sine )
+
+d6 $ fast 5 $ gain "1*3" |*| gain "0.85" # sound "diphone2:10" # cswing 4 0.02 # legato 4 |+| fast 4 (n "<1 2 3>") |+| n "<1 2 3 4 5 6 7 8>" |+| slow 4 (n "<2 4 6 8 10 12 14 16 18 20>") # speed (scale 0.25 0.75 $ slow 3 sine) # pan (slow 1.333 sine) # shape "0.7" # cutoff 4500 # resonance 0.1 # orbit 2
+
+do
+  d6 $ gain "[1 0.95 0.9 0.85]*2 [0.75 0.8 0.85 0.9 0.95 1 0.95 0.9]" # sound (rattles!!0) # legato 1 # speed "{1 1.5 1.333}%16" # cutoff 350 |*| cutoff "[7 6 5 4]*2 [1 2 3 4 5 6 7 6 5]" # orbit 1
+  d1 $ bass
+
+d7 silence
+
+hush
+
+-----
+
+trig d1 $ legato "<[1]*4 [1 1 4 [1 [2? 1]]]>" |*| legato 1 # stack [sound (basses!!4) # nudge "0.03", sound (basses!!5) # up "5" # gain 0.8] |*| up "<0*4 [0 0 <-5 -5 -5 7> [<10 ~> [22 <~ 10>]]]>" # cswing 4 0.01 # orbit 2 # accelerate "<[0 0.04 0.01 -0.05] [0 0 0.1 0]>" |*| up "-1" # shape 0.1 # cutoff "<[2000 1200 700 400] [700 1200 2000 3000]>" |*| gain "<[1 0.95] [0.95 1]>" # hcutoff (scale 100 300 $ slow 8 sine)

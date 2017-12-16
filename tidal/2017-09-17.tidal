@@ -1,0 +1,74 @@
+-- useful functions
+let trim = ifp (< 0) (\x -> silence) id
+    retrig d p = do now <- getNow
+                    d $ (nextSam now) `rotR` p
+    trigin c d p = retrig d $ c ~> (trim p)
+    trig = trigin 0
+    -- continuous nonperiodic patterns
+    cosdecay = (\x -> cos (x*pi) *0.5 +0.5) <$> envL
+    ease begin end dur = (scale end begin $ slow dur $ cosdecay)
+    time = sig fromRational
+    cyc = sig (fromIntegral.floor)
+    nforn t = (floor $ ((sqrt (8*t+1))+1)/2)
+    nforncycs = sig (fromIntegral.nforn.fromRational)
+    -- better filters, fader
+    linquart x = x**5 + x*(1-x*x)/4
+    quadquart x = x**5 + x*(1-x)*x*x/4
+    ucutoff p = cutoff (scale 20 20000 $ quadquart <$> p)
+    uhcutoff p = hcutoff (scale 20 20000 $ quadquart <$> p)
+    fader p p2 = p2 # ucutoff (scale 0.3 1 p) # uhcutoff (scale 0.7 0 p) |+| shape (scale 0 0.2 p) |*| gain (scale 0.6 1 p)
+    -- convenience
+    fade b e d = fader (ease b e d)
+    -- timing
+    multiswing' [] n x = x
+    multiswing' (hd:tl) n x = multiswing' tl (2*n) $ swingBy (n*hd/256) n $ x
+    multiswing amts x = multiswing' amts 1 x -- swing 2, 4, 8, etc in 128th notes
+    lead n x = (n/128) <~ x
+    drag n = lead (-n)
+
+hush
+-- tempo
+cps 0.48
+cps 0.56
+cps 0.72
+
+-- $ fast "<1 1 1 1 1 [3 3 1]>"
+-- d1 $ multiswing [0, 0, 4] $ gain "{~ ~ 1 ~ ~ 1/2 ~ ~ 1 ~ ~ ~ 1}%16" # sound "808:2" # orbit 0 |*| up "{2 3 7 8 11}%16" |*| up "-36" # orbit 2 # nudge "0.003"
+
+d4 silence
+
+hush
+
+do
+  trig d2 $ fast 2 $ multiswing [0, 0, 5] $ gain "1 ~ ~ 1/4 ~ ~ 1 ~" # sound "808:2" # orbit 1 |*| up "-12" |*| gain "0.95" # pan "0.5"
+  trig d7 $ fast 2 $ multiswing [0, 0, 6] $ gain "{~ ~ <1 1/2 1 ~>}%8" # sound "808:2" # orbit 1 |*| up "-24" |*| up "3" |*| gain "0.85" # pan "0.6"
+
+do
+  trig d8 $ multiswing [0, 0, 6] $ up "2 [~ <8 8 3 3>] [~ <7 7 7 <4 [4 <7 11>]>>] [~ 0]" # release "2 1 1 1" # legato 1 # sound "808:2" # orbit 0 # nudge "0.003" |*| up "-60" # hcutoff "50" # attack "0.005" # shape "0.1"
+  trigin 8 d9 $ multiswing [0, 0, 7] $ up "14 [~ <8 8 3 3>] [~ <7 7 7 <4 [4 <7 11>]>>] [~ 12]" |*| up "{0 12 24}%8" # legato 1.5 # stack [sound "808:4" # release "0.2" |*| speed "1.1667", sound "808:2"] # orbit 0 |+| nudge "0.005" |*| up "-60" # hcutoff "300" # gain "0.95" # shape "0.7" |*| gain "0.9"
+
+do
+  trig d3 $ multiswing [0, 1] $ speed (stack ["1*4", (3/16) <~ "1.5/2"]) # sound "808bd" |*| speed "1" # legato 1 # cutoff "2000" # orbit 0 |+| n "{4}%16"
+  trig d4 $ multiswing [0, 1, 4] $ shape "[0.2 0]*4" # hcutoff "[300 20]*4" |*| up "[-8 -4]*4" # sound "808:4" |*| gain 0.9 # nudge "-0.003" # orbit 1 # legato (scalex 0.05 0.15 $ slow 16 sine1)
+  trig d5 $ multiswing [0, 1] $ shape "~ 0.6 ~ [0.7 0.8/4 ~ ~]" # sound "808lt:5" # orbit 1 # up "-4" # end "0.05" # hcutoff "120" # shape "0.3" # cutoff "3100" # resonance "0.1" # legato 1
+
+do
+  -- trig d1 $ multiswing [0, 2] $ gain "[~ 1]*4" # sound "808:5" |*| speed "3" # orbit 0
+  trig d6 $ slow 2 $ speed "{2 ~ 2 3 ~ 2 3 4 ~ 2 3 4 5}%16" # nudge "{0 ~ 0 1 ~ 0 1 2 ~ 0 1 2 3 4}%16" |*| nudge (-0.003) # sound "808:5" # orbit 2 # legato 1 # pan 0.7 # gain "0.95" # cutoff "5000"
+  trig d1 $ slow 2 $ speed "{3 ~ 3 4 ~ 3 4 5 ~ 3 4 5 6}%32" # nudge "{0 ~ 0 1 ~ 0 1 2 ~ 0 1 2 3 4}%32" |*| nudge (-0.001) # pan (slow (13/32) $ scale 0.2 0.6 $ saw1) # sound "808:5" # orbit 2 # legato 1 # gain "0.9" # cutoff "5000"
+
+do
+  d2 silence
+  d7 silence
+  d8 silence
+  d4 silence
+
+do
+  d6 silence
+  d1 silence
+
+do
+  d3 silence
+  d9 silence
+
+hush

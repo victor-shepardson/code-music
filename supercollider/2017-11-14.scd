@@ -8,23 +8,26 @@ s.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs an
 s.options.numOutputBusChannels = 2; // set this to your hardware output channel size, if necessary
 s.options.numInputBusChannels = 0; // set this to your hardware input channel size, if necessary
 // boot the server and start SuperDirt
-
 s.waitForBoot({
 	~dirtchannels = 2;
 	~dirtorbits = 3;
-	~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
+	//~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
+    ~dirtbusses = Array.fill(~dirtorbits, {Bus.audio(s, ~dirtchannels)});
 
 	//start SuperDirt
-	~dirt = SuperDirt(~dirtchannels, s);
+	d = SuperDirt(~dirtchannels, s);
 	//load samples (path containing a wildcard can be passed in)
-	~dirt.loadSoundFiles;
+	d.loadSoundFiles;
 	//s.sync; // wait for samples to be read
-	~dirt.start(57120, all {:x.index, x <- ~dirtbusses});
+	//d.start(57120, all {:x.index, x <- ~dirtbusses});
+    d.start(57120, ~dirtbusses.collect(|x| x.index));
 
 	//create a proxyspace
 	p = ProxySpace.new;
 });
 )
+
+d.loadSoundFileFolder("/Users/victor/record/", "live");
 
 (
 f = Environment.new;

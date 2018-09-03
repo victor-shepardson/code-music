@@ -6,37 +6,170 @@ let (partials, partials_p) = pF "partials" (Just (0))
     (dec, dec_p) = pF "dec" (Just (0))
     (rel, rel_p) = pF "rel" (Just (0))
     (sus, sus_p) = pF "sus" (Just (0.5))
+    (leg, leg_p) = pF "leg" (Just (1.0))
     (mratio, mratio_p) = pF "mratio" (Just (1))
     (mpartials, mpartials_p) = pF "mpartials" (Just (1))
     (midx, midx_p) = pF "midx" (Just (1))
     cosine = ((1/4) <~ sine)
     cosaw = ((1/2) <~ saw)
+    trim = ifp (< 0) (\x -> silence) id -- silence pattern before t=0
+    retrig d p = do now <- getNow
+                    d $ (nextSam now) `rotR` p
+    trigin c d p = retrig d $ c ~> (trim p)
+    trig = trigin 0
 
+hush
 
 cps 0.54
 
-d1 $ n "[-18 -8 [30 20] ~]*2" # dec "{1 2 3}%16" |*| dec (scalex 0.05 0.5 $ slow 12 saw) # partials "{2 8 32}%8" # pan (scale 0.0 0.5 $ slow 12 saw) # s "sinc" # att 0 # sus 0 # curve (-4) # legato 1
-
-d2 $ n "[~ 8 ~ 30]*4" # partials "{1 3 <2 5>}%4" # pan (fast 3 saw) # s "sinc" # gain "0.8" # att 0 # dec 0.15 # sus 0 # curve (-4) # legato 1
-
-d3 $ n "[-18 [~ -8] [~ -20] ~]" |+| n "<0 2 9 [7 19]>" # rel (scalex 1 0.1 $ slow 12 sine) |+| partials (scale 4 0 $ slow 12 sine) # partials "8 2 4" # curve "1" # s "sinc" # att 0 # sus 1 # legato 1 # nudge "0 0.02 0.02 0" -- |+| n "-12"
-
-d4 $ n "[<4 5 6 7> <24 24 24 26*<1 3 2 6 4> >]*4" # curve "[-10 -5]*4" # partials "[<1 2> 3]*4" # dec "[0.3 0.1]*4" # gain "[1.05 0.9]*4" # s "sinc" # att 0 # sus 0 |+| n "-12" # legato 1
-
-d5 $ n "[-30]*4" # s "sinc" # att 0.005 # dec 0.08 # sus 0.5 # legato 0.5 # rel 0.05 # curve (-4) # partials "[4 1]*2" # gain "1.1" # nudge "-0.02"
-
-d4 silence
-d5 silence
-
--- do
---   let lfo = (slow 32 sine)
---   d6 $ n "[-36 -24/2 -12 [~ 0] 24/4 12*<1 1 1 2>]" # partials (scalex 1 8 $ slow 8 sine) # legato (scalex 0.25 2 lfo) # s "sincfm" # rel 0.2 # sus 0.5 # att 0.003 # dec 0.1 # curve (-2) # midx 3 # mratio 0.03125 # mpartials (scalex 2 8 lfo)
+let fx0 = orbit 0 -- # delay 0.0625 # delaytime 0.0625 # delayfeedback 0.2
+    fx1 = orbit 1 # delay 0.5 # delaytime 0.16667 # delayfeedback 0.4 -- # room 0.2 # size 0.5
+    fx2 = orbit 2 -- room 0.1 # size 0.7
 
 do
-  let lfo = (slow 32 sine)
-  d6 $ n "[-31 -24/2 < -9 -7 -2 -12> [~ 0] 19/4 12*<1 1 1 2>]" # partials (scalex 1 8 $ slow 8 sine) # legato (scalex 0.25 2 lfo) # s "sincfm" # rel 0.2 # sus 0.5 # att 0.003 # dec 0.1 # curve (-2) # midx 3 # mratio 0.03125 # mpartials (scalex 2 8 lfo)
+  d6 silence
+  d5 silence
+  let ramp = slow 8 envL in
+    trig d4 $ n "-37*4" # s "sincfm" # legato 8 # nudge "[0 0.01]*2"
+      # leg 0.5 # att 0.005 # dec 0.05 # sus 0.667 # rel 0.05 # curve (-5)
+      # partials (scale 3 1 ramp) # midx 3 # mratio 0.125 # mpartials 4
+      # gain (scale 0.7 0.9 ramp) # shape "0.2 0.05 0.1 0.15" # fx0
+  trig d7 $ n "[~ 31]*<4 4 4 [8 <24 12> 8 4]>" # s "sincfm" # leg 0.33 # legato 8 # nudge "0.02"
+    # dec (scalex 0.009 0.013 $ slow 8 sine) # sus 0.02 # rel 0.3 # curve (-4)
+    # partials "[4 2 8 12]" # midx 4 # mratio 2.25 # mpartials 2
+    # pan "[0.2 0.4]*4" # fx0
+  trig d9 $ n "21*8" # s "sincfm" # leg 0.33
+    # dec (scalex 0.009 0.013 $ slow 4 rand) # sus 0.02 # rel 0.3 # curve (-4)
+    # partials "[4 2 8 12]" # midx 4 # mpartials 2 # mratio 2.25
+    # pan "[0.5 0.7]*2" # fx0 # gain 0.9
 
-d5 $ n "[< ~ [~ 12] ~ > -36*<1 1 1 <1 2>>]*3" # s "sincfm" # att 0.005 # dec 0.08 # sus 0.5 # legato 0.5 # rel 0.05 # curve (-4) # mpartials "[8 1]*3" # mratio "[0.11 0.25]*3" # midx "[2 3]*3" # partials "4 2 3" # gain "1.05" -- # nudge "-0.02"
-d4 $ n "36*<12 12 12 [12 24 12]>" # s "sincfm" # legato 0.25 # dec (scalex 0.009 0.013 $ slow 4 sine) # sus 0.02 # mratio 0.313 # rel 0.3 # midx 4 # mpartials 2 # partials "[12 4 8 2]*3" # curve (-6)
+do
+  let ramp = slow 32 envL in
+  -- let ramp = 0 in
+    trig d3 $ n (slow 4 "<[0 12 17 ~] [-9 13 15 <19 ~ >]>") # s "sincfm" # legato 32
+      # leg (scalex 0.1 5 ramp) # att (scalex 0.1 3 ramp) # sus 1 # rel (scalex 0.1 2 ramp) # curve 2
+      # partials 3 # midx 0.1 # mratio 1 # mpartials (scale 1 5 $ slow 5 sine)
+      # gain 0.55 # pan (scale 0.4 0.6 $ slow 1.11 rand ) # fx0
+  let ramp = slow 32 envL in
+  -- let ramp = 1 in
+    trig d6 $ (1/4) ~> n (slow 4 "<[0 12 17 ~] [-9 13 15 <7 ~ >]>") # s "sincfm" # legato 32 |+| stack [nudge 0.05 |+| n 0, nudge 0.0 |+| n 12, nudge 0.03 |+| n (-12) ]
+      # leg (scalex 0.125 0.0625 ramp) # att (scalex 0.1 0.001 ramp) # dec 0.2 # sus 0.5 # rel (scalex 0.1 1 ramp) # curve (-2)
+      # partials 8 # midx (0.125) # mratio 1.5 # mpartials 2
+      # gain (scale 0.6 0.7 ramp) # pan (scale 0.4 0.6 $ slow 1.11 rand ) # fx2
+
+let ramp = slow 8 envL in
+  trig d5 $ (1) <~ n "[-30 -30/4 ~ ~ ~ ~ -20 ~]*2" # s "sincfm" # legato 8 # nudge "0.02"
+    # leg 0.67 # att 0.001 # dec 0.12 # sus 0.33 # rel 0.05 # curve (-4)
+    # partials "[[1 3 1 1] 1]*2" |*| partials (scale 1 2 ramp) # midx 3 # mratio 0.167 # mpartials 5
+    # gain (scale 0.8 0.9 ramp) # shape 0.2 # fx1
+
+do
+  d2 silence
+  d1 silence
+  trig d8 $ n "[20*4, 30*4, [~ ~ <40 28>/16 ~]*4, [~ ~ ~ 32/32]*4]" # s "sincfm" # legato 8
+    # leg 0.5 # dec (scalex 0.009 0.013 $ slow 4 sine) # sus 0.15 # rel 0.7 # curve (-6)
+    # partials "[10 4 6 2]" # midx 2 # mratio 1.5 # mpartials 1
+    # pan "<0.3 0.5>*4" # gain 0.85 # fx2
+
+do
+  let ramptime = 32
+  trig d2 $ n "[-18 -8 [30 20] ~]*2" |+| n 12 # s "sincfm" # nudge (-0.01) # legato 32
+    # leg 0.0625 # att 0 # sus 1 # rel "{1 2 3}%16" |*| rel (scalex 0.05 2 $ slow ramptime saw) # curve (-4)
+    # partials "{1 4 16}%8" # mratio (-0.5) # midx (-1) # mpartials 3
+    # pan (scale 0.4 0.8 $ fast 2 saw) # gain 0.8 # fx2
+  trigin ramptime d1 $ n "[30 [~ 8 ~]]*16" |+| n (scale (-12) 12 $ slow ramptime saw) # s "sincfm" # legato 2
+    # leg 1 # att 0 # dec 0.06 # sus 0 # curve (slow 1.1 $ scale (-4) (-5) rand)
+    # partials "{1 3 <2 5>}%8" # mratio 0.01 # midx 1 # mpartials 8
+    # pan (scale 0.4 0.9 $ fast 3 saw) # gain "0.9" # fx0
+
+d6 $ n "[~ ~ ~ 12]" # s "sincfm" # legato 4 # nudge "0.01"
+  # leg 0.1 # att 0 # dec 0 # sus 1 # rel 0.5
+  # partials 5 # mpartials 1 # mratio 1.77 # stack [
+    midx (scalex 4 7 $ slow 32 sine) # pan 0,
+    midx (scalex 4 7 $ slow 32 cosine) # pan 1
+  ] # gain 0.75 # fx1
+
+do
+  trig d1 silence
+  trig d7 silence
+  trig d2 silence
+  trig d8 silence
+  trig d3 silence
+  trig d5 silence
+  trig d4 $ n "-37*6" # s "sincfm" # legato 8 # nudge "0.02"
+    # leg 1 # att 0.005 # dec 0.05 # sus 0.8 # rel 0.05 # curve (-5)
+    # partials 1 # midx 2.5 # mratio 0.13 # mpartials 3
+    # shape 0.1 # gain 0.8 # fx0
+
+do
+  trig d9 silence
+  trig d4 $ n "-37*6" # s "sincfm"
+    # att 0.005 # dec 0.05 # sus 0.8 # leg 1 # rel 0.05 # curve (-5) # legato 8 # nudge "0.02"
+    # partials (fast 2 $ fastcat [
+      scalex 1 8 $ slow 16 envL,
+      scalex 1 4 $ slow 8 envL,
+      scalex 1 16 $ slow 32 envL
+    ]) # midx 2.5 # mratio 0.13 # mpartials 3
+    # shape 0.1 # gain 0.8 # fx0
+
+d1 silence
+d2 silence
+d3 silence
+d4 silence
+d5 silence
+d6 silence
+d7 silence
+d8 silence
+
+trig d5 $ n "[< ~ [~ 12] ~ > -36*<1 1 1 <1 2>>]*3" # s "sincfm"
+  # att 0.005 # dec 0.08 # sus 0.5 # leg 0.5 # rel 0.05 # curve (-4)
+  # partials "4 2 3" # mpartials "[8 1]*3" # mratio "[0.11 0.25]*3" # midx "[2 3]*3"
+  # shape 0.1 # gain 0.95 # fx2
+
+trig d7 $ n "36*<12 12 12 [12 24 12]>" # s "sincfm"
+  # leg 0.25 # dec (scalex 0.009 0.013 $ slow 4 sine) # sus 0.02 # rel 0.3 # curve (-6)
+  # partials "[12 4 8 2]*3" # mratio 0.313 # midx 4 # mpartials 2
+  # fx0
+
+trig d1 $ n "[12 ~ 22]*4" # s "sincfm" # legato 8
+  # leg (scalex 0.25 3 $ slow 8 $ saw) # att 0.02 # dec 0.05 # sus 0.2 # rel 0.1
+  # partials 2 # midx 0.4 # mpartials 1 # mratio 0.05
+  # gain 0.9 # pan "[0.6 0.8]*2" # fx2
+
+do
+  trig d1 $ n "[12 14 [22 ~]]*4" # s "sincfm" # legato 8
+    # leg (scalex 0.0625 2 $ slow 8 saw) # att 0.02 # dec 0.05 # sus 0.2 # rel 0.05
+    # partials 2 # midx 0.4 # mpartials 1 # mratio 0.1
+    # pan "[0.6 0.8]*2" # fx2
+  trig d4 $ n "-30*12" # s "sincfm" # legato 8 # nudge "0.02"
+    # leg 0.33 # att 0.005 # dec 0.08 # sus 0.6 # rel 0.07 # curve (-5)
+    # partials "[1 2 3 4 5 6]" # midx 3 # mratio 0.13 # mpartials "[6 5 4 3 2 1]*2"
+    # shape (scale 0 0.7 $ slow 8 saw) # fx0
+
+do
+  let lfo = (scale 1 0 $ slow 32 cosine)
+  let ramp = slow 16 envL
+  trig d6 $ n "[-31 -24/2 < -9 -7 -2 -12> [~ 0] 19/4 12*<1 1 1 2>]" # s "sincfm" # legato 8
+   # leg (scalex 0.25 2 lfo) # att (scalex 1 0.003 ramp) # dec 0.1 # sus 0.5 # rel (scalex 1 0.2 ramp) # curve (-2)
+   # partials (scalex 1 8 $ slow 8 sine) # midx 3 # mratio 0.03125 |*| mratio (scalex 0.125 1 ramp) # mpartials (scalex 2 8 lfo)
+   # gain (scale 0.7 0.85 ramp) # pan (scale 0.55 0.35 $ slow 1.2 sine) # fx0
+
+do
+  trig d4 $ n "-42*6" # s "sincfm" # legato 8 # nudge "0.01"
+    # leg 0.33 # att 0.005 # dec 0.08 # sus 0.8 # rel 0.2 # curve (-5)
+    # partials 2 # midx 2.5 # mratio 0.13 # mpartials 7
+    # shape "[0.7 0.3]*3" # gain 0.8 # fx0
+  trig d1 $ n "[30 [~ 8 ~]]*24" |+| n (scale (-24) 24 $ slow 64 saw) # s "sincfm" # legato 8
+    # leg 0 # att 0 # rel 0.06 # sus 1 # curve (slow 1.1 $ scale (-4) (-5) rand)
+    # partials "{1 3 <2 5>}%8" # mratio 0.125 # midx 1 # mpartials 8
+    # pan (scale 0.45 0.8 $ fast 3 saw) # gain 0.9 # fx0
+
+do
+  d9 silence
+  d1 silence
+
+do
+  d4 silence
+  d5 silence
 
 hush

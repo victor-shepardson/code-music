@@ -71,70 +71,95 @@ f[\lancosc] = {
     f[\sinc].(phi*scale)*f[\sinc].(phi*pi)*mul*EnvGate.new+add
 };
 
-// "sustain" is the duration sent by tidal. it should include attack and decay but not release
-/*SynthDef(\sinc, { |out, att=0, dec=0, rel=0, sus=1, curve=0, sustain=1, partials=8, pan, freq|
-    var fadein = 0.001, fadeout = 0.005;
+SynthDef(\sinc, { |out, fadein=0.001, fadeout=0.005, att=0, dec=0, rel=0, sus=1, curve=0, partials=8, sustain, delta, pan, freq|
     var begin = Impulse.ar(0);
-    var gate = Trig.ar(begin, sustain-rel.max(fadeout));
+    var gate = Trig.ar(begin, sustain-rel);
     var renv = EnvGen.ar(Env.asr(fadein, 1, fadeout, -3), Trig.ar(begin, sustain-fadeout), doneAction:2);
     var lenv = EnvGen.ar(Env.adsr(att, dec, sus, rel, 1, curve), gate)*0.9999+0.0001; //whyyyy
-    var sound = (f[\sincosci].(freq*lenv, lenv*partials, )*lenv*0.5pi).sin;
-    // var sound = f[\sincosci].(freq*lenv, lenv*partials, pm:mod*1pi)*lenv;
-    // var sound = f[\sincosci].(freq*lenv, lenv*partials)*lenv;
-    // var sound = f[\lancosc].(freq, partials);
-    // var sound = f[\lancosc].(freq, partials);
-    // var sound = f[\sincosci].(freq*lenv, partials);
-    // sound = LeakDC.ar(sound, 0.99);
-    // var sound = f[\sincosci].(freq, partials);
-	OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
-}).add;*/
-
-SynthDef(\sinc, { |out, att=0, dec=0, rel=0, sus=1, curve=0, partials=8, leg=1, sustain, delta, pan, freq|
-    var fadein = 0.001, fadeout = 0.005;
-    var begin = Impulse.ar(0);
-    var gate = Trig.ar(begin, delta*leg);
-    var renv = EnvGen.ar(Env.asr(fadein, 1, fadeout, -3), Trig.ar(begin, delta*leg+rel-fadeout), doneAction:2);
-    var lenv = EnvGen.ar(Env.adsr(att, dec, sus, rel, 1, curve), gate)*0.9999+0.0001; //whyyyy
-    var sound = (f[\sincosci].(freq*lenv, lenv*partials, )*lenv*0.5pi).sin;
-	OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
+    var sound = (f[\sincosci].(freq, lenv*(partials-1)+1)*lenv*0.5pi).sin;
+    OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
 }).add;
+d.soundLibrary.addSynth(
+    \sinc, (instrument:\sinc, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
+    })
+);
 
-/*// "sustain" is the duration sent by tidal. it should include attack and decay but not release
-SynthDef(\sincfm, { |out, att=0, dec=0, rel=0, sus=1, curve=0, midx=2, mratio=0.03125pi, mpartials=8, partials=8, sustain=1, pan, freq|
-    var fadein = 0.001, fadeout = 0.005;
+SynthDef(\sincfm, { |out, fadein=0.001, fadeout=0.005, att=0, dec=0, rel=0, sus=1, curve=0, midx=2, mratio=0.03125pi, mpartials=8, partials=8, sustain, delta, pan, freq|
     var begin = Impulse.ar(0);
-    var gate = Trig.ar(begin, sustain-rel.max(fadeout));
+    var gate = Trig.ar(begin, sustain-rel);
     var renv = EnvGen.ar(Env.asr(fadein, 1, fadeout, -3), Trig.ar(begin, sustain-fadeout), doneAction:2);
-    var lenv = EnvGen.ar(Env.adsr(att, dec, sus, rel, 1, curve), gate)*0.9999+0.0001; //whyyyy
-    var mod = f[\sincosci].(freq*lenv*mratio, lenv*mpartials);
-    var sound = (f[\sincosci].(freq*(2**(mod*midx*lenv)), lenv*partials)*lenv*0.5pi).sin;
-	OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
-}).add;*/
-
-SynthDef(\sincfm, { |out, att=0, dec=0, rel=0, sus=1, curve=0, midx=2, mratio=0.03125pi, mpartials=8, partials=8, leg=1, sustain, delta, pan, freq|
-    var fadein = 0.001, fadeout = 0.005;
-    var begin = Impulse.ar(0);
-    var gate = Trig.ar(begin, delta*leg);
-    var renv = EnvGen.ar(Env.asr(fadein, 1, fadeout, -3), Trig.ar(begin, delta*leg+rel-fadeout), doneAction:2);
     var lenv = EnvGen.ar(Env.adsr(att, dec, sus, rel, 1, curve), gate)*0.9999+0.0001; //whyyyy
     var mod = f[\sincosci].(freq*lenv*mratio, lenv*(mpartials-1)+1);
     var sound = (f[\sincosci].(freq*(2**(mod*midx*lenv)), lenv*(partials-1)+1)*lenv*0.5pi).sin;
-	OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
+    OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
 }).add;
+d.soundLibrary.addSynth(
+    \sincfm, (instrument:\sincfm, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
+    })
+);
+
+// option 1: use generic envelopes and set modulation for each parameter/envelope pair
+// one adsr envelope + one or more asr
+//   param = value*scale(pow(env[i], curve), lo, hi)
+// option 2: use an envelope for each parameter
+//   sus = param, att=0, dec=0, rel=inf?
+//   env timing:
+//     att/dec: either match, unique att without dec (asr, includes case of none when att=0)
+//       att = negative to scale master envelope, positive to set.
+//     rel: either match or none (rel=inf?)
+//       negative to scale master envelope, postive to set, 0 to skip
+//   env values:
+//     curve for each parameter
+//     start, (peak), sus, end values
+//   separate att from dec/sus and rel: /``` * `^-- * ```\
+//      this allows asr-like behavior when dec not longer than att, but also adsr-like behavior when it is
+//   fix sustain level at 1, have a peak value with default 1
+//        att from 0 to 1 from t=0 to att
+//        dec from peak to sus from t=0 to dec
+//        rel from 1 to 0 from t=end to end+rel
+//   envelope with start/end=0, peak=2, and sus=1. then curve+scale to given values (i.e. values determine curve)
+//     (e+p-2s)/2 * x^2 + (-3e-p+4s)/2 * x + e
+SynthDef(\sinc2, { |
+    out, fadein=0.001, fadeout=0.005,
+    att=0, dec=0, rel=0, pk=1, sus=1, end=0,
+    pk_ovt=31, sus_ovt=7, end_ovt=0,
+    pk_oct=0, sus_oct=0, end_oct=0,
+    sustain, delta, pan, freq
+    |
+    var begin = Impulse.ar(0);
+    var renv = EnvGen.ar(Env.asr(fadein, 1, fadeout, -3), Trig.ar(begin, sustain-fadeout), doneAction:2);
+    var lenv = (
+        EnvGen.ar(Env.asr(att, 1, 0, 0), Trig.ar(begin, sustain), doneAction:2)
+        * (2-EnvGen.ar(Env.asr(dec, 1, 0, 0), Trig.ar(begin, sustain), doneAction:2))
+        * EnvGen.ar(Env.asr(0, 1, rel, 0), Trig.ar(begin, sustain-rel), doneAction:2)
+    );
+    var gain = lenv*( lenv*(end+pk-(2*sus))/2 + (-3*end-pk+(4*sus))/2 ) + end;
+    var ovt = lenv*( lenv*(end_ovt+pk_ovt-(2*sus_ovt))/2 + (-3*end_ovt-pk_ovt+(4*sus_ovt))/2 ) + end_ovt;
+    var oct = lenv*( lenv*(end_oct+pk_oct-(2*sus_oct))/2 + (-3*end_oct-pk_oct+(4*sus_oct))/2 ) + end_oct;
+    var sound = f[\sincosci].(freq*(2**oct), ovt+1, mul:gain*pi).sin;
+    OffsetOut.ar(out, DirtPan.ar(sound, d.numChannels, pan, renv))
+}).add;
+d.soundLibrary.addSynth(
+    \sinc2, (instrument:\sinc2, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att).max(~fadein).max(~dec) + ~rel.max(~fadeout)
+    })
+);
 )
 
-/*SynthDef(\adsrsynth, { |out, att=0, dec=0, sus=0.5, rel=0, curve=0, leg=1, sustain, pan, freq|
-    var fadein = 0.001, fadeout = 0.003;
+/*SynthDef(\adsrsynth, { |out, att=0, dec=0, sus=0.5, rel=0, curve=0, sustain, pan, freq|
     var begin = Impulse.ar(0);
-    var cut_env = EnvGen.ar(
-        Env.asr(fadein, 1, fadeout, -3),
-        Trig.ar(begin, delta*leg+rel-fadeout, doneAction:2);
-var sound_env = EnvGen.ar(
+    var env = EnvGen.ar(
         Env.adsr(att, dec, sus, rel, 1, curve),
-        Trig.ar(begin, delta*leg));
-    var sound = ...;
-	OffsetOut.ar(out, DirtPan.ar(sound, ~dirt.numChannels, pan, cut_env))
-}).add;*/
+        Trig.ar(begin, sustain-rel));
+    var sound = ...*env;
+	OffsetOut.ar(out, DirtPan.ar(sound, ~dirt.numChannels, pan))
+}).add;
+~dirt.soundLibrary.addSynth(\adsrsynth,
+    (instrument:\adsrsynth, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att+~dec)+~rel}));
+*/
 
 (
 ~amb0 = {
@@ -143,7 +168,7 @@ var sound_env = EnvGen.ar(
 
 ~amb1 = {
     GVerb.ar(
-		HPF.ar(Mix.new(~orbit2.ar), freq:60),
+		HPF.ar(Mix.new(~orbit1.ar), freq:60),
 		roomsize:40, revtime:3, damping:0.5, spread:10,
 		earlyreflevel: 0.2,
 		drylevel:0, mul:0.1
@@ -152,10 +177,10 @@ var sound_env = EnvGen.ar(
 
 ~amb2 = {
     GVerb.ar(
-	   HPF.ar(Mix.new(~orbit1.ar), freq:300),
-		roomsize:90, revtime:5, damping:0.7, spread:1,
-		earlyreflevel: 0.0,
-		drylevel:0, mul:0.03
+	   HPF.ar(Mix.new(~orbit2.ar), freq:200),
+		roomsize:70, revtime:2, damping:0.6, spread:1,
+		earlyreflevel: 0.1,
+		drylevel:0, mul:0.05
 )
 };
 

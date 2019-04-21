@@ -1,0 +1,73 @@
+-- expects a modified SuperDirt to extend `sustain` by `rel` if present
+
+let (partials, partials_p) = pF "partials" (Just (0))
+    (curve, curve_p) = pF "curve" (Just (0))
+    (att, att_p) = pF "att" (Just (0))
+    (dec, dec_p) = pF "dec" (Just (0))
+    (rel, rel_p) = pF "rel" (Just (0))
+    (sus, sus_p) = pF "sus" (Just (0.5))
+    (pk, pk_p) = pF "pk" (Just (1))
+    (end, end_p) = pF "end" (Just (0))
+    (sus_ovt, sus_ovt_p) = pF "sus_ovt" (Just (1))
+    (pk_ovt, pk_ovt_p) = pF "pk_ovt" (Just (1))
+    (end_ovt, end_ovt_p) = pF "end_ovt" (Just (1))
+    (sus_oct, sus_oct_p) = pF "sus_oct" (Just (1))
+    (pk_oct, pk_oct_p) = pF "pk_oct" (Just (1))
+    (end_oct, end_oct_p) = pF "end_oct" (Just (1))
+    (fadein, fadein_p) = pF "fadein" (Just (0.001))
+    (fadeout, fadeout_p) = pF "fadeout" (Just (0.005))
+    cosine = ((1/4) <~ sine)
+    cosaw = ((1/2) <~ saw)
+    trim = ifp (< 0) (\x -> silence) id -- silence pattern before t=0
+    retrig d p = do now <- getNow
+                    d $ (nextSam now) `rotR` p
+    trigin c d p = retrig d $ c ~> (trim p)
+    trig = trigin 0
+
+cps 0.54
+
+hush
+
+d5 $ n "[31, 26, 21]/5" # s "sinc2"
+  # legato 0.0 # fadein 0
+  # att 5 # dec 0 # rel 6
+  # pk 0.25 # sus 0.125 # end 0
+  # pk_ovt 7 # sus_ovt 3 # end_ovt 0
+  # pan 0.6 |-| n 12
+
+d2 $ n "[-23 -27 -35]*4" # s "sinc2"
+  # legato 0.25 # fadein 0
+  # att 0.001 # dec 0.03 # rel 0.05
+  # pk 1.5 # sus 0.5 # end 0
+  # pk_ovt (slow 15 $ scalex 1 8 cosine) # sus_ovt (slow 7 $ scalex 1 8 cosine) # end_ovt (slow 4 $ scalex 1 8 cosine)
+  # pk_oct 1 # sus_oct 0 # end_oct (slow 32 $ scale 0 1 cosine)
+  # pan 0.5
+
+d3 $ n "[-15 -23 -11]*4" # s "sinc2" |+| nudge 0.01
+  # legato 0.25 # fadein 0
+  # att 0.01 # dec 0.1 # rel 0.1
+  # pk 1 # sus 0.125 # end 0
+  # pk_ovt (slow 15 $ scalex 8 1 cosine) # sus_ovt (slow 7 $ scalex 8 1 cosine) # end_ovt (slow 4 $ scalex 8 1 cosine)
+  # pk_oct 1 # sus_oct 1 # end_oct (slow 31 $ scale 1 0 cosine)
+  # pan 0.3
+
+d1 $ n "[~ <-11 1 -3>]*6" # s "sinc2"
+  # legato 0.5 # fadein 0
+  # att 0.001 # dec 0.03 # rel 0.05
+  # pk 1.5 # sus 0.25 # end 0
+  # pk_ovt (slow 15 $ scalex 1 8 sine) # sus_ovt (slow 7 $ scalex 1 8 sine) # end_ovt (slow 4 $ scalex 1 8 sine)
+  # pk_oct 0 # sus_oct 1 # end_oct (slow 32 $ scale 0 1 sine)
+  # pan 0.2
+
+d4 $ n "[31, 26, 21]/7" # s "sinc2"
+  # legato 0.0 # fadein 0
+  # att 6 # dec 0 # rel 7
+  # pk 0.25 # sus 0.125 # end 0
+  # pk_ovt 5 # sus_ovt 11 # end_ovt 2
+  # pan 0.8 |-| n 24
+
+d5 silence
+d2 silence
+d3 silence
+d1 silence
+d4 silence

@@ -20,7 +20,7 @@ let (partials, partials_p) = pF "partials" (Just (0))
     trigin c d p = retrig d $ c ~> (trim p)
     trig = trigin 0
 
-cps 0.54
+cps 0.53
 
 hush
 

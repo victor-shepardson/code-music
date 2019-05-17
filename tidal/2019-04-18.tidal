@@ -8,10 +8,10 @@ d1 silence
 d2 $ "sn:0" <| gain "{9 6 ~ 8 5 ~ 9 6 ~ <5 8>}%16" |/ gain 9 |> nudge (-0.005) |> legato 1 |> speed "{0.75 1.5 1 2}%16" |> pan 0.3 |> hcutoff 160 # orbit 0
 d2 silence
 
-d3 $ "sn:13" <| gain "[~ <7 7 7 7 [5/4 7]>]*8" |/ gain 9 |> legato 1 |> speed 2 |> pan 0.9 |> cutoff 5500 |> resonance 0.1 # orbit 0
+d3 $ "sn:13" <| gain "[~ <7 7 7 7 [5/16 7]>]*8" |/ gain 9 |> legato 1 |> speed 0.889 |> pan 0.9 |> cutoff 5500 |> resonance 0.1 # orbit 0
 d3 silence
 
-d4 $ "dr:0" <| gain "9(13,16)" |/ gain 9 |> legato 1 |> speed 1.777 |> pan 0.4 # orbit 1
+d4 $ "dr:0" <| gain (slow 2 "7(31,32)") |/ gain 9 |> legato 1 |> speed 1.333 |> pan 0.4 # orbit 1
 d4 silence
 
 -- d9 $ "808:1" <| fast (4/12) (gain "[9 .. 32]") |/ gain 32 |> legato 1 |> speed 1 |> pan 0.6
@@ -27,6 +27,23 @@ do
 d8 $ "casio:0" |> legato 1 <| speed "<{1.2 1.777 2.25 3 3.555}%8 1*8>" # pan 0.5 # gain 0.8 |* speed (slow 8 "<0.125 0.25 0.5, 1>") # orbit 2
 
 d9 $ "casio:0" |> legato 1 <| ((1/16) <~ ( speed "<{1.333 2 2.4 3.333 4}%8>")) # pan 0 # gain 0.8 |* speed (slow 8 "<0.125 0.25 0.5, 1>") # orbit 2 # cutoff 5000
+
+let partials = pF "partials"
+    curve = pF "curve"
+    att = pF "att"
+    dec = pF "dec"
+    rel = pF "rel"
+    sus = pF "sus"
+    leg = pF "leg"
+    fadein = pF "fadein"
+    fadeout = pF "fadeout"
+    -- (mratio, mratio_p) = pF "mratio" (Just (1))
+    -- (mpartials, mpartials_p) = pF "mpartials" (Just (1))
+    -- (midx, midx_p) = pF "midx" (Just (1))
+
+d8 $ "sinc" <| speed "<{1.2 1.777 2.25 3 3.555}%8 1*8>" |> pan 0.5 |> gain 0.99 |* speed (slow 8 "<1>") |> orbit 2 |> legato 0.5 |> rel 0.01 |> partials 1
+d9 $ "sinc" <| ((1/16) <~ ( speed "<{1.333 2 2.4 3.333 4}%8 0.889*8>")) |> pan 0.1 |> gain 0.9 |* speed (slow 8 "<1>") |> orbit 2 |> cutoff 5000 |> legato 0.5 |> rel 0.01 |> partials 2
+d7 $ "sinc" |> legato 32 <| speed "< ~ {1 1.2 1.777 1 1.5}%8 ~ ~ >" |* speed "{0.5 1 0.5 2}%8" # pan 0.5 # gain 0.8 |* speed 0.25 |> orbit 1 |> pan "{0.4 0.55 0.7}%8" |> att 0.1 |> rel 8 |> partials 2
 
 
 --------

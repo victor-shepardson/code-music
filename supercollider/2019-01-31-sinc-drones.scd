@@ -16,8 +16,6 @@ f[\sincextremum] = { |n|
     q - (1/q) - (q.pow(-3)*2/3)
 };
 
-// f[\sinc] = { |phi| (phi.abs>1e-8).if(phi.sin/phi, 1)};
-// f[\sinc] = { |phi| var zero = (phi.abs<1e-8); zero.if(1, phi.sin)/zero.if(1, phi)};
 f[\sinc] = { |phi| var zero = (phi.abs<1e-8); phi.sin+zero/(phi+zero)};
 
 

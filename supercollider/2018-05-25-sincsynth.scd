@@ -45,7 +45,7 @@ f[\sincextremum] = { |n|
     q - (1/q) - (q**(-3)*2/3)
 };
 
-f[\sinc] = { |phi| (phi.abs>1e-7).if(phi.sin/phi, 1)};
+f[\sinc] = { |phi| var zero = (phi.abs<1e-8); phi.sin+zero/(phi+zero)};
 
 f[\sincosc] = { |freq, band=1, mul=1, add=0, cutoff=24000|
     var phi = LFSaw.ar(freq, iphase:0),

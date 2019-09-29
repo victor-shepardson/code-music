@@ -4,7 +4,7 @@ include("SuperDirt")
 s.options.numBuffers = 1024 * 16; // increase this if you need to load more samples
 s.options.memSize = 8192 * 64; // increase this if you get "alloc failed" messages
 s.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs and the message "too many nodes"
-s.options.numOutputBusChannels = 2; // set this to your hardware output channel size, if necessary
+s.options.numOutputBusChannels = 8; // set this to your hardware output channel size, if necessary
 s.options.numInputBusChannels = 0; // set this to your hardware input channel size, if necessary
 // boot the server and start SuperDirt
 s.waitForBoot({
@@ -160,7 +160,7 @@ the rule for the "phantom fundamental" is: denominator of modulator, down an oct
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.001)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.002, dry:0.2)};
-~fx3 = {f[\wiggle].(~orbit2, rate:5, amt:0.002, dry:0.2)};
+~fx3 = {f[\wiggle].(~orbit3, rate:5, amt:0.002, dry:0.2)};
 
 
 ~amb0 = {
@@ -189,12 +189,29 @@ the rule for the "phantom fundamental" is: denominator of modulator, down an oct
         ), dry:0.3, rate:1/3, amt:0.008
 )};
 
-~preout = [~fx0+~amb0, ~fx1+~amb1, ~fx2+~amb2, ~fx3+~amb3];
+~amb3 = {
+    f[\wiggle].(
+        GVerb.ar(
+            HPF.ar(Mix.new(~orbit3.ar), freq:60),
+            roomsize:40, revtime:2.5, damping:0.5, spread:10,
+            earlyreflevel: 0.4,
+            drylevel:0, mul:0.08
+        ), dry:0.3, rate:1/3, amt:0.008
+)};
+
+// quad stereo
+// ~preout = {[~fx0.ar+~amb0.ar, ~fx1.ar+~amb1.ar, ~fx2.ar+~amb2.ar, ~fx3.ar+~amb3.ar].flatten};
+
+// stereo
+~preout = {[~fx0.ar+~amb0.ar, ~fx1.ar+~amb1.ar, ~fx2.ar+~amb2.ar, ~fx3.ar+~amb3.ar].sum};
+
 
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )
 
 s.quit
+
+[0,2,3].sum
 
 3/2
 4/3

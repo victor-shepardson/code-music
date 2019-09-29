@@ -41,8 +41,8 @@ let partials = pF "partials"
     -- (mpartials, mpartials_p) = pF "mpartials" (Just (1))
     -- (midx, midx_p) = pF "midx" (Just (1))
 
-d8 $ "sinc" <| speed "<{1.2 1.777 2.25 3 3.555}%8 1*8>" |> pan 0.5 |> gain 0.99 |* speed (slow 8 "<1>") |> orbit 2 |> legato 0.5 |> rel 0.01 |> partials 1
-d9 $ "sinc" <| ((1/16) <~ ( speed "<{1.333 2 2.4 3.333 4}%8 0.889*8>")) |> pan 0.1 |> gain 0.9 |* speed (slow 8 "<1>") |> orbit 2 |> cutoff 5000 |> legato 0.5 |> rel 0.01 |> partials 2
+d8 $ "sinc" <| speed "<{1.2 1.777 2.25 3 3.555}%8 1*8>" |> pan 0.5 |> gain 0.99 |* speed (slow 8 "<1>") |> orbit 3 |> legato 0.5 |> rel 0.01 |> partials 1
+d9 $ "sinc" <| ((1/16) <~ ( speed "<{1.333 2 2.4 3.333 4}%8 0.889*8>")) |> pan 0.1 |> gain 0.9 |* speed (slow 8 "<1>") |> orbit 3 |> cutoff 5000 |> legato 0.5 |> rel 0.01 |> partials 2
 d7 $ "sinc" |> legato 32 <| speed "< ~ {1 1.2 1.777 1 1.5}%8 ~ ~ >" |* speed "{0.5 1 0.5 2}%8" # pan 0.5 # gain 0.8 |* speed 0.25 |> orbit 1 |> pan "{0.4 0.55 0.7}%8" |> att 0.1 |> rel 8 |> partials 2
 
 

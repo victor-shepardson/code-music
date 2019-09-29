@@ -1,0 +1,25 @@
+let pcps x = p "cps" $ s "bd*128" # cps x # gain 0
+
+p 0 $ s "bd*4" # gain "0.8" # legato 1
+
+p 1 $ s "[~ sn]*2" # gain 0.8 # orbit 3 # speed 3 # legato 1
+
+pcps (rangex 0.25 8 $ slow 64 sine)
+
+p 2 $ s "[~ hh:5]*4" # legato 2 # orbit 0 # pan (range 0.1 0.9 $ slow 3 sine) # speed (slow 2 $ rangex 1.25 5 $ sine) # gain 0.85
+
+once $ stack [s "[~ drumtraks:7]*32" # pan 0 # speed (rangex 0.25 4 saw) # gain 0.9, s "drumtraks:10*32" # pan 1 # speed (rangex 0.5 2 saw)] # legato 2 |* gain saw # orbit 3
+
+p 3 $ s "drumtraks:0" # orbit 3 # gain 0.9 # legato 1
+
+p 4 $ s "drumtraks:0*8" # legato 1 # orbit 1 # (slow 10 $ gain (range 0 1 (0.75 <~ sine)) # speed (rangex 1 4 $ saw))
+
+-- p 5 $ s "casio:1" <| up "[0 [~ 12]/2 7 ~]*2" |+ up "<0 {1 2 3 4 5}%16 -7>" # legato 1 # orbit "{1 2 3}%8" # pan (range 0 0.5 saw) |* speed 0.5
+
+-- p 6 $ s "casio:1" <| up "[~ 0/2 [~ 12] 7]*2" |+ up "<-12 5 -2>" # legato 1 # orbit "{3 1 2}%8" # pan (range 0.5 1 (0.25 <~ saw)) |* speed 0.5
+
+p 6 $ gain "{<1 1 1 ~ 1 1 1 [~ 1 ~ ~]> ~ ~ 1 ~ ~ 1 ~ ~ <1 1 ~ 1 >}%16" |> n (slow 2 $ arp "up" "<e'min9 d'min7>") |+ n "0 0 12 [24 0]" # legato 3 |* gain 0.95 |+ n (-24) # s "supergong" # orbit 1
+
+setcps 0.48
+
+hush

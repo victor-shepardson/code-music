@@ -2,6 +2,8 @@ hush
 
 setcps 0.75
 
+p 111 $ s "superhammond" <| (n ("g4" + scale "lydian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7
+
 d1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) # legato 0.5 # orbit 0
 
 d2 $ n "[~ 1]*<8 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
@@ -11,44 +13,59 @@ d3 $ s "auto:5*<1 3 2 3 2 3 2 6>" # orbit 2 # speed 1 # gain (range 1 0.7 saw)
 p 22 $ n "~ [~ ~ ~ 0 0 ~ ~ ~]@2" # s "sn" # gain 0.8 # speed 12 # orbit 2 # nudge (-0.003)
 
 do
-  p 11 $ s "superhammond" <| (n ("g6" + scale "lydian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.8
+  p 11 $ s "superhammond" <| (n ("g6" + scale "lydian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75
   d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("g3" + scale "lydian" "<[[~ < 1@6 3@6 5@6 4@6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
 
 d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("g4" + scale "lydian" "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
 
 d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("g5" + scale "lydian" "0 [~ -1] 2")) # orbit 1 # pan 0.5 # detune (-3)
 d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("g5" + scale "lydian" "<[<0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.5 # detune (-3)
-d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("g5" + scale "lydian" "<[[~ < 1!6 3!6 5!6 4!6>]*3, <0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01)
+d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("g5" + scale "lydian" "<[[~ < 1!6 3!6 5!6 4!6>]*3, <0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.4 # detune (-3)
+
+p 111 $ s "superhammond" <| (n ("g4" + scale "lydian" "[0 <1!12 3!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+
 
 do
   d6 silence
   d8 silence
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("f3" + scale "phrygian" "<[[~ < 1@6 3@6 5@6 4@6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
-  p 11 $ s "superhammond" <| (n ("f6" + scale "phrygian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.8
-  d1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 0.5 # orbit 0
-  d2 $ n "[~ 1]*<8 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("f3" + scale "phrygian" "<[[~ < 1!6 3!6 5!6 4!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  p 111 $ s "superhammond" <| (n ("f2" + scale "phrygian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7
+  p 11 $ s "superhammond" <| (n ("f6" + scale "phrygian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75
+  d1 $ n "1*<1 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 0.5 # orbit 0
+  d2 $ n "[~ 1]*<2 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 
 do
   p 9 $ s "dr:2*12" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.5 # pan 0.3 -- # hpf (rangex 16000 200 $ slow 4 saw)
   p 10 $ s "dr:2*12" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.5 # speed (fast (7/3) $ rangex 1 2 sine) # pan 0.9 # nudge 0.01 -- # hpf (rangex 200 16000 $ slow 4 saw)
   d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("f4" + scale "phrygian" "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  p 111 $ s "superhammond" <| (n ("f3" + scale "phrygian" "[0 <1!12 3!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
 
 d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "0 [~ -1] 2")) # orbit 1 # pan 0.5 # detune (-3)
 d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "<[<0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.5 # detune (-3)
-d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "<[[~ <1!6 3!6 5!6 4!6> ~ ~]*3, <0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01)
+-- d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "<[[~ <1!6 3!6 5!6 4!6>]*3, <0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.4 # detune (-3)
+
+do
+  p 111 $ s "superhammond" <| (n ("f3" + scale "phrygian" "[0 <1!12 3!12 5!12 4!12 2!12 0!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("f3" + scale "phrygian" "<[[~ <1!6 3!6 5!6 4!6 2!6 0!6 -2!6 -3!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("f4" + scale "phrygian" "[<1!6 3!6 5!6 4!6 2!6 0!6 -2!6 -3!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "<[[~ <1!6 3!6 5!6 4!6 2!6 0!6 -2!6 -3!6>]*3, <0!7 [~ 0]> [~ -1] <2 [4/2]> ]>")) # orbit 1 # pan 0.4 # detune (-3)
+
+-- d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("f5" + scale "phrygian" "<[[~ <1!6 3!6 5!6 4!6 2!6 0!6 3!6 4!6>]*3 ]>")) # orbit 1 # pan 0.4 # detune (-3)
 
 do
   d6 silence
   d8 silence
   d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("ef3" + scale "dorian" "<[[~ < 1@6 3@6 5@6 4@6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  p 111 $ s "superhammond" <| (n ("ef3" + scale "dorian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7
   p 11 $ s "superhammond" <| (n ("ef" + scale "dorian" "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.8
   p 9 $ s "dr:2*6" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
   p 10 $ s "dr:9*6" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
-  d1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 0.5 # orbit 0
-  d2 $ n "[~ 1]*<8 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  d1 $ n "1*<1 2 1> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 0.5 # orbit 0
+  d2 $ n "[~ 1]*<2 1 2 1> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 
 
 do
+  p 111 $ s "superhammond" <| (n ("ef3" + scale "dorian" "[0 <1!12 3!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7
   d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("ef4" + scale "dorian" "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
   -- d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("ef5" + scale "dorian" "0 [~ -1] 2")) # orbit 1 # pan 0.5 # detune (-3)
   d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("ef5" + scale "dorian" "<[<0!7 [~ 0]> [~ -1] <2 [4 1/2]> ]>")) # orbit 1 # pan 0.5 # detune (-3)
@@ -62,25 +79,80 @@ do
   d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("ef3" + scale "dorian" "<[{1 ~ 3 ~ 5 ~ 4}%12, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
   d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("ef4" + scale "dorian" "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
   d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("ef5" + scale "dorian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
-  p 9 silence
-  p 10 silence
-  p 11 $ s "superhammond" <| (n ("e3" + scale "dorian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  p 111 silence
+  p 11 $ s "superhammond" <| (n ("ef3" + scale "dorian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
   d3 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # lpf (rangex 800 8000 $ fast (8/5) sine)
   p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8
   d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
   d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  p 9 $ n "{2 ~ 2 ~ 2 ~ 2}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+
+do
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("df3" + scale "ionian" "<[{1 ~ 3 ~ 5 ~ 4}%12, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("df4" + scale "ionian" "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("df5" + scale "ionian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
+  p 111 silence
+  p 11 $ s "superhammond" <| (n ("df3" + scale "ionian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d3 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # lpf (rangex 800 8000 $ fast (8/5) sine)
+  p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8
+  d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
+  d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  p 9 $ n "{2 ~ 2 ~ 2 ~ 2}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+
+do
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("c3" + scale "locrian" "<[{1 ~ 3 ~ 5 ~ 4}%12, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("c4" + scale "locrian" "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("c5" + scale "locrian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
+  p 111 silence
+  p 11 $ s "superhammond" <| (n ("c3" + scale "locrian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d3 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # lpf (rangex 800 8000 $ fast (8/5) sine)
+  p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8
+  d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
+  d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  p 9 $ n "{2 ~ 2 ~ 2 ~ 2}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+
+do
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("af3" + scale "mixolydian" "<[{1 ~ 3 ~ 5 ~ 4}%12, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("af4" + scale "mixolydian" "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("af5" + scale "mixolydian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
+  p 111 silence
+  p 11 $ s "superhammond" <| (n ("af3" + scale "mixolydian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d3 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # lpf (rangex 800 8000 $ fast (8/5) sine)
+  p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8
+  d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
+  d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  p 9 $ n "{2 ~ 2 ~ 2 ~ 2}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+
+do
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("a3" + scale "locrian" "<[{1 ~ 3 ~ 5 ~ 4}%12, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n ("a4" + scale "locrian" "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001)
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("a5" + scale "locrian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
+  p 111 silence
+  p 11 $ s "superhammond" <| (n ("a3" + scale "locrian" "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d3 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # lpf (rangex 800 8000 $ fast (8/5) sine)
+  p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8
+  d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
+  d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  p 9 $ n "{2 ~ 2 ~ 2 ~ 2}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+
 
 do
   d3 silence
   p 33 silence
-  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("ef4" + scale "dorian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99
+  p 9 silence
+  p 10 silence
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("s4" + scale "locrian" "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99
 
 do
-  p 11 $ s "superhammond" <| (n ("e3" + scale "dorian" "8*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
-  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("ef4" + scale "dorian" "[{1 ~ 3 ~ 5 ~ 4}%6, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%6]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("ef3" + scale "dorian" "<[{1 ~ 3 ~ 5 ~ 4}%6, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
+  p 11 $ s "superhammond" <| (n ("a3" + scale "locrian" "9*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7
+  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n ("a4" + scale "locrian" "[{1 ~ 3 ~ 5 ~ 4}%6, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%6]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99
+  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n ("a3" + scale "locrian" "<[{1 ~ 3 ~ 5 ~ 4}%6, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5
   p 8 silence
-
 
 do
   p 7 silence

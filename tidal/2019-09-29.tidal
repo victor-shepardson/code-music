@@ -1,0 +1,130 @@
+let partials = pF "partials"
+    curve = pF "curve"
+    att = pF "att"
+    dec = pF "dec"
+    rel = pF "rel"
+    sus = pF "sus"
+    leg = pF "leg"
+    fadein = pF "fadein"
+    fadeout = pF "fadeout"
+    vibrato = pF "vibrato"
+    vrate = pF "vrate"
+    perc = pF "perc"
+    percf = pF "percf"
+    modamp = pF "modamp"
+
+hush
+
+setcps 0.6
+
+do
+  p 5 $ "{~ ~ ~ e:7 ~ ~}%2" # gain 0.85 # orbit 2 # speed 0.8
+  p 3 $ "<ab:5 ~ ~>" # gain 1 # orbit 2 # lpf 1000
+
+-- p 0 $ "{bd:1 ~ ~ sn:2 ~ ~}%2" # orbit 2
+-- p 0 $ "[bd:1 sn:3/8 ~ sn:4] [bd:1 ~ [~ sn:2/4] sn:4*2]" # orbit 2 # legato 1
+
+p 1 $ n "{7 7 7 4 [~ 8/4] 7}%2" # s "drumtraks" # gain 0.5 # speed 0.8 # legato 1 # pan 0.2 # orbit 0 # lpf (rangex 500 20000 $ slow 8 sine)
+p 11 $ n ((1/4) <~ "{7 7 7 4 [~ 8/4] 7}%2") # s "drumtraks" # gain 0.45 # speed 0.6 # legato 1 # pan 0.5 # orbit 2 # lpf (rangex 300 5000 $ slow 8 sine)
+
+p 2 $ n "{~ ~ ~ ~ ~ [~ ~ 12*2]}%2" # s "drumtraks" # gain 0.7 # speed 0.64 # legato 1 # pan 0.6 # orbit 1 # lpf 5000
+
+p 10 $ "[drum:2]*16" # orbit 1 # gain 0.75 # legato 0.125 # speed 1.2 # pan 0.55 # lpf (rangex 5000 20000 $ fast 7 sine)
+p 11 $ "[drum:2]*8" # orbit 2 # gain 0.75 # legato 0.5 # speed 1.6 # pan 0.15 # lpf (rangex 5000 20000 $ slow 7 sine)
+
+-- p 3 $ "[ab:5 ~]*4" # gain "1" # orbit 2 # speed "1 0.64 0.8 1.28" # lpf (rangex 30 5000 $ slow 16 sine) # legato 0.5
+-- p 3 silence
+-- p 33 $ "[auto:5 ~]*4" # gain "0.8" # orbit 0 # speed "<0.8 0.8 0.64 0.72>" # lpf (rangex 4000 1000 sine) # release 0.8
+
+-- p 4 $ gain "[~ 1] [~ 1] [~ 1/2] [[~ 1] [~ 1/5]]" # s "drum:3" # orbit 0 |* gain 0.9 # speed 0.32 # pan (range 0.3 0.7 $ fast 6 sine) # cut 1 # lpf 2000
+-- p 44 $ gain "[~ 1] [~ 1] [~ 1/2] [[~ 1] [~ 1/5]]" # s "drum:3" # orbit 0 |* gain 0.8 # speed (range 0.28 0.32 $ slow 4 sine) # pan 0.2 # lpf 2000
+
+do
+  p 5 $ "[e:7]*4" # gain 0.8 # orbit 2 # speed 0.8 # hpf 300
+  p 3 $ "[ab:5]*4" # gain 0.9 # orbit 2 # lpf 1000
+  p 2 $ n "[~ ~ [12/8 12/4 12/2 12]]" # s "drumtraks" # gain 0.7 # speed 0.64 # legato 1 # pan 0.6 # orbit 1 # lpf 5000 # hpf 100
+
+
+p 5 $ "[~ e:7]*2" # gain 0.85 # orbit 2 # speed 0.8
+-- p 6 $ "~ ~ ~ [~ ~ ~ ab:4/2]]" # gain 0.8 # legato 1 # orbit 0
+
+do
+  p 1 silence
+  p 11 silence
+  p 0 silence
+  p 2 silence
+
+p 7 $ gain "1*16" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.9 |+ n (-12) # s "supervibe" # orbit 2 # pan 0.5
+
+-- p 8 $ gain "[1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1]" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 0.33 0.667 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "superhammond" # orbit 2 # pan 0.2 # voice 5 # perc 0.7 # percf 2 # decay 1
+
+-- p 9 $ gain "[~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~]" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 0.33 0.667 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "superhammond" # orbit 2 # pan 0.8 # voice 5 # perc 0.7 # percf 2 # decay 1
+
+-- p 8 $ gain "[[1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~]]" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "supervibe" # orbit 0 # pan 0.4 # hpf 200 # decay 1
+-- p 9 $ gain "[~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~]" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "supervibe" # orbit 0 # pan 0.6 # decay 1 # hpf 200
+
+p 8 $ gain "[[1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~]]" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12] [0,7,12,15] [-1,7,12,16] [[0,7,12,14] [0,3,10,12]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "supervibe" # orbit 0 # pan 0.4 # hpf 200 # decay 1
+p 9 $ gain "[~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~ [1 ~] 1 ~]" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12] [0,7,12,15] [-1,7,12,16] [[0,7,12,14] [0,3,10,12]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (12) # s "supervibe" # orbit 0 # pan 0.6 # decay 1 # hpf 200
+
+
+-- p 14 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (0) # s "supervibe" # orbit 1 # pan 0.3
+-- p 15 $ gain "[~ 1]*12" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (0) # s "supervibe" # orbit 1 # pan 0.7
+p 14 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[7,12,19,24] [12,15,22,24] [12,16,18,23] [[7,12,14,19] [3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (0) # s "supervibe" # orbit 1 # pan 0.3 # decay 0.7
+p 15 $ gain "[~ 1]*12" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[7,12,19,24] [12,15,22,24] [12,16,18,23] [[7,12,14,19] [3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.8 |+ n (0) # s "supervibe" # orbit 1 # pan 0.7 # decay 0.7
+
+-- p 12 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.75 |+ n (-36) # s "supervibe" # orbit 2 # pan (range 0.2 0.8 $ fast 4 sine) # hpf 200 # lpf 5000
+-- p 13 $ gain "[1]*8" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.9 |+ n (-36) # s "supervibe" # orbit 0 # pan 0.5 # hpf 130
+
+p 12 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" ("<g3 e3 f3 [a3 b3]>" |+ "<[0,4,7,12] [0,7,12,15] [-1,7,12,16] [[0,7,12,14] [0,3,10,12]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.75 |+ n (-12) # s "supervibe" # orbit 2 # pan (range 0.2 0.8 $ fast 4 sine) # hpf 200 # lpf 5000 # decay 0.5 # velocity 0.7
+p 13 $ gain "[1]*8" |> n (slow 2 $ arp "<updown up updown up>" ("<g3 e3 f3 [a3 b3]>" |+ "<[4,7,12,24] [7,12,15,24] [7,12,16,23] [[7,12,14,19] [3,10,12,19]]>")) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.9 |+ n (-24) # s "supervibe" # orbit 0 # pan 0.5 # hpf 50 # decay 0.5 # velocity 0.2
+
+do
+  p 3 $  gain "1*2 [~ 1] [~ 1] <1 [~ 1] 1*2 1*4>" # s "ab:5" # orbit 2 # speed "1 0.64 0.8 1.28" # lpf (rangex 3000 30 $ slow 16 sine) # release 0.1
+  p 33 $ gain "1*2 [~ 1] [~ 1] <1 [~ 1] 1*2 1*4>" # s "auto:5" # orbit 0 # speed "<0.8 0.8 0.64 0.72>" # lpf (rangex 10000 1000 sine) # release 0.3 |*| gain 0.8 # hpf 300 # shape 0.3
+  p 5 $ "[~ e:7]*4" # gain 0.85 # orbit 2 # speed 0.8 # lpf (rangex 80 20000 $ slow 16 sine)
+
+hush
+
+do
+  p 7 silence
+  p 8 silence
+  p 9 silence
+  p 12 silence
+  p 13 silence
+  p 14 silence
+  p 15 silence
+
+do
+  p 3 silence
+  p 33 silence
+  p 5 silence
+
+do
+  -- p 0 silence
+  p 7 $ gain "1*16" |> n (slow 2 $ arp "<updown up updown up>" ("<b3>" |+ "<[-5,0,3,10,12,19]>")) # legato (rangex 0.25 2 $ slow 16 sine) |* gain 0.8 |+ n (-12) # s "supervibe" # orbit 1 # pan 0.5
+  p 8 $ gain "[1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1]" |> n (slow 2 $ arp "<updown up updown up>" ("<b3>" |+ "<[3,10,12,19]>")) # legato (rangex 1 4 $ slow 16 sine) |* gain 1 |+ n (-12) # s "superfork" # orbit 2 # pan 0.7
+  p 9 $ gain "[~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~]" |> n (slow 2 $ arp "<downup down downup down>" ("<b3>" |+ "<[3,10,12,19]>")) # legato (rangex 1 4 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 2 # pan 0.3
+  p 14 $ gain "[1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1]" |> n (slow 2 $ arp "pinkyup" ("<b3>" |+ "<[-5,0,3,10] [3,10,12,19]>")) # legato (rangex 0.5 2 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 1 # pan 0.9
+  p 15 $ gain "[~ 1]*12" |> n (slow 2 $ arp "pinkydown" ("<b3>" |+ "<[-5,0,3,10] [3,10,12,19]>")) # legato (rangex 0.5 2 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 1 # pan 0.1
+  p 12 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" ("<b3>" |+ "<[-5,0,3,10,12,19]>")) # legato (rangex 0.5 2 $ slow 16 sine) |* gain 0.85 |+ n (-24) # s "supervibe" # orbit 0 # pan 0.2
+  p 13 $ gain "[1]*8" |> n (slow 2 $ arp "<updown up updown up>" ("<b3>" |+ "<[-5,0,3,10,12,19]>")) # legato (rangex 0.5 2 $ slow 16 sine) |* gain 0.85 |+ n (-36) # s "supervibe" # orbit 0 # pan 0.8
+
+p 1 $ n "[7]*8" # s "drumtraks" # gain 0.7 # speed 0.8 # legato 1 # pan 0.2 # orbit 0 # lpf (rangex 800 20000 $ slow 16 sine) # release 0.5
+p 11 $ n ((1/16) <~ "7*8") # s "drumtraks" # gain 0.65 # speed 0.6 # legato 1 # pan 0.5 # orbit 2 # lpf (rangex 500 8000 $ slow 16 sine) # release 0.5
+
+
+chords = ("<g3 e3 f3 [a3 b3]>" + "<[0,4,7,12,19,24] [0,7,12,15,22,24] [-1,7,12,16,18,23] [[0,7,12,14,19] [0,3,10,12,19]]>")
+chords = ("<a3 b3>" + "<[0,7,12,14,19] [0,3,10,12,19]>")
+chords = ("<a3>" + "<[0,7,12,14,19]>")
+chords = ("<f3>" + "<[-1,7,12,16,18,23]>")
+
+do
+  p 7 $ gain "1*16" |> n (slow 2 $ arp "<updown up updown up>" chords) # legato (rangex 0.5 2 $ slow 16 sine) |* gain 0.8 |+ n (-12) # s "supervibe" # orbit 1 # pan 0.5
+  p 8 $ gain "[1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1]" |> n (slow 2 $ arp "<updown up updown up>" chords) # legato (rangex 2 4 $ slow 16 sine) |* gain 1 |+ n (-12) # s "superfork" # orbit 2 # pan 0.7
+  p 9 $ gain "[~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~]" |> n (slow 2 $ arp "<downup down downup down>" chords) # legato (rangex 2 4 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 2 # pan 0.3
+  p 14 $ gain "[1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1 ~ 1 1]" |> n (slow 2 $ arp "pinkydown" chords) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 1 # pan 0.9
+  p 15 $ gain "[~ 1]*12" |> n (slow 2 $ arp "pinkydown" chords) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.9 |+ n (0) # s "superfork" # orbit 1 # pan 0.1
+  p 12 $ gain "[~ 1]*8" |> n (slow 2 $ arp "<downup down downup down>" chords) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.85 |+ n (-24) # s "supervibe" # orbit 0 # pan 0.2
+  p 13 $ gain "[1]*8" |> n (slow 2 $ arp "<updown up updown up>" chords) # legato (rangex 1 2 $ slow 16 sine) |* gain 0.85 |+ n (-36) # s "supervibe" # orbit 0 # pan 0.8
+
+`hush

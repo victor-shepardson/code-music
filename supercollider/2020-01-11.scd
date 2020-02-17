@@ -5,7 +5,7 @@ s.options.numBuffers = 1024 * 16; // increase this if you need to load more samp
 s.options.memSize = 8192 * 64; // increase this if you get "alloc failed" messages
 s.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs and the message "too many nodes"
 s.options.numOutputBusChannels = 2; // set this to your hardware output channel size, if necessary
-s.options.numInputBusChannels = 0; // set this to your hardware input channel size, if necessary
+s.options.numInputBusChannels = 4; // set this to your hardware input channel size, if necessary
 // boot the server and start SuperDirt
 s.waitForBoot({
 	~dirtchannels = 2;
@@ -123,6 +123,24 @@ d.soundLibrary.addSynth(
     })
 );
 
+SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=0.5, pan, accelerate, offset|
+	var env, sound, rate, phase, f0;
+	phase = Line.ar(begin, end, sustain);
+	rate = (begin + 1) * (speed + Sweep.kr(1, accelerate)) * freq;
+	sound = SoundIn.ar([2, 3]); // stereo in
+    f0 = ZeroCrossing.ar(sound);
+	sound = FreqShift.ar(sound, rate-f0);
+    sound = sound[0] * (bal-1).sqrt + (sound[1] * bal.sqrt);
+	OffsetOut.ar(out,
+		DirtPan.ar(sound, ~dirt.numChannels, pan)
+	)
+}).add;
+d.soundLibrary.addSynth(
+    \sinc, (instrument:\sinc, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
+    })
+);
+
 )
 
 /*
@@ -155,7 +173,7 @@ the rule for the "phantom fundamental" is: denominator of modulator, down an oct
 (
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
-~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.002, dry:0.2)};
+~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
 
 ~amb0 = {
 	GVerb.ar(
@@ -180,7 +198,7 @@ the rule for the "phantom fundamental" is: denominator of modulator, down an oct
             roomsize:40, revtime:2.5, damping:0.5, spread:10,
             earlyreflevel: 0.4,
             drylevel:0, mul:0.08
-        ), dry:0.3, rate:1/3, amt:0.008
+        ), dry:0.3, rate:1/3, amt:0.004
 )};
 
 ~preout = ~fx0 + ~fx1 + ~fx2 + ~amb0 + ~amb1 + ~amb2;

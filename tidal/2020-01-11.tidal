@@ -23,6 +23,9 @@ let just2semi j = 12 * (log j) / (log 2)
 
 hush
 
+-- p 0 $ s "dr:7*12" # speed ( rangex 0.5 8 (fast 1 $ fastcat [cF 1 "ml_0", cF 1 "ml_2", cF 1 "ml_3", cF 1 "ml_4", cF 1 "ml_5", cF 1 "ml_6"])) # gain (fast 2 $ range 0.0 2 (fastcat [cF 1 "ml_7", cF 1 "ml_8", cF 1 "ml_9", cF 1 "ml_10", cF 1 "ml_11", cF 1 "ml_12"])) # legato 1
+-- p 1 $ s "{bd:1 sn:1 bd:1 sn:1 bd:1 ~ sn:1}%12" # speed ( rangex 0.5 4 (fast 1 $ cat [cF 1 "mr_0", cF 1 "mr_1", cF 1 "mr_2", cF 1 "mr_3", cF 1 "mr_4", cF 1 "mr_5"])) # gain (fast 1 $ range 0.0 2 (cat [cF 1 "mr_6", cF 1 "mr_7", cF 1 "mr_8", cF 1 "mr_9", cF 1 "mr_10", cF 1 "mr_11"])) # legato 1
+
 setcps 0.75
 
 d1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) # legato 0.5 # orbit 0

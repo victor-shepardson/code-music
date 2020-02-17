@@ -1,6 +1,8 @@
 include("SuperDirt")
 
 (
+n = NetAddr.new("127.0.0.1", 6010);
+
 s.options.numBuffers = 1024 * 16; // increase this if you need to load more samples
 s.options.memSize = 8192 * 64; // increase this if you get "alloc failed" messages
 s.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs and the message "too many nodes"
@@ -135,11 +137,11 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
 		DirtPan.ar(sound, ~dirt.numChannels, pan)
 	)
 }).add;
-d.soundLibrary.addSynth(
-    \sinc, (instrument:\sinc, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+/*d.soundLibrary.addSynth(
+    \inzf, (instrument:\inzf, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
         (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
     })
-);
+);*/
 
 )
 
@@ -171,6 +173,10 @@ the rule for the "phantom fundamental" is: denominator of modulator, down an oct
 */
 
 (
+~in = {SoundIn.ar([2,3])};
+~ml = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[0]))};
+~mr = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[1]))};
+
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};

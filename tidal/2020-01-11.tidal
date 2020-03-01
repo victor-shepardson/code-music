@@ -20,71 +20,99 @@ let just2semi j = 12 * (log j) / (log 2)
                                     ])
     sil c = p c silence
     msil cs = map sil cs
+    rr sync_to name pat = p name $ reset sync_to $ (1 ~> pat)
+    r name = rr name name
+    -- r n pat = p n $ reset n $ (1 ~> pat)
+
 
 hush
+
+-- p 999 $ s "inzf" <| n (root + scale mode (slow 2 "<[{0 2 4 6 7}%12] [{1 3 5 7 8}%12]>")) # gain 0.8 # legato (1/2) |- n 0 # lpf 1700 # release 0.25 # orbit 0 # pan 0.3 # bal 0
+-- p 998 $ s "inzf" <| n (root + scale mode (slow 2 "<[7 4 {2 0}%8] [8 5 {1 3}%8]>")) # gain 0.85 # legato (2/3) |- n 12 # lpf 700 # release 0.625 # orbit 1 # pan 0.5 # bal 1
+-- p 997 $ s "inzf" <| n (root + scale mode (slow 2 "<[{~0 ~2 ~4 ~6 7}%12] [{~1 ~3 ~5 ~7 8}%12]>")) # gain 0.8 # legato (1/2) |- n 12 # lpf 1500 # release 0.25 # orbit 0 # pan 0.8 # bal 0
+
+do
+  p 999 silence
+  p 998 silence
+  p 997 silence
 
 -- p 0 $ s "dr:7*12" # speed ( rangex 0.5 8 (fast 1 $ fastcat [cF 1 "ml_0", cF 1 "ml_2", cF 1 "ml_3", cF 1 "ml_4", cF 1 "ml_5", cF 1 "ml_6"])) # gain (fast 2 $ range 0.0 2 (fastcat [cF 1 "ml_7", cF 1 "ml_8", cF 1 "ml_9", cF 1 "ml_10", cF 1 "ml_11", cF 1 "ml_12"])) # legato 1
 -- p 1 $ s "{bd:1 sn:1 bd:1 sn:1 bd:1 ~ sn:1}%12" # speed ( rangex 0.5 4 (fast 1 $ cat [cF 1 "mr_0", cF 1 "mr_1", cF 1 "mr_2", cF 1 "mr_3", cF 1 "mr_4", cF 1 "mr_5"])) # gain (fast 1 $ range 0.0 2 (cat [cF 1 "mr_6", cF 1 "mr_7", cF 1 "mr_8", cF 1 "mr_9", cF 1 "mr_10", cF 1 "mr_11"])) # legato 1
 
 setcps 0.75
 
-d1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) # legato 0.5 # orbit 0
+hush
 
-d2 $ n "[~ 1]*<8 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+
+r 1 $ n "1*<8 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) (0.25 <~ sine)) # legato 0.5 # orbit 0
+
+r 2 $ n "[~ 1]*<8 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 
 do
-  d3 $ s "auto:5*<1 3 2 3 2 3 2 6>" # orbit 2 # speed 1 # gain (range 1 0.7 saw)
-  p 22 $ n "~ [~ ~ ~ 0 0 ~ ~ ~]@2" # s "sn" # gain 0.8 # speed 12 # orbit 0 # nudge (-0.003)
+  r 3 $ s "auto:5*<3 2 3 2 3 2 6 1>" # orbit 2 # speed 1 # gain (range 1 0.7 saw)
+  r 22 $ n "~ [~ ~ ~ 0 0 ~ ~ ~]@2" # s "sn" # gain 0.8 # speed 12 # orbit 0 # nudge (-0.003)
 
 let mode = "justlydian"
     root = "g"
 
 do
-  p 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (10/3) sine) # legato 1 # pan "[0.5 0.3]*6" # decay 1 # gain 0.7 |- n 12
-  p 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 1 2 $ slow (10/3) sine) # legato 1.5 # pan "[0.2 0.6]*6" # decay 1 # gain 0.65 |+ n 12
-  d7 $ s "supervibe" # gain 0.65 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1@6 3@6 5@6 4@6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- 24
+  r 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (10/3) sine) # legato 1 # pan "[0.5 0.3]*6" # decay 1 # gain 0.7 |- n 12
+  r 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 1 2 $ slow (10/3) sine) # legato 1.5 # pan "[0.2 0.6]*6" # decay 1 # gain 0.65 |+ n 12
+  r 7 $ s "supervibe" # gain 0.65 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1@6 3@6 5@6 4@6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- 24
 
 do
-  d8 $ s "supervibe" # gain 0.75 # legato 1 # sustain 2 <| (n (root + scale mode "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001) |- 12
-  p 111 $ s "superhammond" <| (n (root + scale mode "[0 <1!12 3!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (10/3) sine) # legato 1.5 # pan "[0.5 0.3]*6" # decay 1 # gain 0.7 |- n 12
+  r 8 $ s "supervibe" # gain 0.75 # legato 1 # sustain 2 <| (n (root + scale mode "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001) |- 12
+  r 111 $ s "superhammond" <| (n (root + scale mode "[0 <1!12 3!12 5!12 4!12>]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (10/3) sine) # legato 1.5 # pan "[0.5 0.3]*6" # decay 1 # gain 0.7 |- n 12
 
-d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "0 [~ -1] 2")) # orbit 1 # pan 0.5 # detune (-3) # nudge 0.01
-d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "<0!7 [~ 0]> [~ -1] <2 [4 1/2]>")) # orbit 1 # pan 0.5 # detune (-3) # nudge 0.01
-
-do
-  p 67 $ s "supervibe" # gain 0.8 # legato 2 # sustain 4 <| (n (root + scale mode "<[~ 1 ~ 7 ~ ~]!2 [~ 3 ~ 9 ~ ~]!2 [~ -2 ~ 4 ~ ~]!2 [~ -3 ~ 3 ~ ~]!2>")) # orbit 0 # pan 0.35 # detune (0) # nudge 0.01 |- n 12 # decay 1
-  p 68 $ s "supervibe" # gain 0.8 # legato 2 # sustain 2 <| (n (root + scale mode "<[~ ~ ~ 1 ~ 1]!2 [~ ~ ~ 3 ~ 3]!2 [~ ~ ~ -2 ~ 5]!2 [~ ~ ~ -3 ~ 4]!2>")) # orbit 2 # pan 0.65 # detune (1) # nudge 0.01 |- n 12 # decay 1
-
-p 66 $ s "supervibe" # gain 0.8 # legato 2 # sustain 2 <| (n (root + scale mode "[0 [~ -1] 2]")) # orbit 0 # pan 0.5 # detune (0.5) # nudge 0.01 |- n 12 # decay 0.7
+r 6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "0 [~ -1] 2")) # orbit 1 # pan 0.5 # detune (-3) # nudge 0.01
+r 6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "<0!7 [~ 0]> [~ -1] <2 [4 1/2]>")) # orbit 1 # pan 0.5 # detune (-3) # nudge 0.01
 
 do
-  let filt = 4700
-      rate = 1
-  p 666 $ fast rate $ s "supervibe" # gain 0.7 # legato 2 # sustain 0.5 <| (n (root + scale mode "{0 2 4 6 8 10 12}%3")) # orbit 2 # pan 0.8 # detune (1) # nudge 0.01 |- n 0 # decay 1 # lpf filt
-  p 667 $ fast rate $ s "supervibe" # gain 0.7 # legato 2 # sustain 1 <| (n (root + scale mode "{0 ~ 11 ~ 9 ~ 7 ~ 5 ~ 3 ~ 1}%6")) # orbit 2 # pan 0.2 # detune (1) # nudge 0.01 |- n 0 # decay 1 # lpf filt
+  r 67 $ s "supervibe" # gain 0.8 # legato 2 # sustain 4 <| (n (root + scale mode "<[~ 1 ~ 7 ~ ~]!2 [~ 3 ~ 9 ~ ~]!2 [~ -2 ~ 4 ~ ~]!2 [~ -3 ~ 3 ~ ~]!2>")) # orbit 0 # pan 0.35 # detune (0) # nudge 0.01 |- n 12 # decay 1
+  r 68 $ s "supervibe" # gain 0.8 # legato 2 # sustain 2 <| (n (root + scale mode "<[~ ~ ~ 1 ~ 1]!2 [~ ~ ~ 3 ~ 3]!2 [~ ~ ~ -2 ~ 5]!2 [~ ~ ~ -3 ~ 4]!2>")) # orbit 2 # pan 0.65 # detune (1) # nudge 0.01 |- n 12 # decay 1
 
-p 77 $ s "supervibe" # gain 0.8 # legato 0.667 # sustain 0.7 <| (n (root + scale mode ("0*12"+"<0!8 -1!8 2!8>"))) # orbit 0 # pan 0.5 # detune (range (-3) 0 $ slow 8 sine) |- n 12 # decay 1
-p 78 $ s "supervibe" # gain 0.75 # legato 0.667 # sustain 0.7 <| (n (root + scale mode (slow (129/127) $ "0*12"))) # orbit 0 # pan 0.5 # detune (range (-3) 0 $ slow 9 sine) |- n 0 # decay 1
+r 66 $ s "supervibe" # gain 0.8 # legato 2 # sustain 2 <| (n (root + scale mode "[0 [~ -1] 2]")) # orbit 0 # pan 0.5 # detune (0.5) # nudge 0.01 |- n 12 # decay 0.7
 
+do
+  let filt = 5700
+      rate = 16
+  r 666 $ fast rate $ s "supervibe" # gain 0.75 # legato (4/rate) # sustain 0.5 <| (n (root + scale mode ("{0 2 4 6 8 10 12}%<3 6>"+"<0!8 -1!8 2!8>"))) # orbit 2 # pan 0.9 # detune (1) # nudge 0.01 |- n 0 # decay 1 # lpf filt
+  r 667 $ fast rate $ s "supervibe" # gain 0.75 # legato (4/rate) # sustain 1 <| (n (root + scale mode ("{0 ~ 11 ~ 9 ~ 7 ~ 5 ~ 3 ~ 1}%<6 3>"+"<0!8 -1!8 2!8>"))) # orbit 2 # pan 0.1 # detune (1) # nudge 0.01 |- n 0 # decay 1 # lpf filt
+  r 668 $ fast rate $ s "inzf" # gain 0.9 # legato 1 # release (1/rate/2) <| (n (root + scale mode ("{0 2 4 6 8 10 12}%<3 6>"+"<0!8 -1!8 2!8>"))) # orbit 2 # pan 0.9 # nudge 0.01 |- n 0 # lpf filt
+  r 669 $ fast rate $ s "inzf" # gain 0.9 # legato 1 # release (1/rate/2) <| (n (root + scale mode ("{0 ~ 11 ~ 9 ~ 7 ~ 5 ~ 3 ~ 1}%<6 3>"+"<0!8 -1!8 2!8>"))) # orbit 2 # pan 0.1 # nudge 0.01 |- n 0 # lpf filt
+
+do
+  r 77 $ s "supervibe" # gain 0.8 # legato 0.667 # sustain 0.7 <| (n (root + scale mode ("0*12"+"<0!8 -1!8 2!8>"))) # orbit 1 # pan 0.5 # detune (range (-3) 0 $ slow 8 sine) |- n 12 # decay 1
+  r 777 $ s "inzf" # gain 0.8 # legato 0.875 # release 0.2 <| (n (root + scale mode ("0*12"+"<0!8 -1!8 2!8>"))) # orbit 0 # pan 0.35 |- n 12 # bal 0 # lpf 5000
+
+do
+  r 78 $ slow (128/127) $ s "supervibe" # gain 0.7 # legato 0.667 # sustain 0.7 <| (n (root + scale mode "0*12")) # orbit 1 # pan 0.5 # detune (range (-3) 0 $ slow 9 sine) |- n 0 # decay 1
+  r 778 $ slow (128/127) $ s "inzf" # gain 0.7 # legato 0.875 # release 0.2 <| (n (root + scale mode "0*12")) # orbit 0 # pan 0.8 |- n 0 # bal 1 # lpf 3000
+
+hush
 
 let mode = "justphrygian"
     root = "f"
 
 do
-  d6 silence
-  d8 silence
+  sil 6
+  sil 8
   sil 66
   sil 67
   sil 68
   sil 77
+  sil 777
   sil 78
+  sil 778
   sil 666
   sil 667
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1!6 3!6 5!6 4!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
-  p 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7 |- n 36
-  p 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75 |+ n 12
-  d1 $ n "1*<1 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 0.5 # orbit 0
-  d2 $ n "[~ 1]*<2 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  sil 668
+  sil 669
+  r 7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1!6 3!6 5!6 4!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
+  r 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7 |- n 36
+  r 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75 |+ n 12
+  r 1 $ n "1*<1 2 4> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 0.5 # orbit 0
+  r 2 $ n "[~ 1]*<2 1 2 4> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 1 16 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 --
 -- do
 --   d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n (root + scale mode "[~ < 1!6 3!6 5!6 4!6>]*3")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001) |- n 12
@@ -102,29 +130,33 @@ do
 
 -- how?
 do
-  p 9 $ s "dr:2*12" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.75 0.95 sine) # legato 0.5 # pan 0.2 # speed 1 # lpf 9000
-  p 10 $ s "dr:9*6" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 0.5 # speed (fast (7/3) $ rangex 1 2 sine) # pan 0.9 # nudge 0.01 -- # hpf (rangex 200 16000 $ slow 4 saw)
+  r 9 $ s "dr:2*12" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.75 0.95 sine) # legato 0.5 # pan 0.2 # speed 1 # lpf 9000
+  r 10 $ s "dr:9*6" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 0.5 # speed (fast (7/3) $ rangex 1 2 sine) # pan 0.9 # nudge 0.01 -- # hpf (rangex 200 16000 $ slow 4 saw)
 
 let mode = "justdorian"
     root = "ef"
 
 do
-  d6 silence
-  d8 silence
+  sil 6
+  sil 8
   sil 66
   sil 67
   sil 68
   sil 77
+  sil 777
   sil 78
+  sil 778
   sil 666
   sil 667
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1!6 3!6 5!6 4!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
-  p 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7 |- n 36
-  p 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75 |+ n 12
-  p 9 $ s "dr:2*6" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.75 0.95 sine) # legato 0.875 # pan 0.3 # lpf 12000
-  p 10 $ s "dr:9*6" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 0.5 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
-  d1 $ n "1*<1 2 1> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 0.5 # orbit 0
-  d2 $ n "[~ 1]*<2 1 2 1> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  sil 668
+  sil 669
+  r 7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[[~ < 1!6 3!6 5!6 4!6>]*3, <8!7 [~ 8]> [~ 7] <9 [5 1/2]> ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
+  r 111 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.7 0.3]*6" # decay 1 # gain 0.7 |- n 36
+  r 11 $ s "superhammond" <| (n (root + scale mode "[0 2]*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.75 |+ n 12
+  r 9 $ s "dr:2*6" # orbit 0 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.75 0.95 sine) # legato 0.875 # pan 0.3 # lpf 12000
+  r 10 $ s "dr:9*6" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 0.5 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+  r 1 $ n "1*<1 2 1> 0@2" # s "sn" # gain 0.85 # (speed $ rangex 0.125 2 $ fast (5/7) sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 0.5 # orbit 0
+  r 2 $ n "[~ 1]*<2 1 2 1> [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.25 sine) |* (speed $ rangex 2 32 $ slow 8 saw) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 
 -- do
 --   d6 silence
@@ -153,12 +185,12 @@ do
 
  -- how
 do
-  d3 silence
-  p 9 silence
-  p 10 silence
-  p 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8 # legato 1
-  d1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
-  d2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
+  sil 3
+  sil 9
+  sil 10
+  r 33 $ gain "{1 ~ 0.9 ~ 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # pan (range 0.8 0.2 $ slow (5/3) sine) |* speed 3 |* gain 0.8 # legato 1
+  r 1 $ n "~ 0@2" # s "sn" # gain 0.8 # (speed $ rangex 0.25 2 $ fast (5/7) sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 0.5 # orbit 0
+  r 2 $ n "~ [~ 0]@2" # s "sn" # gain 0.8 # (speed $ rangex 4 0.5 sine) |* (speed $ rangex 4 16 $ slow 8 sine) # legato 1 # pan (fast 3 sine) # orbit 1 # nudge 0.003
 
 let mode = "justdorian"
     root = "ef"
@@ -173,51 +205,55 @@ let mode = "justlocrian"
     root = "a"
 
 do
-  p 666 silence
-  p 667 silence
-  p 77 silence
-  p 78 silence
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[{1 ~ 3 ~ 5 ~ 4}%12, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
-  d8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n (root + scale mode "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001) |- n 12
-  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
-  p 111 silence
-  p 11 $ s "superhammond" <| (n (root + scale mode "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7 |- n 12
-  p 66 $ s "supervibe" # gain 0.85 # legato 1 # sustain 3 <| (n (root + scale mode "{<1 7> ~ <3 9> ~ <-2 4> ~ <-3 3>}%12")) # orbit 0 # pan 0.5 # detune (0) # nudge 0.01 |- n 12 # decay 1 # hpf 300
-  p 67 silence
-  p 68 silence
-  p 999 $ s "inzf" <| n (root + scale mode "[2 0 6 4]*3") # gain 0.85 # legato (1/2) |- n 36 # lpf 1700 # release 0.25 # orbit 0 # pan 0.5 # bal (slow 4 sine)
-  p 99 $ s "inzf" <| n (root + scale mode "{1 ~ 3 ~ 5 ~ 4}%12") # gain 0.75 # legato 2 |- n 12 # lpf 5500 # release 0.5 # orbit 1 # pan 0.1 # bal 0
-  p 998 $ s "inzf" <| n (root + scale mode "{~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12") # gain 0.65 # legato 1 |- n 12 # lpf 3500 # attack 0.01 # release 0.5 # orbit 2 # pan 0.9 # bal 1
+  sil 77
+  sil 777
+  sil 78
+  sil 778
+  sil 666
+  sil 667
+  sil 668
+  sil 669
+  rr 33 7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[{1 ~ 3 ~ 5 ~ 4}%12, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 24
+  rr 33 8 $ s "supervibe" # gain 0.8 # legato 1 # sustain 2 <| (n (root + scale mode "{1 ~ 3 ~ 5 ~ 4}%12")) # orbit 2 # pan 0.2 # decay 2 # detune 3 # nudge (-0.001) |- n 12
+  rr 33 6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.66
+  rr 33 111 silence
+  rr 33 11 $ s "superhammond" <| (n (root + scale mode "[2 0 6 4]*3")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7 |- n 12
+  rr 33 66 $ s "supervibe" # gain 0.85 # legato 1 # sustain 3 <| (n (root + scale mode "{<1 7> ~ <3 9> ~ <-2 4> ~ <-3 3>}%12")) # orbit 0 # pan 0.5 # detune (0) # nudge 0.01 |- n 12 # decay 1 # hpf 300
+  rr 33 67 silence
+  rr 33 68 silence
+  rr 33 999 $ s "inzf" <| n (root + scale mode "[2 0 6 4]*3") # gain 0.85 # legato (1/2) |- n 36 # lpf 1700 # release 0.25 # orbit 0 # pan 0.5 # bal (slow 4 sine)
+  rr 33 99 $ s "inzf" <| n (root + scale mode "{1 ~ 3 ~ 5 ~ 4}%12") # gain 0.75 # legato 2 |- n 12 # lpf 5500 # release 0.5 # orbit 1 # pan 0.1 # bal 0
+  rr 33 998 $ s "inzf" <| n (root + scale mode "{~ 0 2 4 6 8 10 ~ 12 14 16 18 20}%12") # gain 0.65 # legato 1 |- n 12 # lpf 3500 # attack 0.01 # release 0.5 # orbit 2 # pan 0.9 # bal 1
 
 
 do
-  d3 $ gain "{1 0.7/4 0.9 0.7/8 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # legato 2 -- # lpf (rangex 800 8000 $ fast (8/5) sine) # legato 2
-  p 9 $ n "{2 2/4 2 2/8 2 ~ 2}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.7 0.9 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
-  p 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
-  p 333 $ gain "{1 0.8/4 0.9 0.7/8 0.8 ~ 1}%12" #s "dr:7" # orbit 0 # speed (1/3) # legato (1/4) # nudge (-0.01)
+  rr 33 3 $ gain "{1 0.7/4 0.9 0.7/8 0.8 ~ 0.7}%12" #s "auto:5" # orbit 2 # speed 1 # legato 2 -- # lpf (rangex 800 8000 $ fast (8/5) sine) # legato 2
+  rr 33 9 $ n "{2 2/4 2 2/8 2 ~ 2}%12" # s "dr" # orbit 2 # gain (fast 3 $ range 0.7 0.9 sine) |* gain (fast 1 $ range 0.8 1 sine) # legato 0.875 # pan 0.3
+  rr 33 10 $ n "{~ 9 ~ 9 ~ 9 ~}%12" # s "dr" # orbit 1 # gain (fast 3 $ range 0.8 1 sine) |* gain (fast 1 $ range 0.7 0.9 sine) # legato 2 # speed (fast (8/5) $ rangex (1/2) (1) sine) # pan (fast (5) sine) # nudge 0.01
+  rr 33 333 $ gain "{1 0.8/4 0.9 0.7/8 0.8 ~ 1}%12" #s "dr:7" # orbit 0 # speed (1/3) # legato (1/4) # nudge (-0.01)
 
 hush
 
 do
-  d3 silence
-  p 33 silence
-  p 9 silence
-  p 10 silence
-  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99 |- n 12
+  sil 3
+  sil 33
+  sil 9
+  sil 10
+  rr 33 6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%12, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%12]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99 |- n 12
 
 do
-  p 11 $ s "superhammond" <| (n (root + scale mode "9*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7 |- n 24
-  d6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%6, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%6]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99 |- n 12
-  d7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[{1 ~ 3 ~ 5 ~ 4}%6, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 12
-  p 8 silence
-  p 66 silence
-  p 333 silence
+  r 11 $ s "superhammond" <| (n (root + scale mode "9*6")) # orbit 0 # attack 0.5 # release 0.02 # voice (range 5 6 $ slow (5/3) sine) # legato 1.5 # pan "[0.2 0.8]*6" # decay 1 # gain 0.7 |- n 24
+  rr 33 6 $ s "supervibe" # gain 0.75 # legato 2 # sustain 1 <| (n (root + scale mode "[{1 ~ 3 ~ 5 ~ 4}%6, {~ 10 ~ 8 ~ 6 ~ 4 ~ 2 ~ 0 ~}%6]")) # orbit 1 # pan 0.4 # detune (-3) # nudge (0.01) # decay 0.99 |- n 12
+  rr 33 7 $ s "supervibe" # gain 0.6 # legato 12 # sustain 3 <| (n (root + scale mode "<[{1 ~ 3 ~ 5 ~ 4}%6, 8 ]>")) # orbit 2 # pan 0.8 # accelerate 0.1 # decay 0.5 |- n 12
+  r 8 silence
+  r 66 silence
+  r 333 silence
 
 do
-  p 7 silence
-  p 6 silence
-  p 11 silence
-  d1 silence
-  d2 silence
+  r 7 silence
+  r 6 silence
+  r 11 silence
+  r 1 silence
+  r 2 silence
 
 hush

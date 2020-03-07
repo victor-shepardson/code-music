@@ -1,3 +1,6 @@
+:set +m
+:script ~/code-music/tidal/scales.hs
+
 let partials = pF "partials"
     curve = pF "curve"
     att = pF "att"
@@ -9,21 +12,12 @@ let partials = pF "partials"
     fadeout = pF "fadeout"
     bal = pF "bal"
 
-let just2semi j = 12 * (log j) / (log 2)
-    scale = getScale (scaleTable ++ [("justionian",     map just2semi [1,   9/8,   5/4,   4/3,   3/2,   5/3, 15/8]),
-                                     ("justdorian",     map just2semi [1,   9/8,   6/5,   4/3,   3/2,   5/3, 16/9]),
-                                     ("justphrygian",   map just2semi [1, 16/15,   6/5,   4/3,   3/2,   8/5, 16/9]),
-                                     ("justlydian",     map just2semi [1,   9/8,   5/4, 45/32,   3/2,   5/3, 15/8]),
-                                     ("justmixolydian", map just2semi [1,   9/8,   5/4,   4/3,   3/2,   5/3, 16/9]),
-                                     ("justaeolian",    map just2semi [1,   9/8,   6/5,   4/3,   3/2,   8/5, 16/9]),
-                                     ("justlocrian",    map just2semi [1, 16/15,   6/5,   4/3,   45/32,   8/5, 16/9])
-                                    ])
-    sil c = p c silence
-    msil cs = map sil cs
-    rr sync_to name pat = p name $ reset sync_to $ (1 ~> pat)
-    r name = rr name name
-    -- r n pat = p n $ reset n $ (1 ~> pat)
+let scale = getScale (scaleTable ++ newscales)
 
+let sil c = p c silence -- shorthand for silence
+    msil cs = mapM_ sil cs
+    rr sync_to name pat = p name $ reset sync_to $ (1 ~> pat) -- r with separate argument to sync to another pattern
+    r name = rr name name -- shorthand for reset and shift by one (compensating for a bug? may need to revert in future)
 
 hush
 
@@ -32,9 +26,7 @@ hush
 -- p 997 $ s "inzf" <| n (root + scale mode (slow 2 "<[{~0 ~2 ~4 ~6 7}%12] [{~1 ~3 ~5 ~7 8}%12]>")) # gain 0.8 # legato (1/2) |- n 12 # lpf 1500 # release 0.25 # orbit 0 # pan 0.8 # bal 0
 
 do
-  p 999 silence
-  p 998 silence
-  p 997 silence
+  msil $ [999,998,997]
 
 -- p 0 $ s "dr:7*12" # speed ( rangex 0.5 8 (fast 1 $ fastcat [cF 1 "ml_0", cF 1 "ml_2", cF 1 "ml_3", cF 1 "ml_4", cF 1 "ml_5", cF 1 "ml_6"])) # gain (fast 2 $ range 0.0 2 (fastcat [cF 1 "ml_7", cF 1 "ml_8", cF 1 "ml_9", cF 1 "ml_10", cF 1 "ml_11", cF 1 "ml_12"])) # legato 1
 -- p 1 $ s "{bd:1 sn:1 bd:1 sn:1 bd:1 ~ sn:1}%12" # speed ( rangex 0.5 4 (fast 1 $ cat [cF 1 "mr_0", cF 1 "mr_1", cF 1 "mr_2", cF 1 "mr_3", cF 1 "mr_4", cF 1 "mr_5"])) # gain (fast 1 $ range 0.0 2 (cat [cF 1 "mr_6", cF 1 "mr_7", cF 1 "mr_8", cF 1 "mr_9", cF 1 "mr_10", cF 1 "mr_11"])) # legato 1

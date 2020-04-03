@@ -44,6 +44,18 @@ p.push(s);
 ~preout.ar(2);
 ~out.ar(2);
 ~out.play;
+
+~in = {SoundIn.ar([2,3])};
+~ml = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[0]))};
+~mr = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[1]))};
+
+r = {
+    inf.do {
+        ~ml.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['ml_',i].join, v)}) });
+        ~mr.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['mr_',i].join, v)}) });
+        0.04.wait; // 25 frames per second
+    }
+}.fork;
 )
 
 (
@@ -145,37 +157,7 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
 
 )
 
-/*
-AM of sins with freq c, m:
-c -> c-m, c+m
-c > m > 0
-desired fundamental f, interval a:
-f = c-m
-a*f = c+m
-a = (f+2m)/f
-carrier and modulator set to:
-m = (a-1)f/2
-c = f+m = (a+1)f/2
-what if harmonics of c are present?
-c  ->  c-m,  c+m = f, af
-2c -> 2c-m, 2c+m = (a+3)/2f, (3a+1)/2f
-3c -> 3c-m, 3c+m = (a+2)f, (2a+1)f
-4c -> 4c-m, 4c+m = (3a+5)/2f, (5a+3)/2f
-limiting case a=1: 1, 1, 2, 2, 3, 3, 4, 4 as expected
-case a=3/2: 1, 3/2, 9/4, 11/4, 7/4, 4, 7/2, 21/4
-in 4ths, sorted: 4, 6, 7, 9, 11, 14, 16, 21 (sparse harmonics of f/4)
-case a=2: 1, 2, 5/2, 7/2, 4, 5, 11/2, 13/2
-in 2ves: 2, 4, 5, 7, 8, 10, 11, 13 (dense harmonics of f/2)
-case a=3: 1, 3, 3, 5, 5, 7, 7, 9 (odd harmonics, unsure what phase does though)
-case a=4: 1, 4, 7/2, 13/2, 6, 7, 17/2, 23/2
-in 2ves: 2, 7, 8, 12, 13, 14, 17, 23 (sparse harmonics of f/2)
-the rule for the "phantom fundamental" is: denominator of modulator, down an octave if denominator or numerator is even.
-*/
-
 (
-~in = {SoundIn.ar([2,3])};
-~ml = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[0]))};
-~mr = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[1]))};
 
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};

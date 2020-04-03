@@ -33,8 +33,8 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 var notes_held=0, voices=(-1)!12;
 p.clear;
 ~in.ar(2);
-~preout.ar(4);
-~out.ar(4);
+~preout.ar(6);
+~out.ar(6);
 // ~aux.ar(2);
 ~out.play;
 // ~aux.play(2);
@@ -43,21 +43,28 @@ p.clear;
 ~pitches = { \notes.kr((-1)!12)}; //default value is crucial
 // ~pitches.set(\notes, [30, 37, 44, 51, 70, 77, 84, 91]);
 
+//keys
 MIDIdef.noteOn(\set_note, { arg val, num, chan, src;
-    // if no notes held, silence all voices
-    if(notes_held==0, {voices.fill(-1)});
+    switch (chan,
+        0, { //keys
+            // if no notes held, silence all voices
+            if(notes_held==0, {voices.fill(-1)});
 
-    // set next voice
-    voices[notes_held] = num;
-    voices.postln;
-    notes_held.postln;
+            // set next voice
+            voices[notes_held] = num;
+            voices.postln;
+            // notes_held.postln;
 
-    ~pitches.set(\notes, voices);
-    notes_held = notes_held+1;
+            ~pitches.set(\notes, voices);
+            notes_held = notes_held+1;
 
-    //set velocity
-    // n[num].set(\vel, val)
-},nil,0);
+            //set velocity
+            // n[num].set(\vel, val)
+        },
+        1,{ //pads
+
+    })
+},nil,nil);
 
 MIDIdef.noteOff(\unset_note, { arg val, num, chan, src;
     notes_held = notes_held-1;
@@ -77,11 +84,19 @@ MIDIdef.noteOff(\unset_note, { arg val, num, chan, src;
 ~mr = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[1]))};
 
 
-~tones = {Splay.ar(
-    ~pitches.kr[(0..5).reverse*2 ++ ((0..5)*2+1)].collect({ arg pitch, i;
+~tones_left = {Splay.ar(
+    ~pitches.kr[(0..2).reverse*2 ++ ((0..2)*2+1)].collect({ arg pitch, i;
         var env = (pitch >= 0);
         var freq = pitch.midicps;
-        FreqShift.ar(~in.ar.wrapAt(i), freq-~f.ar.wrapAt(i))*env
+        FreqShift.ar(~in.ar[0], freq-~f.ar[0])*env
+    })
+)};
+
+~tones_right = {Splay.ar(
+    ~pitches.kr[(0..2).reverse*2 ++ ((0..2)*2+1)].collect({ arg pitch, i;
+        var env = (pitch >= 0);
+        var freq = pitch.midicps;
+        FreqShift.ar(~in.ar[1], freq-~f.ar[1])*env
     })
 )};
 
@@ -102,7 +117,7 @@ MIDIdef.noteOff(\unset_note, { arg val, num, chan, src;
 // ~tones = {0}
 // ~plucks = {0}
 
-~preout = {~tones.ar ++ ~plucks.ar};
+~preout = {~tones_left.ar ++ ~tones_right.ar ++ ~plucks.ar};
 
 ~fx = {f[\wiggle].(~preout.ar, dry: 0, amt: 0.00003, rate: 5)};
 
@@ -116,12 +131,10 @@ MIDIdef.noteOff(\unset_note, { arg val, num, chan, src;
 ~out = {0.95*Limiter.ar(0.2*LeakDC.ar(~verb.ar*0.04+~fx.ar))};
 
 )
-~out = {~tones.ar++~tones.ar}
 
 {Poll(Impulse.kr(1), ~m.kr, \mfcc)}.play
 
 [1,2,3,4,5,6,7,8,9,10,11,12]
-
 
 ~in.scope
 ~env.scope
@@ -129,7 +142,7 @@ MIDIdef.noteOff(\unset_note, { arg val, num, chan, src;
 ~aux.scope
 ~i.scope
 
-s.record("~/record/scratch.wav", 2);
+s.record("~/record/2019-12-01.0.wav", ~out.bus, 6);
 s.stopRecording;
 
 (

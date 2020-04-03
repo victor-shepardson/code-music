@@ -1,0 +1,122 @@
+-- tidal <- startMulti [OSCTarget {oName = "Tidal", oAddress = "127.0.0.1", oPort = 6010, oPath = "/ctrl", oShape = Just [("feedback", Nothing)], oLatency = 0.02, oPreamble = [toDatum $ VS "feedback"], oTimestamp = BundleStamp}, (superdirtTarget {oLatency = 0.1, oAddress = "127.0.0.1", oPort = 57120})] (defaultConfig {cFrameTimespan = 1/20}) -- BootTidal.hs
+
+let feedback = pF "feedback"
+
+-- p 1 $ feedback $ "1*4" |> (slow 4 $ rangex 2 32 sine)
+p 1 $ feedback $ "1*64" |> (slow (toRational <$> cF 1 "feedback") $ rangex (1/2) 32 sine)
+
+-- p 2 $ fast (toRational <$> cF 1 "feedback") $ s "bd"
+p 2 $ s "bd*16" # speed (cF 1 "feedback")
+
+p 2 $ s "bd:4*16" # speed (rangex 0.5 2 $ sin (cF 0 "feedback")) |*| gain "[1 0.8]*8"
+p 3 $ s "<~ [~ sn:1]*8>" # speed (rangex 1 4 $ sin (pi/2 + cF 0 "feedback")) # legato 1
+p 4 $ s "[~ dr:9]*8" # speed (rangex 4 8 $ sin (pi + cF 0 "feedback")) # pan "[0 1]*4" # legato 2
+
+
+-- p 2 $ s "bd*16" # speed (rangex (1/2) 32 rand)
+
+p 1 $ pF "feedback" $ "1*64" |> (pi/32 + cF 0 "feedback")
+
+p 1 $ pF "feedback" $ "1*64" |> ((rangex 1 4 $ sin $ pi * 2 * cF 0 "feedback") * pi / 4 + cF 0 "feedback")
+
+setF "phasor" $ ("1*64" |> (pi/32 + cF 0 "phasor"))
+
+setF
+
+"1*64" |> (pi/32 + cF 0 "phasor")
+
+setF "phasor" (1 + (cF 0 "phasor"))
+
+setF "phasor" 0
+
+"1*64" + (cF 0 "phasor")
+
+(cF 0 "phasor")
+
+setF "feedback" 1
+
+cF 0 "feedback"
+
+hush
+
+-- https://github.com/tidalcycles/Tidal/issues/483
+import qualified Sound.Tidal.Tempo as T
+import qualified Sound.OSC.FD as O
+import Control.Concurrent.MVar
+import Control.Concurrent
+import qualified Data.Map.Strict as Map
+
+-- current signature:
+onTick :: Config -> MVar StateMap -> MVar (Pattern (IO b))  -> [Cx] -> MVar T.Tempo -> T.State -> IO ()
+onTick config sMapMV pMV cxs tempoMV st =
+  do p <- readMVar pMV
+     sMap <- readMVar sMapMV
+     tempo <- takeMVar tempoMV
+     now <- O.time
+     let es = filter eventHasOnset $ queryArc p (T.nowArc st)
+         on e = (sched tempo $ start $ wholeOrPart e)
+     mapM_ (\e -> do threadDelay (floor $ (on e - now) * 1000000)
+                     value e
+           ) es
+     return ()
+-- sMap is not preserved, needs to work more like startStream?
+-- ah setF is just an application of streamSet to the default stream
+-- but cF is (presumably?) acessing the different states when scheduled in
+-- the default stream by p, vs this patternIO psuedo-stream by p1
+patternIO :: IO (Pattern (IO ()) -> IO ())
+patternIO = do pMV <- newMVar empty
+               sMapMV <- newMVar (Map.empty :: StateMap)
+               (tempoMV, _) <- T.clocked defaultConfig (onTick defaultConfig sMapMV pMV [])
+               return $ \x -> do swapMVar pMV x
+                                 return ()
+
+
+-- onTick :: MVar (Pattern (IO b)) -> MVar T.Tempo -> T.State -> IO ()
+-- onTick pMV tempoMV st = do tempo <- readMVar tempoMV
+--                            p <- readMVar pMV
+--                            now <- O.time
+--                            let es = filter eventHasOnset $ queryArc p (T.nowArc st)
+--                                on e = (sched tempo $ start $ wholeOrPart e)
+--                            mapM_ (\e -> do threadDelay (floor $ (on e - now) * 1000000)
+--                                            value e
+--                                  ) es
+--                            return ()
+-- patternIO :: IO (Pattern (IO ()) -> IO ())
+-- patternIO = do pMV <- newMVar empty
+--                (tempoMV, _) <- T.clocked defaultConfig (onTick pMV)
+--                return $ \x -> do swapMVar pMV x
+--                                  return ()
+
+
+p1 <- patternIO
+
+p1 $ euclid 3 8 $ pure (putStrLn "hello world")
+
+p1 $ fromList [setF "phasor" 0, setF "phasor" 1]
+
+p1 $ pure (do setF "phasor" $ cF 0 "phasor" + 1 )
+
+p 1 $ s "bd*4" # speed ((cF 0 "phasor") + 1)
+
+cF 0 "phasor"
+
+hush
+
+-- misc features to explore
+
+"<0 1>..<2 3 4>":: Pattern Int
+
+-- type Time = Rational
+
+-- data EventF a b = Event
+--   { context :: Context
+--   , whole :: Maybe a
+--   , part :: a
+--   , value :: b
+--   } deriving (Eq, Ord, Functor)
+--
+-- type Event a = EventF (ArcF Time) a
+--
+-- withEvents :: ([Event a] -> [Event b]) -> Pattern a -> Pattern b
+
+-- ur https://tidalcycles.org/index.php/ur

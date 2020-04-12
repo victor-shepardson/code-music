@@ -60,6 +60,11 @@ instruments = [
                         'Reverb E-mu Drumulator Sample Pack_Ride.wav'
                     ]),
                 ]),
+                ('Reverb Roland TR 505 Sample Pack/', [
+                    ('Reverb Roland TR 505 Sample Pack_Audio Files/', [
+                        'Reverb Roland TR 505 Sample Pack_Ride.wav',
+                    ]),
+                ]),
             ]),
         ]),
     dict(
@@ -73,6 +78,32 @@ instruments = [
                         'Reverb Roland Rhythm 77 Sample Pack_Tamborine.wav',
                         'Reverb Roland Rhythm 77 Sample Pack_Wood Block.wav',
 
+                    ]),
+                ]),
+            ]),
+        ]),
+    dict(
+        src_prefix = '',
+        dest_prefix = 'tom/',
+        files = [
+            ('Reverb Drum Machines | The Complete Collection/', [
+                ('Reverb Roland TR 505 Sample Pack/', [
+                    ('Reverb Roland TR 505 Sample Pack_Audio Files/', [
+                        'Reverb Roland TR 505 Sample Pack_Tom1.wav',
+                        'Reverb Roland TR 505 Sample Pack_Tom2.wav',
+                        'Reverb Roland TR 505 Sample Pack_Tom3.wav',
+                    ]),
+                ]),
+            ]),
+        ]),
+    dict(
+        src_prefix = '',
+        dest_prefix = 'kick/',
+        files = [
+            ('Reverb Drum Machines | The Complete Collection/', [
+                ('Reverb Roland TR 505 Sample Pack/', [
+                    ('Reverb Roland TR 505 Sample Pack_Audio Files/', [
+                        'Reverb Roland TR 505 Sample Pack_Kick.wav',
                     ]),
                 ]),
             ]),

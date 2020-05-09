@@ -13,7 +13,7 @@ data Scale = Scale
   , index :: (Int -> Int)
   }
 
-
+cyclical_tuner :: Fractional a => a -> [a] -> Tuning a
 cyclical_tuner octave intervals = Tuning {tuning_n_tones=n, tune=tune} where
   intervals' = toVector intervals
   n = length intervals
@@ -22,159 +22,8 @@ cyclical_tuner octave intervals = Tuning {tuning_n_tones=n, tune=tune} where
         j = i `div` n in
     (intervals' Vector.! i') * (octave^^j)
 
-my_tuning = cyclical_tuner 2 [1, 13/12, 12/11, 11/10, 10/9, 9/8, 8/7, 7/6, 6/5, 5/4, 4/3, 3/2]
-
-(tune my_tuning) 1
-
-cyclical_scale tuning_n_tones steps = Scale {scale_n_tones=n, index=scale_fn} where
-  steps' = toVector steps
-  n = length steps
-  scale_fn i =
-    let i' = i `mod` n
-        j = i `div` n in
-    (steps' Vector.! i') + (tuning_n_tones * j)
-
-
-my_scale = cyclical_scale 12 [0, 2, 4, 6, 8, 10]
-my_scale = cyclical_scale (tuning_n_tones my_tuning) [0, 2, 4, 6, 8, 10]
-
-(index my_scale) (-1)
-
-my_chord = cyclical_scale (scale_n_tones my_scale) [0, 2, 4]
-
-tune my_tuning $ index my_scale $ index my_chord 1
-
-my_root = 1 -- in scale degrees
-my_tonic = 0 -- in tuning degrees
-my_ref = 440 -- in Hz
-
-my_ref * tune my_tuning (my_tonic + index my_scale (my_root + index my_chord 1))
-
-f i = tune my_tuning (my_tonic + index my_scale (my_root + index my_chord i))
-
-just2semi j = 12 * (log j) / (log 2)
-
-do
-  let my_chord = cyclical_scale [0, 2, 4] (scale_n_tones my_scale)
-  let f i = tune my_tuning (my_tonic + index my_scale (my_root + index my_chord i))
-  p 0 $ note (just2semi $ f <$> "{0 1 2}%8") # s "supervibe" # legato 3 # detune (0)
-
--- chords =
---   Map.fromList
---   [
---     ("triad", cyclical_scale [0, 2, 4] (scale_n_tones my_scale))
---   , ("tetrad", cyclical_scale [0, 2, 4, 6] (scale_n_tones my_scale))
---   ]
---
--- -- index :: Scale -> Int -> Int
--- -- fmap :: Functor F => (a -> b) -> f a -> f b
--- -- (Scale -> Int -> Int) -> Maybe Scale -> Maybe (Int -> Int)
--- s k = fmap index (chords Map.!? k)
--- -- filterJust :: Pattern (Maybe a) -> Pattern a
---
--- -- flap :: Functor F => f (a -> b) -> a -> f b
--- -- Maybe (a -> b) -> a -> Maybe b
--- sf k x = (\f -> f x) <$> s k
---
--- :type sf
---
--- filterJust $ sf <$> "triad" <*> "0 1 2"
-
--- like tidal getScale?
--- ki_pattern table p_k p_i = filterJust $ sf <$> p_k <*> p_i
---   where table' = Map.fromList table
---         sf k x = (\f -> f x) <$> s k
---         s k = fmap index (table' Map.!? k)
-
-ki_pattern_scale table p_k p_i = filterJust $ sf <$> p_k <*> p_i
-  where table' = Map.fromList table
-        s k = fmap index (table' Map.!? k)
-        sf k x = (\f -> f x) <$> s k
-
-ki_pattern_tuning table p_k p_i = filterJust $ sf <$> p_k <*> p_i
-  where table' = Map.fromList table
-        s k = fmap tune (table' Map.!? k)
-        sf k x = (\f -> f x) <$> s k
-
-:type ki_pattern_scale
-
-chord = ki_pattern_scale
-  [
-    ("triad", cyclical_scale 7 [0, 2, 4])
-  , ("tetrad", cyclical_scale 7 [0, 2, 4, 6])
-  ]
-
-scale = ki_pattern_scale
-  [
-    ("minor", cyclical_scale 12 [0, 2, 3, 5, 7, 8, 10])
-  , ("major", cyclical_scale 12 [0, 2, 4, 5, 7, 9, 11])
-  ]
-
-tuning = ki_pattern_tuning
-  [
-    ("just", cyclical_tuner 2 [1,  16/15,  9/8,  6/5,   5/4,  4/3,   45/32,  3/2,   8/5,   5/3,  16/9,  15/8  ])
-  , ("pyth", cyclical_tuner 2 [1, 256/243, 9/8, 32/27, 81/64, 4/3, 1024/729, 3/2, 128/81, 27/16, 16/9, 243/128])
-  ]
-
-
-chord "triad" "0 1 2"
-
-tuning "[just,pyth]" $ scale "<major minor>" $ chord "triad" "0 1 2"
-
-p 0 $ note (just2semi $ tuning "[just,pyth]" $ scale "<major _ minor _>" $ chord "<triad tetrad>" "{0 3 6 9 12}%8") # s "supervibe" # legato 3 # detune (-2) # orbit 2
-
-p 0 $ note (just2semi $ tuning "[just,pyth]" $ slow 2 "<0 5 -2 -9>" + (scale "major" $ slow 2 "0 -2 -4 -6" + chord "<triad tetrad>" "{0 3 6 9 12}%12")) # s "supervibe" # legato 3 # detune (-2) # orbit 2 # pan (fast (15/4) sine)
-
-p 1 $ note (just2semi $ tuning "[just,pyth]" $ "-12*6") # s "supervibe" # legato 1 # detune (0) # orbit 0
-
-p 2 $ note (just2semi $ tuning "[just,pyth]" $ slow 2 "<0 -7 -2 3>" + (scale "major" "0*3")) # s "supervibe" # legato 3 # detune (1) # orbit 1
-
--- problem: chord computed in terms of scale_n_tones, scale in terms of tuning_n_tones etc
--- need to do `tsc "tunings" "scales" "chords" "chord_tones"` all to once,
--- or not define octave in these terms,
--- or require scales to be specific to tuning sizes etc
-
-
--- given a list of (string,value) pairs, construct the function to map string patterns to maybe value patterns
-k_pattern :: [(String, a)] -> Pattern String -> Pattern a
-k_pattern table pat = filterJust $ (table' Map.!?) <$> pat
-  where table' = Map.fromList table
-        -- s k = fmap tune (table' Map.!? k)
-
-tuning_pattern = k_pattern [
-    ("just", cyclical_tuner 2 [1,  16/15,  9/8,  6/5,   5/4,  4/3,   45/32,  3/2,   8/5,   5/3,  16/9,  15/8  ])
-  , ("pyth", cyclical_tuner 2 [1, 256/243, 9/8, 32/27, 81/64, 4/3, 1024/729, 3/2, 128/81, 27/16, 16/9, 243/128])
-  ]
-
-scale_pattern = k_pattern [
-    ("whole", \n -> cyclical_scale n [0, 2, 4, 6, 8, 10])
-  , ("diatonic", \n -> cyclical_scale n [0, 2, 4, 5, 7, 9, 11])
-  ]
-
-:type tuning_pattern "just pyth"
-
-:type scale_pattern "whole diatonic"
-
--- tuning, function which returns a scale given length of tuning, scale degree -> tuning value
-tunescale_f :: Tuning a -> (Int -> Scale) -> Int -> a
-tunescale_f tuning scale_f i = tune tuning $ (index $ scale_f $ tuning_n_tones tuning) i
-
-tusc :: Pattern String -> Pattern String -> Pattern Int -> ControlPattern
-tusc tpat spat ipat = note $ just2semi $ tunescale_f <$> (tuning_pattern tpat) <*> (scale_pattern spat) <*> (ipat |- 1)
-
-let pat = tusc "just" "diatonic" ("<0 -2 -3 -1 -4@4>" +| "[[0, 3, 6] ~] {0 6 ~ 3 9 ~ 5}%4") # s "supersaw" # orbit 0
-  in p 0 $ stack [pat # legato (1/2) |- note 12, pat # legato 1, pat # legato 2 |+ note 12]
-
--- for constant tuning:
-sc = tusc (slow 8 "pyth")
-
-p 0 $ (tusc (slow 2 "pyth") (slow 2 "whole") (slow 2 "0")) |> s "supersaw" |> legato 1
-
-hush
-
--- more generally, we could always define scales in terms of a tuning:
-
--- change this to take a tuning in place of the tuning length:
+-- TODO: does Vector actually help here?
+--       partial application should let the compiler create it only once per distinct `steps`?
 cyclical_scale :: [Int] -> Tuning a -> Scale
 cyclical_scale steps tuning = Scale {scale_n_tones=n, index=scale_fn} where
   steps' = toVector steps
@@ -206,11 +55,11 @@ tunescale_f tuning scale_f i = tune tuning $ index (scale_f tuning) i
 semitones rat_pat = (log rat_pat) |* (12 / log 2)
 
 -- "apply over patterns with structure from right" has a weird name: *>
--- both in that it collides with something else in Applicative and points backward compared to <|
+-- both in that it collides with something else in Applicative, and points backward compared to <|
 tusc :: Pattern String -> Pattern String -> Pattern Int -> ControlPattern
 tusc tpat spat ipat = note $ semitones $ tunescale_f <$> tuning_pattern tpat <*> scale_pattern spat Sound.Tidal.Context.*> ipat
 
-let pat = tusc "just,pyth" "diatonic" ("<0 -2 -3 -1 -4@4>" +| "[[0, 3, 6, 9, 12] ~] {0 6 ~ ~ 3 9 ~ ~ 5 ~}%4") # s "supervibe" # orbit 2 # detune (-2)
+let pat = tusc "just,pyth" "diatonic" ("<0 -2 -3 -1 -4@4>" +| "[[0, 3, 6, 9, 12] ~] {0 6 ~ ~ 3 9 ~ ~ 5 ~}%4") # s "supervibe" # orbit 0 # detune (-2)
   in p 0 $ stack [
     pat # legato (2) |- note 24 # nudge 0.06,
     pat # legato (1/2) |- note 12 # nudge 0.04,
@@ -219,24 +68,7 @@ let pat = tusc "just,pyth" "diatonic" ("<0 -2 -3 -1 -4@4>" +| "[[0, 3, 6, 9, 12]
 
 hush
 
+-- next: sharp flat up down notation?
+
 
 --------------
-
-scale intervals tuning i =
-  let octave = length tuning
-      n = length intervals
-      i' = i `mod` n
-      j = i `div` n in
-  (intervals !! i') + (octave * j)
-
-  tune my_tuning (-4)
-
-(-1) `mod` 12
-
-array (0,2) [0,1,2]
-
-
-
-toVector [1,2,3]
-
-:type [1,2,3]

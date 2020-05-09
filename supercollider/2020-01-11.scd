@@ -18,15 +18,18 @@ s.waitForBoot({
 	//start SuperDirt
 	d = SuperDirt(~dirtchannels, s);
 	//load samples (path containing a wildcard can be passed in)
-	d.loadSoundFiles;
+    d.loadSoundFiles;
 	//s.sync; // wait for samples to be read
 	//d.start(57120, all {:x.index, x <- ~dirtbusses});
-    d.start(57120, ~dirtbusses.collect({|x| x.index}));
+    d.start(57120, ~dirtbusses.collect({ |x| x.index }));
 
 	//create a proxyspace
 	p = ProxySpace.new;
 });
 )
+
+d.loadSoundFiles("~/Music/sample/dirt/*");
+
 
 (
 p.clear;
@@ -51,8 +54,8 @@ p.push(s);
 
 r = {
     inf.do {
-        ~ml.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['ml_',i].join, v)}) });
-        ~mr.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['mr_',i].join, v)}) });
+        ~ml.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['ml_',i].join, v) }) });
+        ~mr.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['mr_',i].join, v) }) });
         0.04.wait; // 25 frames per second
     }
 }.fork;
@@ -60,6 +63,7 @@ r = {
 
 (
 f = Environment.new;
+
 f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	var waveform = {|r, m| var freq = r*(2**m);
 		SinOsc.kr(freq) + LFNoise1.kr(freq*2) / 2;
@@ -70,6 +74,31 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	});
 	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
 };
+
+f[\transverb] = {
+    arg in, t=0.1, maxt=32;
+    var ons = Onsets.kr(FFT(LocalBuf(1024), in), odftype:'rcomplex');
+    var smooth_ons = Lag.kr(ons, lagTime:t);
+    f[\wiggle].(
+        GVerb.ar(
+            HPF.ar(Mix.new(in)*(1-smooth_ons), freq:60),
+            roomsize:40,
+            revtime:2.pow((maxt.log2 - t.log2 + 1)*(1-smooth_ons) + t.log2 - 1),
+            damping:0.5, spread:10,
+            earlyreflevel: 0.4,
+            drylevel:0, mul:0.08
+    ), rate:2, amt:0.002, dry:0.5) +
+    GVerb.ar(
+        // HPF.ar(in*smooth_ons*HPF.ar(BrownNoise.ar+1, freq:100),freq:300),
+        HPF.ar(in*smooth_ons,freq:300),
+        roomsize:80,
+        revtime:2.pow((maxt.log2 - 1 - t.log2)*(1-smooth_ons) + t.log2 - 1),
+        damping:0.0, spread:100,
+        earlyreflevel: 0.1,
+        drylevel:0, mul:0.8
+    )
+};
+
 
 f[\sincextremum] = { |n|
     var q = n+0.5*pi;
@@ -158,8 +187,27 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
 )
 
 (
+/*
+~amb0 = {
+	0.6*f[\transverb].(
+        Mix.new(~orbit0.ar),
+        t: 1/6, maxt: 8
+)};
 
-~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
+~amb1 = {
+	0.8*f[\transverb].(
+        Mix.new(~orbit1.ar),
+        t: 1/36, maxt: 1
+)};
+
+~amb2 = {
+	0.6*f[\transverb].(
+        Mix.new(~orbit2.ar),
+        t: 1/6, maxt: 4
+)};
+~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;*/
+
+~fx0 = ~orbit0;//{f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
 
@@ -189,38 +237,9 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
         ), dry:0.3, rate:1/3, amt:0.004
 )};
 
-~preout = ~fx0 + ~fx1 + ~fx2 + ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 ;//+ ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )
 
 s.quit
-
-3/2
-4/3
-5/3
-5/4
-7/4
-6/5
-7/5
-8/5
-9/5
-7/6
-11/6
-8/7
-9/7
-10/7
-11/7
-12/7
-13/7
-9/8
-11/8
-13/8
-15/8
-10/9
-11/9
-13/9
-14/9
-15/9
-16/9
-2**(9/12)

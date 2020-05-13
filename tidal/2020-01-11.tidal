@@ -8,6 +8,7 @@ let scale = getScale (scaleTable ++ newscales)
     inkyn pat = note $ inky pat
     inkys pat = speed $ semi2just <$> (inky pat)
     cosine = ((1/4) <~ sine)
+    semitones rat_pat = (log rat_pat) |* (12 / log 2)
 
 let partials = pF "partials"
     curve = pF "curve"
@@ -32,10 +33,21 @@ do
   mode $ slow 5 "<justaeolian justphrygian justdorian>" --" justaeolian@2>"
   root $ slow 5 "<c4 f3 ef3>"
 
-rr 21 24 $ s "supervibe" <| inkyn ("0") +| note (fast 2 $ just2semi ("65 33 15"/"64 32 16")) # legato 1 # gain 0.85 # detune (-3) # sustain 1 # orbit 2 # pan (range 0.9 0.5 saw)
-rr 21 25 $ s "supervibe" <| inkyn ("0*6") # legato 1 # gain 0.85 # detune (-3) # sustain 1 # orbit 2 # pan (range 1 0.4 saw)
+rr 21 24 $ s "supervibe" <| inkyn ("0") +| note (fast 2 $ semitones ("65 33 15"/"64 32 16")) # legato 1 # gain 0.85 # detune (-3) # sustain 1 # orbit 2 # pan (range 0.9 0.5 saw) # hpf 200
+rr 21 25 $ s "supervibe" <| inkyn ("0*6") # legato 1 # gain 0.85 # detune (-3) # sustain 1 # orbit 2 # pan (range 0.8 0.5 saw) # hpf 300
 
 rr 21 22 $ s "supervibe" <| inkyn ("<0 2 3 ~ [0 2 3 5]>") # legato 1 # gain 0.9 # detune (-3) # sustain 0.4 # orbit 0 # pan (range 0 0.5 saw)
+
+p 0 $ s "perc" <| n "[6 7]*6" # lpf (fast (144/13) $ rangex 300 20000 saw) # pan (fast (144/13) $ range 0.8 0.45 saw) # orbit 2 # shape 0.2
+
+p 1 $ s "kick" <| n "[< ~ 2> ~ 3 1]*3" # shape 0.3 # lpf 5000 # orbit 1 # legato (1)
+
+p 2 $ s "skin" <| n "[[~ 3] ~ <[~ 3] 6*2 [3 6]>]" # orbit 0 # pan 0.2 # orbit 1 # shape 0.1
+p 3 $ s "skin" <| n ((1/12) <~ "[[~ 3] ~ <[~ 3] 6*2 [3 6]>]") # orbit 2 # pan 0.65 # orbit 0 # gain 0.7 # speed 0.88
+
+p 4 $ s "ride" <| n "{1 ~}%3" # orbit 0 # speed "[1,1.11]" * speed 0.5
+
+
 
 -- rr 21 26 $ s "supervibe" <| inkyn ("<[0 3 ~ ~ 2 5/2]!3 ~> ") # legato 1 # gain 0.8 # detune (-3) # sustain 0.6 # orbit 0 # pan (range 0.2 0.8 saw) |- note 12
 

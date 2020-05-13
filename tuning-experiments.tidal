@@ -39,7 +39,7 @@ k_pattern table pat = filterJust $ (table' Map.!?) <$> pat
         -- s k = fmap tune (table' Map.!? k)
 
 tuning_pattern = k_pattern [
-    ("just", cyclical_tuner 2 [1,  16/15,  9/8,  6/5,   5/4,  4/3,   45/32,  3/2,   8/5,   5/3,  16/9,  15/8  ])
+    ("just", cyclical_tuner 2 [1,  16/15,  9/8,  6/5,   5/4,  4/3,   45/32,  3/2,   8/5,   5/3,   9/5,  15/8  ])
   , ("pyth", cyclical_tuner 2 [1, 256/243, 9/8, 32/27, 81/64, 4/3, 1024/729, 3/2, 128/81, 27/16, 16/9, 243/128])
   ]
 

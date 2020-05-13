@@ -207,7 +207,7 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
 )};
 ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;*/
 
-~fx0 = ~orbit0;//{f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
+~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
 
@@ -237,7 +237,7 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
         ), dry:0.3, rate:1/3, amt:0.004
 )};
 
-~preout = ~fx0 + ~fx1 + ~fx2 ;//+ ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 + ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

@@ -51,6 +51,16 @@ instruments = [
             'Matrix 1000 Bass2_C5.wav',
         ]),
     dict(
+        src_prefix = 'Reverb Oberheim Matrix 1000 Synth Collection Sample Pack/Reverb Oberheim Matrix 1000 Synth Collection Sample Pack_Audio/',
+        dest_prefix = 'matrix_lead/',
+        files = [
+            ('Lead1/',['Matrix 1000 Lead1_C1.wav']),
+            ('Lead5/',['Matrix 1000 Lead5_C2.wav']),
+            ('Lead4/',['Matrix 1000 Lead4_C3.wav']),
+            ('Lead3/',['Matrix 1000 Lead3_C4.wav']),
+            ('Lead2/',['Matrix 1000 Lead2_C5.wav']),
+        ]),
+    dict(
         src_prefix = '',
         dest_prefix = 'ride/',
         files = [
@@ -70,6 +80,18 @@ instruments = [
                         'Reverb Suzuki RPM-40 Sample Pack_Ride.wav',
                     ]),
                 ]),
+                ('Reverb Roland TR-808 Sample Pack/', [
+                    ('Reverb Roland TR-808 Sample Pack_Audio Files/', [
+                        ('Reverb Roland TR-808 Sample Pack_Cymbal/', [
+                            'Reverb Roland TR-808 Sample Pack_Cymbal Accent Max Decay.wav',
+                        ]),
+                    ]),
+                ]),
+                ('Reverb Oberheim DMX Sample Pack/', [
+                    ('Reverb Oberheim DMX Sample Pack_Audio Files/', [
+                        'Reverb Oberheim DMX Sample Pack_Ride.wav',
+                    ]),
+                ]),
             ]),
         ]),
     dict(
@@ -84,6 +106,11 @@ instruments = [
                             'CC - Med 1.wav',
                         ]),
                     ]),
+                ]),
+            ]),
+            ('Reverb Vintage Drums Vol. 1/', [
+                ('Reverb Vintage Drums Vol. 1 One Shots/', [
+                    'Crash Two.wav',
                 ]),
             ]),
         ]),
@@ -145,6 +172,16 @@ instruments = [
                         'Reverb Ace Tone Rhythm Fever Sample Pack_Perc5.wav',
                     ]),
                 ]),
+                ('Reverb LinnDrum Sample Pack/', [
+                    ('Reverb LinnDrum Sample Pack_Audio Files/', [
+                        'Reverb LinnDrum Sample Pack_Tambourine Soft.wav',
+                    ]),
+                ]),
+                ('Reverb Oberheim DMX Sample Pack/', [
+                    ('Reverb Oberheim DMX Sample Pack_Audio Files/', [
+                        'Reverb Oberheim DMX Sample Pack_Tamborine.wav',
+                    ]),
+                ]),
             ]),
         ]),
     dict(
@@ -175,6 +212,19 @@ instruments = [
                         ]),
                     ]),
                 ]),
+                ('Reverb Roland TR-808 Sample Pack/', [
+                    ('Reverb Roland TR-808 Sample Pack_Audio Files/', [
+                        ('Reverb Roland TR-808 Sample Pack_Toms/', [
+                            'Reverb Roland TR-808 Sample Pack_Tom Low Accent Min Decay.wav',
+                        ]),
+                    ]),
+                ]),
+                ('Reverb Oberheim DMX Sample Pack/', [
+                    ('Reverb Oberheim DMX Sample Pack_Audio Files/', [
+                        'Reverb Oberheim DMX Sample Pack_Tom1.wav',
+                        'Reverb Oberheim DMX Sample Pack_Tom6.wav',
+                    ]),
+                ]),
             ]),
         ]),
     dict(
@@ -203,6 +253,33 @@ instruments = [
                             'BD.1 - High Tune Med Decay.wav',
                             'BD.1 MOD [Pitch+Depth] 2.wav',
                             'BD.1 MOD [Pitch+Depth] 11.wav'
+                        ]),
+                    ]),
+                ]),
+                ('Reverb Sequential Circuits DrumTraks Sample Pack/', [
+                    ('Reverb Sequential Circuits DrumTraks Sample Pack_Audio Files/', [
+                        'Reverb Sequential Circuits DrumTraks Sample Pack_Kick.wav',
+                    ]),
+                ]),
+                ('Reverb Roland TR-909 Sample Pack/', [
+                    ('Reverb Roland TR-909 Sample Pack_Audio Files/', [
+                        ('Reverb Roland TR-909 Sample Pack_Kick/', [
+                            'Reverb Roland TR-909 Sample Pack_Kick Accent Low Tone Min Attack Max Decay.wav',
+                        ]),
+                    ]),
+                ]),
+                ('Reverb LinnDrum Sample Pack/', [
+                    ('Reverb LinnDrum Sample Pack_Audio Files/', [
+                        'Reverb LinnDrum Sample Pack_Kick Hard.wav',
+                    ]),
+                ]),
+                ('Reverb Roland Modded TR-707 Sample Pack/', [
+                    ('Reverb Roland Modded TR-707 Sample Pack_Audio Files/', [
+                        ('Reverb Roland Modded TR-707 Sample Pack_Kick/', [
+                            'Reverb Roland Modded TR-707 Sample Pack_Kick4.wav',
+                            'Reverb Roland Modded TR-707 Sample Pack_Kick2.wav',
+                            'Reverb Roland Modded TR-707 Sample Pack_Kick7.wav',
+                            'Reverb Roland Modded TR-707 Sample Pack_Kick13.wav',
                         ]),
                     ]),
                 ]),

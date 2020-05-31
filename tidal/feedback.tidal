@@ -61,14 +61,18 @@ onTick config sMapMV pMV cxs tempoMV st =
      return ()
 -- sMap is not preserved, needs to work more like startStream?
 -- ah setF is just an application of streamSet to the default stream
--- but cF is (presumably?) acessing the different states when scheduled in
+-- but cF is (presumably?) accessing different states when scheduled in
 -- the default stream by p, vs this patternIO psuedo-stream by p1
+-- so, need to understand how streamSet works
 patternIO :: IO (Pattern (IO ()) -> IO ())
 patternIO = do pMV <- newMVar empty
                sMapMV <- newMVar (Map.empty :: StateMap)
                (tempoMV, _) <- T.clocked defaultConfig (onTick defaultConfig sMapMV pMV [])
                return $ \x -> do swapMVar pMV x
                                  return ()
+
+-- add another map analogous to pMV to onTick: ioMV
+-- new Stream, startStream, startMulti with argument for ioMV
 
 
 -- onTick :: MVar (Pattern (IO b)) -> MVar T.Tempo -> T.State -> IO ()

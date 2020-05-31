@@ -168,7 +168,7 @@ d.soundLibrary.addSynth(
 
 SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=0.5, pan, accelerate, offset|
 	var env, sound, rate, phase, f0;
-	phase = Line.ar(begin, end, sustain);
+    // phase = Line.ar(begin, end, sustain);
 	rate = (begin + 1) * (speed + Sweep.kr(1, accelerate)) * freq;
 	sound = SoundIn.ar([2, 3]); // stereo in
     f0 = ZeroCrossing.ar(sound);
@@ -184,7 +184,79 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
     })
 );*/
 
+SynthDef(\o0, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=0.5, pan, accelerate, offset|
+	var env, sound, rate, phase, f0;
+	rate = (begin + 1) * (speed + Sweep.kr(1, accelerate)) * freq;
+    sound =  DelayC.ar(~orbit0.ar, 10, 0.005); // stereo in
+    f0 = Tartini.kr(sound);
+    sound = FreqShift.ar(sound, rate-f0);
+    sound = sound[0] * (bal-1).sqrt + (sound[1] * bal.sqrt);
+	OffsetOut.ar(out,
+		DirtPan.ar(sound, ~dirt.numChannels, pan)
+	)
+}).add;
+d.soundLibrary.addSynth(
+    \o0, (instrument:\o0, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
+        (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
+    })
+);
+
 )
+
+(
+f[\sinccos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0),
+    sinc = f[\sinc].(ratio*phi*pi),
+    cos_env = (pi*phi).cos +1 /2;
+    sinc * cos_env
+};
+
+f[\coscos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0),
+    cos_wave = (ratio*phi*pi).cos,
+    cos_env = (pi*phi).cos +1 /2;
+    cos_wave * cos_env
+};
+
+f[\sinsincos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0),
+    fold_wave = ((phi*pi).sin*ratio*pi).sin,
+    cos_env = (pi*phi).cos +1 /2;
+    fold_wave * cos_env
+};
+
+f[\sindistcos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0),
+    squash_wave = ((phi*pi).sin*(ratio**2)/2).distort,
+    cos_env = (pi*phi).cos +1 /2;
+    squash_wave * cos_env
+};
+
+f[\stretch] = {
+    arg freq, ratio, osc ...oscargs;
+    FreqShift.ar(osc.(freq*ratio, *oscargs), 0-(ratio -1 *freq))
+};
+
+t.free;
+
+// t = {f[\sinccos].(54.5,SinOsc.kr(1/8) +1 /2 **2 * 32)}.play;
+
+// t = {f[\stretch].(54, (5/3), f[\sinccos], SinOsc.ar(27/3) +1 /2 **2 * 16 +1)}.play;
+
+// t = {f[\stretch].(54, (1), f[\sinccos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+
+// t = {f[\stretch].(54, (1), f[\coscos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+
+// t = {f[\stretch].(54, (1), f[\sinsincos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+
+// t = {f[\stretch].(54*2, (1), f[\sindistcos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+
+)
+
 
 (
 /*

@@ -10,16 +10,16 @@ let scale = getScale (scaleTable ++ newscales)
     cosine = ((1/4) <~ sine)
     semitones rat_pat = (log rat_pat) |* (12 / log 2)
 
-let partials = pF "partials"
-    curve = pF "curve"
-    att = pF "att"
-    dec = pF "dec"
-    rel = pF "rel"
-    sus = pF "sus"
-    leg = pF "leg"
-    fadein = pF "fadein"
-    fadeout = pF "fadeout"
-    bal = pF "bal"
+-- let partials = pF "partials"
+--     curve = pF "curve"
+--     att = pF "att"
+--     dec = pF "dec"
+--     rel = pF "rel"
+--     sus = pF "sus"
+--     leg = pF "leg"
+--     fadein = pF "fadein"
+--     fadeout = pF "fadeout"
+--     bal = pF "bal"
 
 let sil c = p c silence -- shorthand for silence
     msil cs = mapM_ sil cs
@@ -28,67 +28,86 @@ let sil c = p c silence -- shorthand for silence
 
 hush
 
-do
-  setcps 0.65
-  mode $ slow 5 "<justaeolian justphrygian justdorian>" --" justaeolian@2>"
-  root $ slow 5 $ scale "justaeolian" ("<0 -4 -5>" - 7) --"<c4 f3 ef3>"
+-- do
+--   setcps 0.65
+--   mode $ slow 5 "<justaeolian justphrygian justdorian>" --" justaeolian@2>"
+--   root $ slow 5 $ scale "justaeolian" ("<0 -4 -5>" - 7) --"<c4 f3 ef3>"
+--
+--
+-- rr 21 24 $ s "supervibe" <| inkyn ("0") +| note (fast 4 $ semitones ("65 33 15"/"64 32 16")) # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.9 0.5 saw) # hpf 200 |+ note 24
+-- rr 21 25 $ s "supervibe" <| inkyn ("0*12") # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 |+ note 24
+--
+-- p 0 $ s "perc" <| n "[9 11 8 4]*6" # lpf (fast (144/11) $ rangex 300 20000 saw) # pan (fast (144/13) $ range 0.8 0.45 saw) # orbit 2 # shape 0.2 # legato (2/3)
+--
+-- p 1 $ s "kick" <| n "[< ~ 2> ~ <11 9 10> ~]*3" # lpf 5000 # orbit 1 # gain 0.9-- # legato 1
+--
+-- p 2 $ s "skin" <| n "[[~ 5] ~ <[~ 5] 8*2 [5 8]>]" # orbit 0 # pan 0.2 # orbit 1 # shape 0.1
+-- p 3 $ s "skin" <| n ((1/12) <~ "[[~ 5] ~ <[~ 5] 8*2 [5 8]>]") # orbit 2 # pan 0.65 # orbit 0 # gain 0.8 # speed 0.88
+--
+-- rr 21 23 $ sound "matrix_lead:2" <| inkyn ("[7 10 13 9 12 15]*2" + 7) # legato ("{1 2 4 6 1 3 5}%12") # orbit 1 # shape 0.0 # hpf 200 / legato 4
+--
 
-
-rr 21 24 $ s "supervibe" <| inkyn ("0") +| note (fast 4 $ semitones ("65 33 15"/"64 32 16")) # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.9 0.5 saw) # hpf 200 |+ note 24
-rr 21 25 $ s "supervibe" <| inkyn ("0*12") # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 |+ note 24
-
-p 0 $ s "perc" <| n "[9 11 8 4]*6" # lpf (fast (144/11) $ rangex 300 20000 saw) # pan (fast (144/13) $ range 0.8 0.45 saw) # orbit 2 # shape 0.2 # legato (2/3)
-
-p 1 $ s "kick" <| n "[< ~ 2> ~ <11 9 10> ~]*3" # lpf 5000 # orbit 1 # gain 0.9-- # legato 1
-
-p 2 $ s "skin" <| n "[[~ 5] ~ <[~ 5] 8*2 [5 8]>]" # orbit 0 # pan 0.2 # orbit 1 # shape 0.1
-p 3 $ s "skin" <| n ((1/12) <~ "[[~ 5] ~ <[~ 5] 8*2 [5 8]>]") # orbit 2 # pan 0.65 # orbit 0 # gain 0.8 # speed 0.88
-
-rr 21 23 $ sound "matrix_lead:2" <| inkyn ("[7 10 13 9 12 15]*2" + 7) # legato ("{1 2 4 6 1 3 5}%12") # orbit 1 # shape 0.0 # hpf 200 / legato 4
 
 hush
 
 
-setcps 0.63
-
+let brf f w q pat = stack [pat # lpf (f - w) # lpq q, pat # hpf (f + w) # hpq q]
 
 do
+  setcps 0.61 --0.63 -- 0.54
   mode (slow 2 "justaeolian")
   root (slow 2 $ scale "justphrygian" ("<0 >" -7 ))
-  let brf f w q pat = stack [pat # lpf (f - w) # lpq q, pat # hpf (f + w) # hpq q]
   rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 4 6 8 ~@2]*4!2>") # legato 5.5 # pan (fast "<1 2 4 8 16>" sine) + note 12 # orbit 2 # shape 0.2
 
 rr 21 23 $ s "supervibe" <| inkyn ("<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato 10 # gain 0.8 # detune (-2) # orbit 2 # hpf 300
 
-rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7 9 11 13 15>"/16) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.8 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300
+-- rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7 9 11 13 15>"/16) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.8 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300
+rr 21 25 $ s "supervibe" <| inkyn ((slow 16 $ "<1 3 5 7>"/8) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.8 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300
 
 
 -- perc should be tuned narrower?
-rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] ~@8 <7 7 ~ ~ > ~ ~]*2") # inkyn "-3" # legato 1 # shape 0.6 # orbit 1 # pan 0.2
+-- rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] ~@8 <7 7 ~ ~ > ~ ~]*2") # inkyn "-3" # legato 1 # shape 0.6 # orbit 1 # pan 0.2
+rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] ~@8 <7 7 ~ ~ > ~ ~]*2") # note "-15" # legato 1 # shape 0.6 # orbit 1 # pan 0.2
 
-rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ 2]@8 2 ~ ~]*2") # inkyn "0" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
+
+-- rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ 2]@8 2 ~ ~]*2") # inkyn "0" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
+rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ 2]@8 2 ~ ~]*2") # note "-12" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
+
 
 -- introduce bass gradually?
+rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[0,7] _>") # legato 1 # n 1 # shape 0.5 # orbit 1 # gain 0.95 # lpf 4000
+
+-- before introducing chord changes, the 3rd part of cycle sounds like the last since
+-- the voicing is most dissonant
+-- need to handle transition to chord cycle somehow
 
 do
   mode (slow 2 "<justaeolian justdorian justlocrian justlydian>")
   root (slow 2 $ scale "justphrygian" ("<0 3 4 1>" - 7 ))
   rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, 7, 14]@3 11] [[0, -7, 7]@3 9] [[0, -7, 7]@3 9] [[0, 7, 14]@3 9]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95
+  -- one option, just retrigger:
+  rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 4 6 8 ~@2]*4!2>") # legato 5.5 # pan (fast "<1 2 4 8 16>" sine) + note 12 # orbit 2 # shape 0.2
+
 
 -- perc bass groove?
 
 do
-  rr 21 27 $ s "perc" <| n ((0/12) ~> "[2 6]*<4@6 12 4>") # stack [ inkyn "9" # hpf 300 # gain 0.8, inkyn "2" # gain 0.9] # legato 0.33 |+ shape (range 0 0.6 $ fast 2 cosine) # orbit 2 # pan (range 0.5 0.8 $ fast 3 sine) # lpf 5000 # gain 0.8
+  -- rr 21 27 $ s "perc" <| n ((0/12) ~> "[2 6]*<4@6 12 4>") # stack [ inkyn "9" # hpf 300 # gain 0.8, inkyn "2" # gain 0.9] # legato 0.33 |+ shape (range 0 0.6 $ fast 2 cosine) # orbit 2 # pan (range 0.5 0.8 $ fast 3 sine) # lpf 5000 # gain 0.8
+  rr 21 27 $ s "perc" <| n ((0/12) ~> "[2 6]*<4@6 12 4>") # stack [ note "-3" # hpf 300 # gain 0.8, note "-10" # gain 0.9] # legato 0.33 |+ shape (range 0 0.6 $ fast 2 cosine) # orbit 2 # pan (range 0.5 0.8 $ fast 3 sine) # lpf 5000 # gain 0.8
   rr 21 23 $ s "supervibe" <| inkyn ("<[0 1 4 6 ~@8]*8!2 <[-1 0 1 2 ~@8] [0 1 2 6 ~ ~ <4 9> ~@9]>*8!2 [-1 0 1 2 ~@8]*8!2 <[0 1 2 6 ~@8] [0 1 2 6 ~ <9 4> ~@2]>*8!2>") # legato 1 # gain 0.8 # detune (-2) # sustain 0.5 # orbit 2 # hpf 300
   r 21 silence
 
 
 do
-  rr 21 19 $ s "perc" <| n ("[[0 2@2]/3 ~@8 <7 7 ~ ~ > ~ ~]*2") # inkyn ("-3" - 7) # legato 1 # shape 0.6 # orbit 1 # pan 0.2
-  rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ <2 2 ~>]@8 2/2 ~ ~]*2") # inkyn "0" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
+  -- rr 21 19 $ s "perc" <| n ("[[0 2@2]/3 ~@8 <7 7 ~ ~ > ~ ~]*2") # inkyn ("-3" - 7) # legato 1 # shape 0.6 # orbit 1 # pan 0.2
+  -- rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ <2 2 ~>]@8 2/2 ~ ~]*2") # inkyn "0" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
+  rr 21 19 $ s "perc" <| n ("[[0 2@2]/3 ~@8 <7 7 ~ ~ > ~ ~]*2") # note ("-15" - 12) # legato 1 # shape 0.6 # orbit 1 # pan 0.2
+  rr 21 26 $ s "perc" <| n ((0/24) <~ "[~ [~ <2 2 ~>]@8 2/2 ~ ~]*2") # note "-12" # legato 0.667 # shape 0.6 # orbit 1 # pan 0.6
   r 25 silence
   r 23 silence
 
+
+-- change in bass feels sudden here
 
 do
   -- mode (slow 4 "<justdorian justaeolian justionian justlydian>")
@@ -99,8 +118,10 @@ do
   mode (slow 4 "<justdorian justaeolian justionian justlydian justaeolian justdorian justlocrian justlydian>")
   -- root (slow 4 $ scale "justphrygian" ("<0 4 5 1 0 3 4 1>" - 7) - (slow 8 "<0 1 2 3 4 5 6 7 8 9 10 11>"))
   root (slow 4 $ scale "justphrygian" ("<0 4 5 1 0 3 4 1>" - 7) - (cF 0 "tonic"))
-  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[14__ 7 <0 2 4 [~ ~ 8 6 4 2 0] 0 2 6 4>_ 9_] [[0, -7, 7]@5 11/2]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95
+  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, 7, 14]@3 11] [[0, -7, 7]@3 9] [[0, -7, 7]@3 9] [[0, 7, 14]@3 9]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95
   rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*<2@192 1@192>!2 [0 2 6 8 ~@2]*<2@192 1@192>!2 [0 2 6 8 ~@2]*<2@192 1@192>!2 [0 4 6 8 ~@2]*<2@192 1@192>!2>") # legato 5.5 # pan (fast "<1 2 4 8 16>" sine) + note 12 # orbit 2 # shape 0.2 # lpf (slow 192 $ rangex 20000 80 saw)
+
+rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[14__ 7 <0 2 4 [~ ~ 8 6 4 2 0] 0 2 6 4>_ 9_] [[0, -7, 7]@5 11/2]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95
 
 rr 21 23 $ s "supervibe" <| inkyn ("<[~ 0 1 4 6 ~@7]*2!4 [~ -5 -1 0 1 ~@7]*2!4 [~ -5 -2 0 1 ~@7]*2!4 [~ -1 0 2 -1 ~@7]*2!4>") # legato 10 # gain 0.8 # detune (-2) # orbit 2 # hpf 300
 
@@ -124,33 +145,42 @@ rr 21 27 $ s "perc" <| n ("[2 6]*<2@5 6@2 2>") # stack [ inkyn (slow 4 "9 8 6 4 
 
 rr 21 23 $ s "supervibe" <| inkyn (slow 3 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>") # legato 6 # gain 0.8 # detune (-3) # orbit 2 # hpf 300
 
-
 -- as chords descend, increase complexity of parts but reduce texture by
 -- fading to ambience and filtering
 -- eventually bass is so low it's mostly percussive
--- repetitive perc parts have faded into distant trickle, leaving what?
--- does something happen after 12 cycles when it loops around? or should it
--- be tuned out of ET?
+
+r 77 $ s "noise:5*1" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+r 77 $ s "noise:5*2" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+r 77 $ s "noise:5*4" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+r 77 $ s "noise:5*8" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+
+
+do
+  let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]"
+  rr 21 241 $ s "harp:2" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 tones) # orbit 1 # n "1" # gain 0.9 # shape 0.4
+  rr 21 242 $ s "harp:2" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 tones) # orbit 0 # n "1" # gain 0.9 # shape 0.4 |- note 12 # pan 0.8
+  rr 21 24 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) # legato (2/3) # orbit 1 # n "2" # gain 0.9
+  rr 21 244 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) # legato (2/3) # orbit 2 # n "3" # gain 0.85
+
+
+rr 21 24 $ s "supervibe" <| inkyn ("0") +| note (fast 4 $ semitones ("65 33 15"/"64 32 16")) # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.9 0.5 saw) # hpf 200 |+ note 24
+rr 21 25 $ s "supervibe" <| inkyn ("0*12") # legato (1/2) # gain 0.8 # detune (0) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 |+ note 24
+
+p 1 $ s "kick" <| n "[< ~ 2> ~ <11 9 10> ~]*2" # lpf 5000 # orbit 1 # gain 0.9
+
+r 77 $ s "noise:4*8" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+
+do
+  let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]" + "{0 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 18 19 20 21 22}%24"
+  rr 21 241 $ s "harp:2" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 tones) # orbit 1 # n "1" # gain 0.9 # shape 0.4
+  rr 21 242 $ s "harp:2" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 tones) # orbit 0 # n "1" # gain 0.9 # shape 0.4 |- note 12 # pan 0.8
+  rr 21 24 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) # legato (2/3) # orbit 1 # n "2" # gain 0.9
+  rr 21 244 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) # legato (2/3) # orbit 2 # n "3" # gain 0.85
 
 hush
 
--- ...
+----
 
--- rr 21 24 $ s "cz_violin:2" <| inkyn "<[~ {0 4 6 8 9}%6@4 ~]*2!2 [~ {3 5 9 11 14}%6@4 ~]*2!2 [~ {4 6 10 12 -1}%6@4 ~]*2!2 [~ {1 3 7 9 12}%6@4 ~]*2!2>" # legato (slow 16 $ rangex 6 18 sine) # orbit 1 # n "{1 2}%12" # pan (fast 2 $ range 0.4 0.8 saw)
-
--- rr 21 24 $ s "cz_violin" <| inkyn (slow 2 "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,<4 4 4 ~ >,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<11 11 11 ~ >,<12 ~ 12 12>]") # legato 0.5 # orbit 1 # n "2" # gain 0.95
-
-rr 21 24 $ s "cz_violin" <| inkyn ( (1/6) ~> (slow 8 $ stack [
-  (0/4) ~> "4",
-  (1/4) ~> "3",
-  (2/4) ~> "8",
-  (3/4) ~> "7"
-  ])) # legato (3/4) # orbit 1 # n "3" # gain 0.9 |- note 12-- # release 64
-
-
-rr 21 24 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]") # legato (2/3) # orbit 2 # n "2" # gain 0.95
-
-rr 21 244 $ s "cz_violin" <| inkyn ( (1/6) ~> slow 2 "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]") # legato (2/3) # orbit 2 # n "3" # gain 0.95
 
 p 244 silence
 p 24 silence
@@ -270,7 +300,6 @@ rr 1 1 $ s "bassoon_vib" <| inkys "[[~ 0 2]*4, [6 4]*2, [~ ~ 8]]" # n "{0 1}%12"
 -- rr 1 4 $ s "bassoon_stac" <| inkys "[[~ 0 2]*8, [6 ~ 4]*4, [~ ~ 8 ~]*2]" # n "{1 0}%12" # legato 2 # pan (fast (5/4) sine) # gain 0.9 # lpf 9000 # orbit 1
 
 rr 1 4 $ s "bassoon_stac" <| inkys "[[~ <0 2 4 6 8> <1 8>]*8, [<7 6 5> ~ <9 2>]*4, [~ 4]*2]" # n "{1 0}%12" # legato 2 # pan (range 0.3 0.7 $ fast (5/4) sine) # gain 0.9 # lpf 9000 # orbit 2
-
 
 
 -- rr 1 2 $ s "bassoon_vib:2" <| ((1/2) <~ slow 1 (inkys "<0 2 -1 -3>")) |* speed 0.25 # legato 4 # orbit 0 # decay 1 # release 6 # shape 0.5

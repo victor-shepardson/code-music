@@ -32,6 +32,39 @@ instruments = [
             'PSBassoon_C4_v1_rr1.wav',
         ]),
     dict(
+        src_prefix = 'VSCO-2-CE/Woodwinds/Flute/stac/',
+        dest_prefix = 'flute_stac/',
+        files = [
+            'LDFlute_stac_C4_v1_rr2.wav',
+            'LDFlute_stac_C5_v1_rr2.wav',
+            'LDFlute_stac_C6_v1_rr2.wav',
+        ]),
+    dict(
+        src_prefix = 'VSCO-2-CE/Woodwinds/Flute/susNV/',
+        dest_prefix = 'flute/',
+        files = [
+            'LDFlute_susNV_C3_v3_1.wav',
+            'LDFlute_susNV_C4_v1_1.wav',
+            'LDFlute_susNV_C5_v1_1.wav',
+            'LDFlute_susNV_C6_v1_1.wav',
+        ]),
+    dict(
+        src_prefix = 'VSCO-2-CE/Woodwinds/Flute/expvib/',
+        dest_prefix = 'flute_vib/',
+        files = [
+            'LDFlute_expvib_C3_v1_1.wav',
+            'LDFlute_expvib_C4_v1_1.wav',
+            'LDFlute_expvib_C5_v1_1.wav',
+            'LDFlute_expvib_C6_v1_1.wav',
+        ]),
+    dict( # TODO: resample (maybe just change sampling rate of file?) to get more C tones
+        src_prefix = 'VSCO-2-CE/Strings/Harp/',
+        dest_prefix = 'harp/',
+        files = [
+            'KSHarp_C3_mf.wav',
+            'KSHarp_C5_mf.wav',
+        ]),
+    dict(
         src_prefix = 'Reverb Casio CZ1000 Synth Collection Sample Pack/Reverb Casio CZ1000 Synth Collection Sample Pack_Audio Files/Violin Lead/',
         dest_prefix = 'cz_violin/',
         files = [
@@ -39,6 +72,42 @@ instruments = [
             'Casio CZ1000 Violin Lead_C2.wav',
             'Casio CZ1000 Violin Lead_C3.wav',
             'Casio CZ1000 Violin Lead_C4.wav',
+        ]),
+    dict(
+        src_prefix = 'Reverb Casio CZ1000 Synth Collection Sample Pack/Reverb Casio CZ1000 Synth Collection Sample Pack_Audio Files/Accordian/',
+        dest_prefix = 'cz_accordian/',
+        files = [
+            'Casio CZ1000 Accordian_C1.wav',
+            'Casio CZ1000 Accordian_C2.wav',
+            'Casio CZ1000 Accordian_C3.wav',
+            'Casio CZ1000 Accordian_C4.wav',
+        ]),
+    dict(
+        src_prefix = 'Reverb Casio CZ1000 Synth Collection Sample Pack/Reverb Casio CZ1000 Synth Collection Sample Pack_Audio Files/Whistle/',
+        dest_prefix = 'cz_whistle/',
+        files = [
+            'Casio CZ1000 Whistle_C1.wav',
+            'Casio CZ1000 Whistle_C2.wav',
+            'Casio CZ1000 Whistle_C3.wav',
+            'Casio CZ1000 Whistle_C4.wav',
+        ]),
+    dict(
+        src_prefix = 'Reverb Casio CZ1000 Synth Collection Sample Pack/Reverb Casio CZ1000 Synth Collection Sample Pack_Audio Files/Trumpet/',
+        dest_prefix = 'cz_trumpet/',
+        files = [
+            'Casio CZ1000 Trumpet_C1.wav',
+            'Casio CZ1000 Trumpet_C2.wav',
+            'Casio CZ1000 Trumpet_C3.wav',
+            'Casio CZ1000 Trumpet_C4.wav',
+        ]),
+    dict(
+        src_prefix = 'Reverb Casio CZ1000 Synth Collection Sample Pack/Reverb Casio CZ1000 Synth Collection Sample Pack_Audio Files/Electric Organ/',
+        dest_prefix = 'cz_organ/',
+        files = [
+            'Casio CZ1000 Electric Organ_C1.wav',
+            'Casio CZ1000 Electric Organ_C2.wav',
+            'Casio CZ1000 Electric Organ_C3.wav',
+            'Casio CZ1000 Electric Organ_C4.wav',
         ]),
     dict(
         src_prefix = 'Reverb Oberheim Matrix 1000 Synth Collection Sample Pack/Reverb Oberheim Matrix 1000 Synth Collection Sample Pack_Audio/Bass2/',
@@ -93,6 +162,17 @@ instruments = [
                     ]),
                 ]),
             ]),
+            ('VSCO-2-CE/', [
+                ('VSCO 1 Percussion/', [
+                    ('varMetal/', [
+                        ('Gong/', [
+                            'gong_smack_3.wav',
+                            'gong_smack_2.wav',
+                            'gong_scrape_1.wav',
+                        ]),
+                    ]),
+                ]),
+            ]),
         ]),
     dict(
         src_prefix = '',
@@ -111,6 +191,17 @@ instruments = [
             ('Reverb Vintage Drums Vol. 1/', [
                 ('Reverb Vintage Drums Vol. 1 One Shots/', [
                     'Crash Two.wav',
+                ]),
+            ]),
+            ('VSCO-2-CE/', [
+                ('VSCO 1 Percussion/', [
+                    ('varMetal/', [
+                        ('Cymbals/', [
+                            ('susp/', [
+                                'susp_hit_hardmall_fff.wav',
+                            ]),
+                        ]),
+                    ]),
                 ]),
             ]),
         ]),
@@ -181,6 +272,29 @@ instruments = [
                     ('Reverb Oberheim DMX Sample Pack_Audio Files/', [
                         'Reverb Oberheim DMX Sample Pack_Tamborine.wav',
                     ]),
+                ]),
+            ]),
+            ('VSCO-2-CE/', [
+                ('VSCO 1 Percussion/', [
+                    ('varWood/', [
+                        'slapstick3.wav',
+                        'tambourine_Down.wav',
+                        'tambourine_up_7.wav',
+                    ]),
+                    ('varMetal/', [
+                        ('various/', [
+                            'bell_tree_metalscrape1.wav',
+                            'brake_mf_1.wav',
+                            'cabasa_4.wav',
+                            'sleighbell1_hit_1.wav',
+                            'windchimes_fastAsc1.wav',
+                        ]),
+                        ('Cymbals/', [
+                            ('susp/', [
+                                'susp_hit_metal_2_f.wav',
+                            ]),
+                        ]),
+                    ])
                 ]),
             ]),
         ]),
@@ -303,6 +417,46 @@ instruments = [
                     ]),
                 ]),
             ]),
+        ]),
+    dict(
+        src_prefix = '',
+        dest_prefix = 'noise/',
+        files = [
+            ('VSCO-2-CE/', [
+                ('VSCO 1 Percussion/', [
+                    ('varWood/', [
+                        'ratchet1.wav',
+                        'maraca_shake.wav',
+                        'tambourine_shake.wav'
+                    ]),
+                    ('varMetal/', [
+                        ('various/', [
+                            'cabasa_roll2.wav',
+                            'sleighbell2_shake1.wav',
+                            'windchimes_slowDesc1.wav',
+                        ]),
+                    ]),
+                ]),
+            ]),
+        ]),
+    dict(
+        src_prefix = 'VSCO-2-CE/Miscellania Raw/Misc 1/',
+        dest_prefix = 'zap/',
+        files = [
+            'zap1.wav',
+            'zap2.wav',
+            'zap3.wav',
+            'zap4.wav',
+            'zap5.wav',
+            'zap6.wav',
+            'zap7.wav',
+            'zap8.wav',
+            'zap9.wav',
+            'zap10.wav',
+            'zap11.wav',
+            'zap12.wav',
+            'zap13.wav',
+            'zap14.wav',
         ]),
     ]
 

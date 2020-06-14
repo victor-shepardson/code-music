@@ -1,0 +1,31 @@
+:set +m
+:script ~/code-music/tidal/scales.hs
+
+let sil c = p c silence -- shorthand for silence
+    msil cs = mapM_ sil cs
+    rr sync_to name pat = p name $ reset sync_to $ (1 ~> pat) -- r with separate argument to sync to another pattern
+    r name = rr name name -- shorthand for reset and shift by one (compensating for a bug? may need to revert in future)
+
+let scale = getScale (scaleTable ++ newscales)
+    mode = setS "mode"
+    root = setF "root"
+    inky pat = (cF 0 "root") +| scale (cS "major" "mode") pat
+    inkyn pat = note $ inky pat
+    inkys pat = speed $ semi2just <$> (inky pat)
+    cosine = ((1/4) <~ sine)
+    semitones rat_pat = (log rat_pat) |* (12 / log 2)
+
+do
+  setcps 0.6
+  mode "tenthirdsdorian"
+  root "c4"
+
+-- p 0 $ n (slow 16 "[<0 2 3 6 12>!<2 3> ~@<6 5>]*6") # speed (slow 16 ("{1 5 6 7 8}%18"/"{1 4 5 6 7}%18")) # s "zap" # shape 0.7 # orbit 1
+
+-- p 1 $ n (slow 8 "[~ <1 5 4 9 11>]*3") # speed (slow 8 ("{1 5 6 7}%6"/"{1 4 5 6}%6")) # s "zap" # shape 0.8 # orbit 2 # pan 1 |* speed 0.667
+
+p 2 $ n (slow 1 "<10 13>") # speed (slow 1 ("<1 5 6 7>"/"<1 4 5 6>")) # s "zap" # legato 2 # shape 0.9 # orbit 2 |* speed 0.5 # pan 0.6
+
+hush
+
+p 0 $ stack [s "zap:6" # pan 0.7 # sustain "0.13" # nudge "-0.03" # speed (rangex 0.5 1 rand), s "flute_stac:1" # speed 1 # shape 0.5, s "harp:1"] *| inkyn ("[0 <4 2@3> <6 4@3> <3 6> <1>@2]*4" + "{0 7 14 21 14 14 7@11 0@13}%3" + (slow 8 "<0 1>") -7) # orbit 1 # legato 6 # pan 0.8

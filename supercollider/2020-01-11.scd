@@ -75,30 +75,6 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
 };
 
-f[\transverb] = {
-    arg in, t=0.1, maxt=32;
-    var ons = Onsets.kr(FFT(LocalBuf(1024), in), odftype:'rcomplex');
-    var smooth_ons = Lag.kr(ons, lagTime:t);
-    f[\wiggle].(
-        GVerb.ar(
-            HPF.ar(Mix.new(in)*(1-smooth_ons), freq:60),
-            roomsize:40,
-            revtime:2.pow((maxt.log2 - t.log2 + 1)*(1-smooth_ons) + t.log2 - 1),
-            damping:0.5, spread:10,
-            earlyreflevel: 0.4,
-            drylevel:0, mul:0.08
-    ), rate:2, amt:0.002, dry:0.5) +
-    GVerb.ar(
-        // HPF.ar(in*smooth_ons*HPF.ar(BrownNoise.ar+1, freq:100),freq:300),
-        HPF.ar(in*smooth_ons,freq:300),
-        roomsize:80,
-        revtime:2.pow((maxt.log2 - 1 - t.log2)*(1-smooth_ons) + t.log2 - 1),
-        damping:0.0, spread:100,
-        earlyreflevel: 0.1,
-        drylevel:0, mul:0.8
-    )
-};
-
 
 f[\sincextremum] = { |n|
     var q = n+0.5*pi;
@@ -184,22 +160,6 @@ SynthDef(\inzf, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=
     })
 );*/
 
-SynthDef(\o0, { |out, sustain = 1, freq = 440, speed = 1, begin=0, end=1, bal=0.5, pan, accelerate, offset|
-	var env, sound, rate, phase, f0;
-	rate = (begin + 1) * (speed + Sweep.kr(1, accelerate)) * freq;
-    sound =  DelayC.ar(~orbit0.ar, 10, 0.005); // stereo in
-    f0 = Tartini.kr(sound);
-    sound = FreqShift.ar(sound, rate-f0);
-    sound = sound[0] * (bal-1).sqrt + (sound[1] * bal.sqrt);
-	OffsetOut.ar(out,
-		DirtPan.ar(sound, ~dirt.numChannels, pan)
-	)
-}).add;
-d.soundLibrary.addSynth(
-    \o0, (instrument:\o0, fadein:0.001, fadeout:0.005, att:0, dec:0, rel:0, legato:1, sustain: {
-        (~delta*~legato).max(~att.max(~fadein)+~dec)+~rel.max(~fadeout)
-    })
-);
 
 )
 
@@ -228,10 +188,19 @@ f[\sinsincos] = {
     fold_wave * cos_env
 };
 
-f[\sindistcos] = {
+f[\sinsigcos] = {
     arg freq, ratio;
     var phi = LFSaw.ar(freq, iphase:0),
     squash_wave = ((phi*pi).sin*(ratio**2)/2).distort,
+    cos_env = (pi*phi).cos +1 /2;
+    squash_wave * cos_env
+};
+
+f[\sinsinsigcos] = {
+    arg freq, ratio, ratio2;
+    var phi = LFSaw.ar(freq, iphase:0),
+    fold_wave = ((phi*pi).sin*ratio*pi).sin,
+    squash_wave = (fold_wave*(ratio2**2)).distort,
     cos_env = (pi*phi).cos +1 /2;
     squash_wave * cos_env
 };
@@ -243,6 +212,8 @@ f[\stretch] = {
 
 t.free;
 
+t = {f[\sinccos].(110,1)}.play
+
 // t = {f[\sinccos].(54.5,SinOsc.kr(1/8) +1 /2 **2 * 32)}.play;
 
 // t = {f[\stretch].(54, (5/3), f[\sinccos], SinOsc.ar(27/3) +1 /2 **2 * 16 +1)}.play;
@@ -253,30 +224,27 @@ t.free;
 
 // t = {f[\stretch].(54, (1), f[\sinsincos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
 
-// t = {f[\stretch].(54*2, (1), f[\sindistcos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+// t = {f[\stretch].(54*2, (1), f[\sinsigcos], SinOsc.ar(1/8) +1 /2 **2 * 32)}.play;
+
+/*t = {Splay.ar([
+f[\stretch].(54*2, (3/4), f[\sinsinsigcos],
+    SinOsc.ar(1/32) +1 /2 **2 * 4 + 0.25,
+    SinOsc.ar(1/11) +1 /2 **2 * 1 + 0.5
+),
+f[\stretch].(54*4, (1/4), f[\sinsinsigcos],
+    SinOsc.ar(1/45) +1 /2 **2 * 2 + 0.25,
+    SinOsc.ar(1/7) +1 /2 **2 * 1 + 0.5
+),
+f[\stretch].(54*3, (2/4), f[\sinsinsigcos],
+    SinOsc.ar(1/65) +1 /2 **2 * 3 + 0.25,
+    SinOsc.ar(1/13) +1 /2 **2 * 1 + 0.5
+)
+])}.play;*/
 
 )
 
 
 (
-/*
-~amb0 = {
-	0.6*f[\transverb].(
-        Mix.new(~orbit0.ar),
-        t: 1/6, maxt: 8
-)};
-
-~amb1 = {
-	0.8*f[\transverb].(
-        Mix.new(~orbit1.ar),
-        t: 1/36, maxt: 1
-)};
-
-~amb2 = {
-	0.6*f[\transverb].(
-        Mix.new(~orbit2.ar),
-        t: 1/6, maxt: 4
-)};
 ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;*/
 
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
@@ -313,5 +281,9 @@ t.free;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )
+
+thisProcess.platform.recordingsDir
+s.record
+s.stopRecording
 
 s.quit

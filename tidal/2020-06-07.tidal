@@ -16,16 +16,19 @@ let scale = getScale (scaleTable ++ newscales)
     semitones rat_pat = (log rat_pat) |* (12 / log 2)
 
 do
-  setcps 0.6
-  mode "tenthirdsdorian"
+  setcps 0.61
+  -- mode "tenthirdsdorian"
+  mode "justdorian"
   root "c4"
 
 -- p 0 $ n (slow 16 "[<0 2 3 6 12>!<2 3> ~@<6 5>]*6") # speed (slow 16 ("{1 5 6 7 8}%18"/"{1 4 5 6 7}%18")) # s "zap" # shape 0.7 # orbit 1
 
 -- p 1 $ n (slow 8 "[~ <1 5 4 9 11>]*3") # speed (slow 8 ("{1 5 6 7}%6"/"{1 4 5 6}%6")) # s "zap" # shape 0.8 # orbit 2 # pan 1 |* speed 0.667
 
-p 2 $ n (slow 1 "<10 13>") # speed (slow 1 ("<1 5 6 7>"/"<1 4 5 6>")) # s "zap" # legato 2 # shape 0.9 # orbit 2 |* speed 0.5 # pan 0.6
+rr 0 2 $ n (slow 1 "<10 13>") # speed (slow 1 ("<1 5 6 7>"/"<1 4 5 6>")) # s "zap" # legato 2 # shape 0.9 # orbit 2 |* speed 0.5 # pan 0.6
 
 hush
 
-p 0 $ stack [s "zap:6" # pan 0.7 # sustain "0.13" # nudge "-0.03" # speed (rangex 0.5 1 rand), s "flute_stac:1" # speed 1 # shape 0.5, s "harp:1"] *| inkyn ("[0 <4 2@3> <6 4@3> <3 6> <1>@2]*4" + "{0 7 14 21 14 14 7@11 0@13}%3" + (slow 8 "<0 1>") -7) # orbit 1 # legato 6 # pan 0.8
+rr 0 0 $ stack [s "zap:6" # pan 0.7 # sustain "0.13" # nudge "-0.03" # speed (rangex 0.5 1 rand), s "flute_stac:1" # speed 1 # shape 0.5, s "harp:1"] *| inkyn ("[0 <4 2@3> <6 4@3> <3 6> <1>@2]*4" + "{0 7 14 21 14 14 7@11 0@13}%3" + (slow 8 "<0 1>") -7) # orbit 1 # legato 6 # pan 0.8
+
+p 1 $ s "noise:0*2" # pan rand # shape 0.7 # speed (rangex 0.25 0.75 rand) # end 0.3

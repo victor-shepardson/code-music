@@ -68,16 +68,20 @@ do
   r 0 $ gain "0*32" |> cps (slow 24 $ rangex 0.075 0.6 envL)
   -- r 0 $ gain "0*32" |> cps (slow 24 $ rangex 0.15 0.6 envL)
   rr 0 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 2 6 8 ~@2]*4!2 [0 4 6 8 ~@2]*4!2>") # legato 5.5 # pan (((fast "<1 2 4 8 16>" sine)-0.5) * 1 + 0.5) + note 12 # orbit 2 # shape 0.2 # groove 1 -- # cps (slow 24 $ rangex 0.15 0.6 envL)-- |* gain (256/(256 + sig fromRational))
-  rr 21 88 $ s "supervibe" <| inkyn "{0 4 6 8}%24" # legato (2/3) # gain 0.85 # detune (0) # orbit 2 # pan (range 0.3 0.5 saw) # hpf 300 |+ note 0 # nudge 0.03
-  rr 21 8 $ s "supervibe" <| inkyn "{0 4 6 8}%8" +| note (fast 8 $ semitones ("65 33 15"/"64 32 16")) # legato (2/3) # gain 0.9 # detune (0) # orbit 2 # pan (range 1 0.5 saw) # hpf 200 |+ note 0 # groove 1
+  rr 21 88 $ s "supervibe" <| inkyn "{0 4 6 8}%24" # legato (2/3) # gain 0.8 # detune (0) # orbit 2 # pan (range 0.3 0.5 saw) # hpf 300 |+ note 0 # nudge 0.03
+  rr 21 8 $ s "supervibe" <| inkyn "{0 4 6 8}%8" +| note (fast 8 $ semitones ("65 33 15"/"64 32 16")) # legato (2/3) # gain 0.85 # detune (0) # orbit 2 # pan (range 1 0.5 saw) # hpf 200 |+ note 0 # groove 1
+  rr 21 77 $ s "noise:5*2" # pan rand # shape 0.5 # speed (rangex 0.125 1 $ slow 32 envL) |* speed "-1" # legato (range 64 0 $ slow 32 envL)
+
+p 19 silence
 
 do
-  rr 21 19 $ s "perc" <| n "[[0 2@2] ~@8 7 ~ <~ 2!6 ~ >]*2" # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
+  -- rr 21 19 $ s "perc" <| n "[[0 2@2] ~@8 7 ~ <~ ~ 2!6>]*2" # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
+  rr 21 19 $ s "perc" <| n "[[0 2@2] ~@2 <~ 7> ~@5 7 ~ ~]*2" # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
+
 
 do
   rr 21 23 $ s "supervibe" <| inkyn ("<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato 10 # gain 0.8 # detune (-2) # orbit 2 # hpf 300 # groove 1
   rr 21 26 $ s "perc" <| n (fast 2 "[~@5 2 ~@3 2 ~ ~]") # note "[[-17,-12]@2 [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.55 # groove 1
-
 
 -- r 77 $ s "noise:3" # pan rand # shape 0.6 # speed (rangex 0.5 2 rand)
 -- r 77 $ s "noise:3*2" # pan rand # shape 0.6 # speed (rangex 0.5 2 rand)
@@ -86,17 +90,19 @@ do
 
 -- rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7 9 11 13 15>"/16) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.8 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300
 do
+  rr 21 77 $ silence
   rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7>"/8) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 4 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.77 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 # groove 2 # lpf 3000
   -- rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7>"/8) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.77 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 # groove 2 # lpf 3000
   rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") # legato 5.5 # pan (((fast "<1 2 4 8 16>" sine)-0.5) * 1 + 0.5) + note 12 # orbit 2 # shape 0.2 # groove 1-- |* gain (256/(256 + sig fromRational))
   p 8 silence
   p 88 silence
 -- do
-  rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] <~ ~ ~ 2> ~@7 <~ 7 7 7> ~ <~ 2!6 ~ >]*2") # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
+  -- rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] <~ ~ ~ 2> ~@7 <~ 7 7 7> ~ <~ 2!6 ~ >]*2") # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
+  rr 21 19 $ s "perc" <| n "[[0 2@2] <~ ~ ~ 2> ~ <~ 7> ~@5 <~ 7 7 7> ~ ~]*2" # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
   -- rr 21 19 $ s "perc" <| n ((0/24) <~ "[[0 2@2] ~@8 <7 7 ~ 7> ~ <2!7 ~ >]*2") # note ("[-15,-20]") # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.45 0.05 sine) # groove 1 # lpf 3300
-  rr 21 22 $ s "matrix_bass" <| inkyn (2 <~ slow 4 "[0,7]") # legato 1 # n 1 # shape 0.5 # orbit 1 # gain 0.9 # lpf 4000 # bassacc # groove 1
+  rr 21 22 $ s "matrix_bass" <| inkyn (0 <~ slow 4 "[0,7]") # legato 1 # n 1 # shape 0.5 # orbit 1 # gain 0.9 # lpf 4000 # bassacc # groove 1
 -- do
-  rr 21 26 $ s "perc" <| n (fast 2 "<[~@5 2 ~@3 2 ~ ~]!3 [~@4 2 ~@4 2 ~ ~]>") # note "[[-17,-12]@2 [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.55 # groove 1
+  rr 21 26 $ s "perc" <| n (fast 2 "<[~@5 2 ~@3 2 ~ ~] [~@4 2 ~@4 2 ~ ~]>") # note "[[-17,-12]@2 [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.55 # groove 1
   -- rr 21 26 $ s "perc" <| n ((0/24) <~ "[~@5 2 ~@3 2 ~ ~]*2") # note "[[-17,-12] [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.55 # groove 1
   -- rr 21 266 $ s "perc" <| n (2 + "[[0*3 [~ 0]*3]*2, ~ 0]") # note "-12" # legato 0.67 # shape 0.1 # orbit 2 # pan (range 0.3 0.7 $ fast 8 sine) # groove 0.5 # lpf 6000
 
@@ -111,6 +117,8 @@ hush
 
 rr 21 88 $ s "supervibe" <| inkyn "{0 4 6 8}%24" # legato (1/2) # gain 0.85 # detune (0) # orbit 2 # pan (range 0.3 0.5 saw) # hpf 300 |+ note 0 # nudge 0.03
 rr 21 8 $ s "supervibe" <| inkyn "{0 4 6 8}%8" +| note (fast 8 $ semitones ("65 33 15"/"64 32 16")) # legato (1/2) # gain 0.9 # detune (0) # orbit 2 # pan (range 1 0.5 saw) # hpf 200 |+ note 0 # groove 1
+
+-- rr 21 222 $ s "matrix_bass:2" <| inkyn (slow 4 "[0,-7]") # legato 1 # n 1 # shape 0.5 # orbit 1 # gain 0.9 # lpf 4000 # bassacc # groove 1 # accelerate "1"
 
 -- need to handle transition to chord cycle somehow
 -- build microtonal dissonances?
@@ -129,6 +137,7 @@ rr 21 8 $ s "supervibe" <| inkyn "{0 4 6 8}%8" +| note (fast 8 $ semitones ("65 
 --   root (scale "justphrygian" "-6")
 
 do
+  p 222 silence
   p 211 silence
   p 2111 silence
   p 77 silence
@@ -142,6 +151,13 @@ do
   rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") # legato 5.5 # pan (fast "<4 8 16>" $ sine*0.7 + 0.15) + note 12 # orbit 2 # shape 0.2 # groove 1
   rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, 7, 14]@3 11] [[0, -7, 7]@3 <9 2>] <[[0, -7, 7]@3 9] [[0, -7, 7]@5 2@3]> [[0, 7, 14]@3 9]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # bassacc # groove 1
   p 25 silence
+  -- rr 21 255 $ s ("crash:2") <| speed (slow 2 "<[2@3 1]!2 <[2@3 1] [2@5 1@3]> [2@3 1]>") # shape 0.1 -- # accelerate "-1.4" -- # lpf 6000
+  -- rr 21 255 $ s ("kick:7") <| legato (slow 2 $ 1/"<[6@3 1]!2 <[6@3 1] [6@5 1@3]> [6@3 1]>") # shape 0.8 # orbit 2 # speed 1-- # accelerate "-1.4" -- # lpf 6000
+  rr 21 255 $ s ("kick:7") <| orbit (slow 2 "<[1@3 2]!2 <[1@3 2] [1@5 2@3]> [1@3 2]>") # shape 0.9 # speed "<1 2>" # groove 1-- # accelerate "-1.4" -- # lpf 6000
+  -- rr 21 2555 $ s ("kick:7") <| speed ("[0.5 1 1.5 2 ~@2]*2") # shape 0.8 # orbit 2 # groove 1 # legato 0.5-- # accelerate "-1.4" -- # lpf 6000
+
+
+
   -- rr 21 25 $ s "supervibe" <| inkyn ((slow 8 $ "<1 3 5 7>"/8) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato "[12@11 ~]" # gain 0.77 # detune (-2) # orbit 0 # pan (range 0.8 0.5 saw) # hpf 300 # groove 2 # lpf 3000
 
 -- perc change here?
@@ -153,7 +169,7 @@ do
   rr 21 27 $ s "perc" <| n "[2@4 6@5 6@3]*<2@5 [2@5 6] 6 2>" # stack [ note "-3" # hpf 300 # gain 0.8, note "-10" # gain 0.9] # legato 0.33 |+ shape (range 0 0.5 $ fast 2 cosine) # orbit 2 # pan (range 0.5 0.8 $ fast 3 sine) # lpf 5000 # gain 0.8 # groove 1
   -- rr 21 27 $ s "perc" <| n ((0/12) ~> "[2/2 6]*<4@6 12 4>") # stack [ note "-3" # hpf 300 # gain 0.8, note "-10" # gain 0.9] # legato 0.33 |+ shape (range 0 0.5 $ fast 2 cosine) # orbit 2 # pan (range 0.5 0.8 $ fast 3 sine) # lpf 5000 # gain 0.8 # groove 1
   -- rr 21 23 $ s "supervibe" <| inkyn ("<[0 1 4 6 ~@8]*8!2 <[0 1 2 6 ~@8] [0 1 2 6 ~ ~ <4 9> ~@9]>*8!2 [0 2 6 1 ~@8]*8!2 <[0 1 2 6 ~@8] [0 1 2 6 ~ <9 4> ~@2]>*8!2>") # legato 1 # gain 0.8 # detune (-2) # sustain 0.5 # orbit 2 # hpf 300 # groove 1
-  r 21 silence
+  -- r 21 silence
 
 rr 21 88 $ s "supervibe" <| inkyn "{0 4 6 8}%24" # legato (1/2) # gain 0.85 # detune (0) # orbit 2 # pan (range 0.3 0.5 saw) # hpf 300 |+ note 0 # nudge 0.03
 rr 21 8 $ s "supervibe" <| inkyn "{0 4 6 8}%8" +| note (fast 8 $ semitones ("65 33 15"/"64 32 16")) # legato (1/2) # gain 0.9 # detune (0) # orbit 2 # pan (range 1 0.5 saw) # hpf 200 |+ note 0 # groove 1
@@ -164,11 +180,14 @@ do
   p 8 silence
   p 88 silence
   rr 21 19 $ s "perc" <| n ("[[0 2@2]/3 ~@8 <7*2 7 ~ ~ > ~ 7]*2") # note ("[[-17,-12] [-12,-7]]*2"-20) # legato 1 # shape 0.5 # orbit 1 # pan (fast 2 $ range 0.3 0.7 sine) # groove 0.5 # lpf 3300
-  rr 21 26 $ s "perc" <| n ((0/24) <~ "[~@5 <2 2 ~>@4 2/2 ~ ~]*2") # note "[-12, -7]" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.6 # groove 1
+  -- rr 21 26 $ s "perc" <| n ((0/24) <~ "[~@5 <2 2 ~>@4 2/2 ~ ~]*2") # note "[-12, -7]" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.6 # groove 1
+  rr 21 26 $ s "perc" <| n ("[~@4 <2 2 ~>@5 2/2 ~ ~]*<2@5 [2@5 6] 0 2>") # note "[[-17,-12]@2 [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.6 # groove 1
   r 25 silence
   r 23 silence
   r 21 silence
-  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, -7, 7]@3 ~] [[0, -7, 7]@3 ~] [[0, -7, 7]] [[0, -7, 7]@3 2]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # bassacc # groove 0.5
+  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, -7, 7]@3 ~] [[0, -7, 7]@3 ~] [[0, -7, 7]] [[0, -5, 9]@3 2]>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # bassacc # groove 0.5
+
+-- hush
 
 do
   p 8 silence
@@ -207,9 +226,8 @@ do
   rr 21 19 $ s "perc" <| n ("[[0 2@2]/4 ~@8 <7 7 ~ ~ >/2 ~ ~]*2") # inkyn ("-3" - 11) # legato 1 # shape 0.6 # orbit 1 # pan 0.2  # groove 0.5 # lpf 3000
 
 do
-  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0,7]_____ 4_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # lpf 5000 # groove 0.5 |+ accelerate (-0.02) |+ accelerate (slow 2 "<0 [0.075 0@5] 0 0>")
+  rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0,7]_____ 4_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # lpf 5000 # groove 0.5 |+ accelerate (-0.02) -- |+ accelerate (slow 2 "<0 [0.075 0@5] 0 0>")
   rr 21 26 $ s "perc" <| n ( "[~ [~ <0 0 ~>]@8 0/2 ~ ~]" + 2) # inkyn "-14" # legato 1 # shape 0.5 # orbit 2 # pan 0.6 # groove 1 -- # delay 0.7 # delaytime (1/24) # delayfb 0.8 # lock 1
-
 
 do
   rr 21 23 $ s "supervibe" <| inkyn (slow 2 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>") # legato 10 # gain 0.8 # detune (-2) # orbit 2 # hpf 300 # groove 1 # shape 0.1
@@ -232,7 +250,7 @@ do
   rr 21 26 $ s "perc" <| n ( "[~ [~ <0 0 ~>]@8 0/2 ~ ~]" + 2) # inkyn "-18" # legato 2 # shape 0.4 # orbit 2 # pan 0.6 # groove 1 -- # delay 0.7 # delaytime (1/24) # delayfb 0.8 # lock 1
 
 do
-  rr 21 1 $ s "kick" <| n "[[< ~ 2> ~ <11 9 10> ~]*2, 2]" # lpf 5000 # orbit 2 # gain 0.9
+  rr 21 1 $ s "kick" <| n "[[< ~ 2> ~ <11 9 10> ~]*2]" # lpf 5000 # orbit 2 # gain 0.9 # groove 1
   r 77 $ s "noise:5*1" # pan rand # shape 0.6 # speed (rangex 0.5 2 rand)
 
 r 77 $ s "noise:5*2" # pan rand # shape 0.7 # speed (rangex 0.5 2 rand)
@@ -268,6 +286,7 @@ do
   p 21 silence
   p 24 silence
   p 244 silence
+  p 255 silence
   r 77 $ s "noise:3*4" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
 
 p 77 silence

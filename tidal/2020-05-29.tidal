@@ -89,7 +89,6 @@ do
   rr 21 19 $ s "perc" <| n "[[0 2@11]@4 ~@5 ~@3 ~@6 7@4 <~ 7>]*2" # stack [speed (1/3) # pan 0.15, speed (1/4) # pan 0.0, speed (1/5) # pan 0.3] # legato 1 # shape 0.6 # orbit 1 # groove 0.67 # lpf 3300 # hpf 200
 
 
--- TODO: vibe is triggering in wrong part of cycle... why
 do
   rr 21 23 $ s "supervibe" <| inkyn ("<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato 9 # gain 0.85 # detune (-2) # orbit 2 # hpf 300 # groove 1 # pan (range 1 0.5 $ fast 2 saw)
   -- rr 21 26 $ s "perc" <| n (fast 2 "[~@6 2 ~@2 2 ~ ~]") # note "[[-17,-12]@2 [-12,-7]]*2" # legato 0.667 # shape 0.5 # orbit 2 # pan 0.55 # groove 1
@@ -293,7 +292,7 @@ do
   -- todo: simplify?
   rr 21 22 $ s "matrix_bass" <| inkyn (slow 2 "<[[0, 7, 14]@3 11] [[0, -7, 7]@3 9]!7>") # legato 1 # n 1 # shape 0.7 # orbit 1 # gain 0.95 # bassacc # groove 0.5 |+ accelerate (-0.02)
   -- rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*<2@192 1@192>!2 [0 2 6 8 ~@2]*<2@192 1@192>!2 [0 2 6 8 ~@2]*<2@192 1@192>!2 [0 4 6 8 ~@2]*<2@192 1@192>!2>") # legato 5.5 # pan (fast "<1 2 4 8 16>" sine) + note 12 # orbit 2 # shape 0.2 # lpf (slow 192 $ rangex 20000 80 saw) # groove 1 -- # delay 0.7 # delaytime (1/12) # delayfb 0.8 # lock 1
-  rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 4 5 6 ~@2]*2!4>") # legato 5.5 # pan (fast 4 sine) + note 12 # orbit 2 # shape 0.2 # lpf (slow 192 $ rangex 20000 80 saw) # groove 1 -- # delay 0.7 # delaytime (1/12) # delayfb 0.8 # lock 1
+  rr 21 21 $ brf 600 400 0.05 $ s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 4 5 6 ~@2]*2!4>") # legato 5.5 # pan (fast 4 sine) + note 12 # orbit 2 # shape 0.2 # lpf (slow 112 $ rangex 20000 80 saw) # groove 1 -- # delay 0.7 # delaytime (1/12) # delayfb 0.8 # lock 1
 
 hush
 

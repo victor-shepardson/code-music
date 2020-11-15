@@ -47,21 +47,9 @@ p.push(s);
 ~out.ar(2);
 ~out.play;
 
-/*~in = {SoundIn.ar([2,3])};
-~ml = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[0]))};
-~mr = {MFCC.kr(FFT(LocalBuf(1024), ~in.ar[1]))};
-
-r = {
-    inf.do {
-        ~ml.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['ml_',i].join, v) }) });
-        ~mr.bus.getn(13, { |val| val.do({ |v, i| n.sendMsg('/ctrl', ['mr_',i].join, v) }) });
-        0.04.wait; // 25 frames per second
-    }
-}.fork;*/
-
 d.orbits.do { |x|
     x.globalEffects = x.globalEffects.addFirst(
-        GlobalDirtEffect(\monosynth, [\monofreq, \monogain, \monoslew, \monopan])
+        GlobalDirtEffect(\monosynth, [\monofreq, \monogain, \monolag, \monopan])
     )
 };
 )
@@ -80,7 +68,31 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
 };
 
+(1..SuperDirt.maxSampleNumChannels).do { |numChannels|
+    SynthDef("monosynth"++numChannels, {
+    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01|
+        var in, snd;
+
+        in = In.ar(dryBus, d.numChannels);
+
+        snd = SinOsc.ar(Lag.kr(monofreq, monolag)).sin*Lag.kr(monogain, monolag);
+
+        snd = DirtPan.ar(snd, numChannels, Lag.kr(monopan, monolag));
+
+        Out.ar(effectBus, snd+in);
+    }, [\ir, \ir]).add;
+};
+
+// d.orbits.do { |x| x.globalEffects.postln }
 )
+
+d.orbits.do({ |x| x.initNodeTree });
+
+// d.orbits.do { |x|
+//     x.globalEffects = x.globalEffects[0] = (
+//         GlobalDirtEffect(\monosynth, [\monofreq, \monogain])
+//     )
+// };
 
 
 (

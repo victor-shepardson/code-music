@@ -1,0 +1,53 @@
+:set +m
+:script ~/code-music/tidal/scales.hs
+
+let scale = getScale (scaleTable ++ newscales)
+    mode = setS "mode"
+    root = setF "root"
+    swing = setF "swing"
+    groove pat = nudge (pat * (cF 0 "swing"))
+    inky pat = (cF 0 "root") +| scale (cS "major" "mode") pat
+    inkyn pat = note $ inky pat
+    inkys pat = speed $ semi2just <$> (inky pat)
+    cosine = ((1/4) <~ sine)
+    semitones rat_pat = (log rat_pat) |* (12 / log 2)
+
+let monofreq = pF "monofreq"
+    monogain = pF "monogain"
+    monolag = pF "monolag"
+    monopan x = pF "monopan" (x * 2 - 1)
+    inkym pat = monofreq $ (semi2just <$> (inky pat)) * 261.63
+    mono n pat = p n $ pat |> orbit n # s "dirac" # gain 0 # legato 1
+    monokill n = p n $ s "dirac*16" # gain 0 # monogain 0 # orbit n # legato 1
+
+global_transpose = 0 -- 0
+
+do
+  setcps 0.54
+  mode "justionian"
+  root "-4"
+  swing $ fast 2 $ range 0.03 0 saw
+
+-- some monosynths with melodies in Hz
+
+mono 2 $ monofreq "<200 220 330>" |> monogain (rangex 0.5 0.1 $ slow 3 saw) # monolag 1 # monopan 0.5
+monokill 2
+
+mono 0 $ slow 1 $ monofreq (stack [fast 4 "400 440 660", fast 1.5 "500 600"]) |> monogain (rangex 0.2 0.001 $ slow 8 sine) # monopan (range 0.1 0.6 $ fast 5 sine)
+monokill 0
+
+mono 1 $ monofreq (slow 6 "<300 400 450>") |> monogain 0.05 # monolag 0.1 # monopan 0.9
+monokill 1
+
+-- 5-limit
+
+mono 2 $ inkym "<0 1 5>" |> monogain (rangex 0.5 0.1 $ slow 3 saw)
+monokill 2
+
+mono 0 $ slow 1 $ inkym (stack [fast 4 "7 9 13", fast 1.5 "8 12"]) |> monogain (rangex 0.2 0.05 $ slow 1 sine)
+monokill 0
+
+mono 1 $ inkym (slow 6 "<4 6 7>") |> monogain 0.05
+monokill 1
+
+hush

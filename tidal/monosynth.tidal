@@ -16,6 +16,7 @@ let monofreq = pF "monofreq"
     monogain = pF "monogain"
     monolag = pF "monolag"
     monopan x = pF "monopan" (x * 2 - 1)
+    monostretch = pF "monostretch"
     inkym pat = monofreq $ (semi2just <$> (inky pat)) * 261.63
     mono n pat = p n $ pat |> orbit n # s "dirac" # gain 0 # legato 1
     monokill n = p n $ s "dirac*16" # gain 0 # monogain 0 # orbit n # legato 1
@@ -30,10 +31,13 @@ do
 
 -- some monosynths with melodies in Hz
 
-mono 2 $ monofreq "<200 220 330>" |> monogain (rangex 0.5 0.1 $ slow 3 saw) # monolag 1 # monopan 0.5
+mono 2 $ monofreq (fast 1 $ "100") |> monogain (rangex 0.2 0.1 $ slow 4 saw) # monolag (rangex 0.03 0.3 $ slow 4 saw) # monopan 0.9 # monostretch (slow 1 "<0.5 1 2 1>")
 monokill 2
 
-mono 0 $ slow 1 $ monofreq (stack [fast 4 "400 440 660", fast 1.5 "500 600"]) |> monogain (rangex 0.2 0.001 $ slow 8 sine) # monopan (range 0.1 0.6 $ fast 5 sine)
+mono 1 $ monofreq ((1/2) ~> (slow 2 $ "<210~~ 280~ 330>")) |> monogain (rangex 0.3 0.1 $ slow 4 saw) # monolag (rangex 0.001 1 $ slow 4 saw) # monopan 0.1 # monostretch (slow 4 "0.25 0.5 0.75 1")
+monokill 1
+
+mono 0 $ slow 1 $ monofreq (stack [fast "<4__ 8>" ("420 440 660"/8), fast 1.5 ("490 630"/4)]) |> monogain (rangex 0.0001 0.5 $ slow 16 saw) # monopan (range 0.2 0.8 $ fast 5 sine) # monostretch 6 # monolag 0.001
 monokill 0
 
 mono 1 $ monofreq (slow 6 "<300 400 450>") |> monogain 0.05 # monolag 0.1 # monopan 0.9
@@ -41,13 +45,13 @@ monokill 1
 
 -- 5-limit
 
-mono 2 $ inkym "<0 1 5>" |> monogain (rangex 0.5 0.1 $ slow 3 saw)
+mono 2 $ slow 4 $ inkym "<<0!3 [8__ 4]> <1!3 1> <5!3 [~ -1]>>" |> monogain (rangex 0.5 0.1 $ slow 3 saw) # monostretch 0.125
 monokill 2
 
-mono 0 $ slow 1 $ inkym (stack [fast 4 "7 9 13", fast 1.5 "8 12"]) |> monogain (rangex 0.2 0.05 $ slow 1 sine)
+mono 0 $ slow 8 $ inkym (stack [fast 4 "7 9 13", fast 1.5 "8 12"]) |> monogain (rangex 0.2 0.05 $ slow 1 sine) # monostretch 0.5 # monolag 0.4
 monokill 0
 
-mono 1 $ inkym (slow 6 "<4 6 7>") |> monogain 0.05
+mono 1 $ slow 4 $ inkym (slow 6 "<4 6 7>") |> monogain 0.1 # monostretch 0.25 # monolag 0.001
 monokill 1
 
 hush

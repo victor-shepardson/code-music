@@ -49,13 +49,27 @@ p.push(s);
 
 d.orbits.do { |x|
     x.globalEffects = x.globalEffects.addFirst(
-        GlobalDirtEffect(\monosynth, [\monofreq, \monogain, \monolag, \monopan])
-    )
+        GlobalDirtEffect(\monosynth, [
+            \monofreq, \monogain, \monolag, \monopan, \monostretch
+        ]))
 };
 )
 
 (
 f = Environment.new;
+
+f[\sinsincos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0),
+    fold_wave = ((phi*pi).sin*ratio*pi).sin,
+    cos_env = (pi*phi).cos +1 /2;
+    fold_wave * cos_env
+};
+
+f[\stretch] = {
+    arg freq, ratio, osc ...oscargs;
+    FreqShift.ar(osc.(freq*ratio, *oscargs), 0-(ratio -1 *freq))
+};
 
 f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	var waveform = {|r, m| var freq = r*(2**m);
@@ -70,12 +84,14 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 
 (1..SuperDirt.maxSampleNumChannels).do { |numChannels|
     SynthDef("monosynth"++numChannels, {
-    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01|
-        var in, snd;
+    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01, monostretch=1|
+        var in = In.ar(dryBus, d.numChannels);
+        var freq = Lag.kr(monofreq, monolag);
+        var gain = Lag.kr(monogain, monolag);
+        var stretch = Lag.kr(monostretch, monolag);
 
-        in = In.ar(dryBus, d.numChannels);
-
-        snd = SinOsc.ar(Lag.kr(monofreq, monolag)).sin*Lag.kr(monogain, monolag);
+        // var snd = SinOsc.ar(freq).sin*gain;
+        var snd = {f[\stretch].(freq, stretch, f[\sinsincos], 1)*gain};
 
         snd = DirtPan.ar(snd, numChannels, Lag.kr(monopan, monolag));
 

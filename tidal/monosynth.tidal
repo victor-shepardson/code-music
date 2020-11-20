@@ -15,8 +15,11 @@ let scale = getScale (scaleTable ++ newscales)
 let monofreq = pF "monofreq"
     monogain = pF "monogain"
     monolag = pF "monolag"
+    monolag' pat = pF "monolag" pat # nudge (-pat)
     monopan x = pF "monopan" (x * 2 - 1)
     monostretch = pF "monostretch"
+    monospread = pF "monospread"
+    monodrive = pF "monodrive"
     inkym pat = monofreq $ (semi2just <$> (inky pat)) * 261.63
     mono n pat = p n $ pat |> orbit n # s "dirac" # gain 0 # legato 1
     monokill n = p n $ s "dirac*16" # gain 0 # monogain 0 # orbit n # legato 1
@@ -27,17 +30,31 @@ do
   setcps 0.54
   mode "justionian"
   root "-4"
-  swing $ fast 2 $ range 0.03 0 saw
+  swing $ slow 2 $ range 0 (0.03) saw
 
 -- some monosynths with melodies in Hz
 
-mono 2 $ monofreq (fast 1 $ "100") |> monogain (rangex 0.2 0.1 $ slow 4 saw) # monolag (rangex 0.03 0.3 $ slow 4 saw) # monopan 0.9 # monostretch (slow 1 "<0.5 1 2 1>")
+mono 2 $ monofreq (slow 2 $ "<<100 90> 75 60 50>") |> monogain (rangex 0.2 0.1 $ slow 8 sine) # monolag' (rangex 0.2 2 $ slow 8 $ (1/4) ~> saw) # monopan 0.2 # monostretch (slow 1 "0.5") # monospread (rangex 0.0001 0.001 $ slow (2/5) sine) # monodrive (slow 2 "<2 4>")
 monokill 2
 
-mono 1 $ monofreq ((1/2) ~> (slow 2 $ "<210~~ 280~ 330>")) |> monogain (rangex 0.3 0.1 $ slow 4 saw) # monolag (rangex 0.001 1 $ slow 4 saw) # monopan 0.1 # monostretch (slow 4 "0.25 0.5 0.75 1")
+mono 1 $ monofreq (slow 2 $ "<<100 90> 75 60 50>") |> monogain (rangex 0.2 0.1 $ slow 8 sine) # monolag' (rangex 0.2 2 $ slow 8 $ (1/4) ~> saw) # monopan 0.5 # monostretch (slow 2 "<0.25 1>") # monospread (rangex 0.003 0.03 $ slow (3/7) sine) # monodrive (slow 2 "<2 1>")
 monokill 1
 
-mono 0 $ slow 1 $ monofreq (stack [fast "<4__ 8>" ("420 440 660"/8), fast 1.5 ("490 630"/4)]) |> monogain (rangex 0.0001 0.5 $ slow 16 saw) # monopan (range 0.2 0.8 $ fast 5 sine) # monostretch 6 # monolag 0.001
+p 2 $ stack [
+  s "<kick:3 ~>" # shape 0.9 # lpf 2000 # groove 1,
+  s "ride:0*2" # groove 1 # speed (rangex 1.01 0.99 rand) # shape 0.3,
+  s "ride:5*2" # groove 1 # speed (rangex 1.01 0.99 rand) # nudge (-0.01) # gain 0.8,
+  s "snare" <| n "<~ 1 0 1>" # groove 1 # lpf 5000 # shape 0.3
+  ]
+
+do
+  monokill 0
+  monokill 1
+  monokill 2
+
+hush
+
+mono 0 $ slow 1 $ monofreq (stack [fast "<4__ 8>" ("400 240 300"/2), fast 1.5 ("450 300")]) |> monogain (rangex 0.01 0.5 $ slow 16 sine) # monopan (range 0.4 0.9 $ fast (5/4) sine) # monostretch 1 # monolag 0.01 # monospread 1.003
 monokill 0
 
 mono 1 $ monofreq (slow 6 "<300 400 450>") |> monogain 0.05 # monolag 0.1 # monopan 0.9

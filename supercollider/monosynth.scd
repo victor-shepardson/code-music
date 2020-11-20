@@ -50,7 +50,8 @@ p.push(s);
 d.orbits.do { |x|
     x.globalEffects = x.globalEffects.addFirst(
         GlobalDirtEffect(\monosynth, [
-            \monofreq, \monogain, \monolag, \monopan, \monostretch
+            \monofreq, \monogain, \monolag, \monopan, \monostretch, \monospread,
+            \monodrive
         ]))
 };
 )
@@ -84,16 +85,24 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 
 (1..SuperDirt.maxSampleNumChannels).do { |numChannels|
     SynthDef("monosynth"++numChannels, {
-    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01, monostretch=1|
+    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01, monostretch=1,
+     monospread=0, monodrive=1|
         var in = In.ar(dryBus, d.numChannels);
-        var freq = Lag.kr(monofreq, monolag);
-        var gain = Lag.kr(monogain, monolag);
-        var stretch = Lag.kr(monostretch, monolag);
+        var warp = \sine;
+        var p = 4;
+        var freq = VarLag.kr(monofreq**(1/p), monolag, warp:warp)**p;
+        var gain = VarLag.kr(monogain**(1/p), monolag, warp:warp)**p;
+        var spread = VarLag.kr(monospread, monolag, warp:warp);
+        var stretch = VarLag.kr(monostretch, monolag, warp:warp);
+        var drive = VarLag.kr(monodrive, monolag, warp:warp);
+        var pan = VarLag.kr(monopan, monolag, warp:warp);
 
         // var snd = SinOsc.ar(freq).sin*gain;
-        var snd = {f[\stretch].(freq, stretch, f[\sinsincos], 1)*gain};
+        var snd = {(Mix.ar(f[\stretch].(
+            freq, stretch*[2**spread, 2**(0-spread)], f[\sinsincos], drive))*pi).sin
+        *gain};
 
-        snd = DirtPan.ar(snd, numChannels, Lag.kr(monopan, monolag));
+        snd = DirtPan.ar(snd, numChannels, pan);
 
         Out.ar(effectBus, snd+in);
     }, [\ir, \ir]).add;
@@ -115,8 +124,8 @@ d.orbits.do({ |x| x.initNodeTree });
 ~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;
 
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
-~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
-~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
+~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.001, dry:0.5)};
+~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.0003, dry:0.2)};
 
 ~amb0 = {
 	GVerb.ar(

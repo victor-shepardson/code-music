@@ -11,7 +11,7 @@ s.options.numInputBusChannels = 4; // set this to your hardware input channel si
 // boot the server and start SuperDirt
 s.waitForBoot({
 	~dirtchannels = 2;
-	~dirtorbits = 3;
+	~dirtorbits = 6;
 	//~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
     ~dirtbusses = Array.fill(~dirtorbits, {Bus.audio(s, ~dirtchannels)});
 
@@ -61,8 +61,10 @@ r = {
 
 d.orbits.do { |x|
     x.globalEffects = x.globalEffects.addFirst(
-        GlobalDirtEffect(\monosynth, [\monofreq, \monogain, \monoslew, \monopan])
-    )
+        GlobalDirtEffect(\monosynth, [
+            \monofreq, \monogain, \monolag, \monopan, \monostretch, \monospread,
+            \monodrive, \monoindex, \monoratio
+        ]))
 };
 )
 
@@ -80,19 +82,75 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 	dry*in + DelayC.ar(in, 3*amt, (wave+1)*amt/2+(SampleDur.ir*4))
 };
 
+
+// f[\sinsincos] = {
+//     arg freq, ratio;
+//     var phi = LFSaw.ar(freq, iphase:0)*pi,
+//     fold_wave = (phi.sin*ratio*pi).sin,
+//     cos_env = phi.cos +1 /2;
+//     fold_wave * cos_env
+// };
+
+f[\sincos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0)*pi,
+    fold_wave = phi.sin*ratio*pi),
+    cos_env = phi.cos +1 /2;
+    fold_wave * cos_env
+};
+
+f[\stretch] = {
+    arg freq, ratio, osc ...oscargs;
+    FreqShift.ar(osc.(freq*ratio, *oscargs), 0-(ratio -1 *freq))
+};
+
+(1..SuperDirt.maxSampleNumChannels).do { |numChannels|
+    SynthDef("monosynth"++numChannels, {
+    |dryBus, effectBus, monofreq=0, monogain=0, monopan=0, monolag=0.01, monostretch=1,
+     monospread=0, monodrive=1, monoindex=0, monoratio=1|
+        var in = In.ar(dryBus, d.numChannels);
+        var warp = \sine;
+        var p = 4;
+        var freq = VarLag.kr(monofreq**(1/p), monolag, warp:warp)**p;
+        var gain = VarLag.kr(monogain**(1/p), monolag, warp:warp)**p;
+        var spread = VarLag.kr(monospread, monolag, warp:warp);
+        var stretch = VarLag.kr(monostretch, monolag, warp:warp);
+        var drive = VarLag.kr(monodrive.abs, monolag, warp:warp);
+        var pan = VarLag.kr(monopan, monolag, warp:warp);
+        var ratio = VarLag.kr(monoratio, monolag, warp:warp);
+        var index = VarLag.kr(monoindex, monolag, warp:warp);
+        var mod = SinOsc.ar(freq*ratio)*index;
+
+        // var snd = SinOsc.ar(freq).sin*gain;
+        var snd = {Mix.ar(f[\stretch].(
+            freq+mod, stretch*[2**spread, 2**(0-spread)], f[\sinsincos], drive))
+        };
+        var dmix = 1.min(drive);
+        // snd = (1-dmix *snd) + (dmix * (snd*pi*1.max(drive)).sin);
+        snd = snd*gain;
+
+        snd = DirtPan.ar(snd, numChannels, pan);
+
+        Out.ar(effectBus, snd+in);
+    }, [\ir, \ir]).add;
+
+};
 )
+
+d.orbits.do({ |x| x.initNodeTree });
 
 
 (
-~preout = ~orbit0 + ~orbit1 + ~orbit2 + ~amb0 + ~amb1 + ~amb2;
-
 ~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
 ~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
+~fx3 = ~orbit3;
+~fx4 = ~orbit4;
+~fx5 = ~orbit5;
 
 ~amb0 = {
 	GVerb.ar(
-        Mix.new(~orbit0.ar),
+        Mix.new(~orbit0.ar+~orbit3.ar),
         roomsize:50, revtime:1.5, damping:0.9, spread:5,
         earlyreflevel: 0.0,
         drylevel:0, mul:0.03
@@ -100,7 +158,7 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 
 ~amb1 = {
 	GVerb.ar(
-		HPF.ar(Mix.new(~orbit1.ar), freq:300),
+		HPF.ar(Mix.new(~orbit1.ar+~orbit4.ar), freq:300),
 		roomsize:100, revtime:1.5, damping:0.7, spread:5,
 		earlyreflevel: 0.0,
 		drylevel:0, mul:0.05
@@ -109,14 +167,14 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 ~amb2 = {
     f[\wiggle].(
         GVerb.ar(
-            HPF.ar(Mix.new(~orbit2.ar), freq:60),
+            HPF.ar(Mix.new(~orbit2.ar+~orbit5.ar), freq:60),
             roomsize:40, revtime:2.5, damping:0.6, spread:90,
             earlyreflevel: 0.2,
             drylevel:0, mul:0.08
         ), dry:0.0, rate:1/3, amt:0.003
 )};
 
-~preout = ~fx0 + ~fx1 + ~fx2 + ~amb0 + ~amb1 + ~amb2;
+~preout = ~fx0 + ~fx1 + ~fx2 + ~fx3 + ~fx4 + ~fx5 + ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

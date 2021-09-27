@@ -1,0 +1,9 @@
+setcps 0.42598406182082
+
+p 0 $ s "scratch" <| n "[[0 [1 [~ 2]]] [[~ 3] [~ 4]]]"
+
+p 0 $ fast 2 $ jux (rev . (# speed 1.5)) $ s "scratch" <| n "[[0 [1 [~ 2]]] [[~ 3] [~ 4]]]"
+
+p 0 $ fast 8 $ s "scratch" <| n "[[0 [1 [~ 2]]] [[~ 3] [~ 4]]]" # speed (slow 4 $ rangex 0.125 4 saw) # legato 2
+
+hush

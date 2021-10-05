@@ -139,7 +139,7 @@ r = Synth.new(\recordbuf, [\outbus, p, \inbus, s.options.numOutputBusChannels, \
 // start: write phase into loop start bus
 // stop: write phase into loop end bus; stop recording
 (
-var nloop = 2, nchan = 1,
+var nloop = 3, nchan = 1,
 buflen = s.sampleRate*50,
 xfadesamps = (s.sampleRate*0.01).floor,
 infadeseconds = 0.01;
@@ -243,12 +243,14 @@ SynthDef(\conditional_player, { arg outbus, inbus, condbus, bufnum;
 
 (
 var inbus = s.options.numOutputBusChannels;
+var nslot = 2;
 
-// ~reset_modal = false;
-~recorders = ~buffers.collect{nil};
-~monitors = Dictionary.new;
-~players = Dictionary.new;
-~players_by_loop = Array.fill(~recorders.size, {Set.new});
+~recorders = ~buffers.collect{nil}; //Array of recorders
+~slots = Array.newClear(nslot); //Array of recorder index or nil
+~recorder_pool = Set.new; //set of recorder index
+~monitors = Dictionary.new; //bus index -> monitor synth
+~players = Dictionary.new; //player tag -> player synth
+~players_by_loop = Array.fill(~recorders.size, {Set.new}); //recorder index -> Set[player tag]
 
 // loop functions
 // ==============
@@ -257,7 +259,9 @@ var inbus = s.options.numOutputBusChannels;
 ~record = {arg i;
     ~recorders[i] !? (_.free);
     ~recorders[i] = Synth.new(\loop_recorder, [
-        \outbus, ~buses[i], \inbus, inbus, \bufnum, ~buffers[i]])};
+        \outbus, ~buses[i], \inbus, inbus, \bufnum, ~buffers[i]]);
+    ~recorder_pool.add(i);
+};
 
 //create a monitor on bus `out`
 ~monitor = {arg out;
@@ -276,7 +280,7 @@ var inbus = s.options.numOutputBusChannels;
 ~play = {arg in, out;
     var player = Synth.tail(s, \loop_player, [
         \outbus, out, \inbus, ~buses[in], \bufnum, ~buffers[in]]);
-    var tag = ~players.size;
+    var tag = (1 << 30).rand.asHexString;
     "player %".format(tag).postln;
     ~players.add(tag -> player);
     ~players_by_loop[in].add(tag);
@@ -307,32 +311,42 @@ var inbus = s.options.numOutputBusChannels;
     player
 };
 
-// call start and also:
-// TODO: if loop `i` is not recording, call record first
-//     ISSUE: better to use a new loop and map it to current control...
-// if `monitor` is not nil, make a monitor on bus `monitor`
-~start_ = {arg i, monitor=nil;
-    monitor !? ~monitor;
-    ~recorders[i].set(\start, 1)
-};
-// OK, associating loops with buses is a conceptual error
-// really want to have pool of waiting recorders;
-// 'replacing' a loop in the interface means
-//   1. gracefully releasing the old recorder and players
-//   2. starting an available recorder and mapping it to the interface
-//  apparently need a concept of "control slots" as well as loop index, player tag, and bus
 
-// call play and also:
-// if `monitor` is false, free the monitor on bus `out`
-// inform loop `in` of loop end.
-// NOTE: currently sends a stop trigger which sets end point?
-//       this doesn't matter since loop_recorder currently stops its phasor...
-// TODO: refactor for separate play / play with monitor and stop
-~play_ = {arg in, out, monitor=true;
-    var player = ~play.(in, out);
-    if(monitor) {} {~free_monitor.(out)};
-    ~stop.(in);
-    player
+//remove recorder from the slot, release all its players and then call record on it
+~free_slot = {arg slot;
+    ~slots[slot] !? {arg rec;
+        ~free_loop_players.(rec);
+        ~slots[rec] = nil;
+        ~record.(rec) //TODO: wait until players freed
+    };
+};
+
+// start a loop on slot `slot`:
+// if the slot has a recorder, release it
+// place an available recorder in the slot, and call start on it
+// if `monitor` is not nil, make a monitor on bus `monitor`
+~start_slot = {arg slot, monitor=nil;
+    var new_rec;
+    ~free_slot.(slot);
+    new_rec = ~recorder_pool.pop; //this will error of there are no recorders
+    ~start.(new_rec);
+    monitor !? ~monitor;
+    ~slots[slot] = new_rec;
+};
+
+// if slot is empty, do nothing
+// inform loop in `slot` of loop end.
+// create a player on bus `out` for the loop in `slot`
+// if `monitor` is not nil, free the monitor on bus `monitor`
+~play_slot = {arg slot, out, monitor=nil;
+    var rec = ~slots[slot];
+    if (rec.notNil) {
+        monitor !? ~free_monitor;
+        ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set a new end point
+        ~play.(rec, out)
+    } {
+        "slot % is empty".format(slot).postln;
+    }
 };
 
 
@@ -345,28 +359,17 @@ var inbus = s.options.numOutputBusChannels;
 // MIDI controls
 // =============
 
-~loop_notes = [71,69];
+~slot_notes = [71,69]; //slot index -> MIDI note
 
-~recorders.size.do{arg i;
-    var note = ~loop_notes[i];
+~slots.size.do{arg i;
+    var note = ~slot_notes[i];
     //start on key down, play on key up
     //here, recorder and player index are tied
-    MIDIdef.noteOn("loop_%_start".format(i), {~start_.(i, monitor:nil)}, noteNum:note);
-    MIDIdef.noteOff("loop_%_play".format(i), {~play_.(i, out:i, monitor:false)}, noteNum:note);
+    MIDIdef.noteOn("loop_%_start".format(i), {~start_slot.(i, monitor:nil)}, noteNum:note);
+    MIDIdef.noteOff("loop_%_play".format(i), {~play_slot.(i, out:i, monitor:false)}, noteNum:note);
     //reset on adjacent black key
     MIDIdef.noteOn("loop_%_reset".format(i), {~record.(i); ~free_loop_players.(i)}, noteNum:note-1);
 };
-
-// MIDIdef.noteOn(\loop_0_start, {~start.(0, monitor:nil)}, noteNum:72);
-// MIDIdef.noteOff(\loop_0_play, {~play.(0, out:0, monitor:false)}, noteNum:72);
-/*MIDIdef.noteOn(\loop_0_start, {
-    if (~reset_modal) {
-        ~record.(0);
-        ~players_by_loop[0].do{_.release};
-    } {
-        ~start.(0, monitor:nil);
-    }
-}, noteNum:72);*/
 
 // MIDIdef.noteOn(\loop_1_start, {~start.(1, monitor:1)}, noteNum:71);
 // MIDIdef.noteOff(\loop_1_play, {~play.(1, out:1, monitor:false)}, noteNum:71);
@@ -386,6 +389,24 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 
 // actions
 // =======
+
+(
+fork {
+    ~start_slot.(0, monitor:0);
+    1.wait;
+    ~play_slot.(0, out:0, monitor:0);
+    "slots: %; pool: %".format(~slots, ~recorder_pool).postln
+};
+)
+
+(
+fork {
+    ~start_slot.(1, monitor:1);
+    1.wait;
+    ~play_slot.(1, out:1, monitor:1);
+    "slots: %; pool: %".format(~slots, ~recorder_pool).postln
+};
+)
 
 t = {SinOsc.ar(443, mul:0.2)}.play(s, s.options.numOutputBusChannels)
 t.free

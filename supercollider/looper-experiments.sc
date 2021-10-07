@@ -144,9 +144,15 @@ buflen = s.sampleRate*50,
 xfadesamps = (s.sampleRate*0.01).floor,
 infadeseconds = 0.01;
 ~buffers !? (_.do(_.free));
-~buses !? (_.do(_.free));
 ~buffers = nloop.collect{Buffer.alloc(s, buflen, nchan)};
-~buses = nloop.collect{Bus.audio(s, 3)};
+
+// ~buses !? (_.do(_.free));
+// // ~buses = nloop.collect{Bus.audio(s, 3)};
+// // for monitoring recording?
+// ~buses = nloop.collect{Bus.audio(s, nchan)};
+
+~data_buffers !? (_.do(_.free));
+~data_buffers = nloop.collect{Buffer.alloc(s, 2)};
 
 // loop synthdefs
 // ==============
@@ -166,7 +172,7 @@ SynthDef(\monitor, { arg outbus, inbus;
 //currently loop can be re-recorded but this causes a click.
 //could go back to single-use recoders
 //organize recorders in pairs, keep one recording at all times?
-SynthDef(\loop_recorder, { arg outbus, inbus, bufnum;
+/*SynthDef(\loop_recorder, { arg outbus, inbus, bufnum;
     var input = In.ar(inbus, nchan);
     var start = T2A.ar(\start.tr(0)), stop = T2A.ar(\stop.tr(0));
     var recording = Schmidt.ar(Impulse.ar(0)+start-stop, -0.5, 0.5);
@@ -177,20 +183,19 @@ SynthDef(\loop_recorder, { arg outbus, inbus, bufnum;
     BufWr.ar(input, bufnum, phase, loop: 1);
     // recording.poll(5, \rec); begin.poll(5, \begin); end.poll(5, \end);
     Out.ar(outbus, [phase, begin, end])
-}).add;
-/*SynthDef(\loop_recorder, { arg outbus, inbus, bufnum;
-    var input = In.ar(inbus, nchan);
-    var start = \start.ar(0), stop = \stop.ar(0);
-    var recording = 1-Latch.ar(1, stop);
-    var phase = Phasor.ar(
-        0, recording*BufRateScale.kr(bufnum), start:0, end:buflen);//BufFrames.kr(bufnum));
-    BufWr.ar(input, bufnum, phase, loop: 1);
-    // recording.poll(5, \rec);
-    Out.ar(outbus, [phase, Latch.ar(phase+1, start)-1, Latch.ar(phase+1, stop)-1])
 }).add;*/
+SynthDef(\loop_recorder, { arg inbus, bufnum, databuf;
+    var input = In.ar(inbus, nchan);
+    var start = T2A.ar(\start.tr(0)), stop = T2A.ar(\stop.tr(0));
+    var phase = Phasor.ar(
+        0, BufRateScale.kr(bufnum), start:0, end:buflen);
+    Demand.ar(start, 0, Dbufwr(phase, databuf, 0));
+    Demand.ar(stop, 0, Dbufwr(phase, databuf, 1));
+    BufWr.ar(input, bufnum, phase, loop: 1);
+}).add;
 
 //note: phasor reset may not be useful; will click
-SynthDef(\loop_player, { arg outbus, inbus, bufnum;
+/*SynthDef(\loop_player, { arg outbus, inbus, bufnum;
     var in = In.ar(inbus, 3), begin = in[1], end = in[2];
     var unwrap_end = (end<begin)*buflen + end;
     var playing = (begin>0)*(end>0);
@@ -205,6 +210,24 @@ SynthDef(\loop_player, { arg outbus, inbus, bufnum;
     var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
     var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
     Out.ar(outbus, signal);
+}).add;*/
+SynthDef(\loop_player, { arg outbus, bufnum, databuf;
+    var begin = BufRd.ar(1, databuf, DC.ar(0), interpolation:1);
+    var end = BufRd.ar(1, databuf, DC.ar(1), interpolation:1);
+    var unwrap_end = (end<begin)*buflen + end;
+    var playing = (begin>=0)*(end>=0);
+    var rate = \rate.ar(1);
+    var phase1 = Phasor.ar(
+        rate:rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end,
+        trig:playing, resetPos:begin
+    );
+    var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
+    var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
+    var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:4);
+    var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:4);
+    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
+    // playing.poll(5, \playing); begin.poll(5, \begin); end.poll(5, \end);
+    Out.ar(outbus, signal);
 }).add;
 
 /*SynthDef(\listener, { arg outbus, inbus;
@@ -213,12 +236,30 @@ SynthDef(\loop_player, { arg outbus, inbus, bufnum;
     Out.ar(outbus, feat);
 }).add;*/
 
-SynthDef(\conditional_player, { arg outbus, inbus, condbus, bufnum;
+/*SynthDef(\conditional_player, { arg outbus, inbus, condbus, bufnum;
     var in = In.ar(inbus, 3), begin = in[1], end = in[2];
     var unwrap_end = (end<begin)*buflen + end;
     var condin = Mix.ar(In.ar(condbus, nchan));
     var feat = 16*Amplitude.ar(condin, 0.003, 0.5);
     var playing = (begin>0)*(end>0);
+    var rate = \rate.ar(1) * (1-(feat/(1+feat.abs)));
+    var phase1 = Phasor.ar(0, rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end);
+    var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
+    var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
+    var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
+    var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
+    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
+    signal = FreqShift.ar(signal, feat*100);
+    Out.ar(outbus, signal);
+}).add;
+)*/
+SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
+    var begin = BufRd.ar(1, databuf, DC.ar(0), interpolation:1);
+    var end = BufRd.ar(1, databuf, DC.ar(1), interpolation:1);
+    var unwrap_end = (end<begin)*buflen + end;
+    var condin = Mix.ar(In.ar(condbus, nchan));
+    var feat = 16*Amplitude.ar(condin, 0.003, 0.5);
+    var playing = (begin>=0)*(end>=0);
     var rate = \rate.ar(1) * (1-(feat/(1+feat.abs)));
     var phase1 = Phasor.ar(0, rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end);
     var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
@@ -255,12 +296,14 @@ var nslot = 2;
 // loop functions
 // ==============
 
-//replace the recorder at index `i`
-~record = {arg i;
-    ~recorders[i] !? (_.free);
-    ~recorders[i] = Synth.new(\loop_recorder, [
-        \outbus, ~buses[i], \inbus, inbus, \bufnum, ~buffers[i]]);
-    ~recorder_pool.add(i);
+//replace the recorder at index `rec`
+~record = {arg rec;
+    ~recorders[rec] !? (_.free);
+    ~data_buffers[rec].fill(0,2,value:-1);
+    ~recorders[rec] = Synth.new(\loop_recorder, [
+    // \outbus, ~buses[i], \inbus, inbus, \bufnum, ~buffers[rec]]);
+        \inbus, inbus, \bufnum, ~buffers[rec], \databuf, ~data_buffers[rec]]);
+    ~recorder_pool.add(rec);
 };
 
 //create a monitor on bus `out`
@@ -270,65 +313,67 @@ var nslot = 2;
         \outbus, out, \inbus, inbus]))
 };
 
-//inform recorder `i` of loop begin
-~start = {arg i; ~recorders[i].set(\start, 1)};
+//inform recorder `rec` of loop begin
+~start = {arg rec; ~recorders[rec].set(\start, 1)};
 
 // inform recorder `i` of loop end
-~stop = {arg i; ~recorders[i].set(\stop, 1)};
+~stop = {arg rec; ~recorders[rec].set(\stop, 1)};
 
-// make a new player of loop `in` on bus `out`
-~play = {arg in, out;
+// make a new player of loop `rec` on bus `out`
+~play = {arg rec, out;
     var player = Synth.tail(s, \loop_player, [
-        \outbus, out, \inbus, ~buses[in], \bufnum, ~buffers[in]]);
+    // \outbus, out, \inbus, ~buses[rec], \bufnum, ~buffers[rec]]);
+        \outbus, out, \bufnum, ~buffers[rec], \databuf, ~data_buffers[rec]]);
+
     var tag = (1 << 30).rand.asHexString;
     "player %".format(tag).postln;
     ~players.add(tag -> player);
-    ~players_by_loop[in].add(tag);
+    ~players_by_loop[rec].add(tag);
+    player
+};
+
+// make a new player of loop `in` on bus `out`, listening to bus `cond`
+~playc = {arg rec, out, cond;
+    var player = Synth.tail(s, \conditional_player, [
+    // \outbus, out, \inbus, ~buses[rec], \condbus, cond, \bufnum, ~buffers[rec]]);
+        \outbus, out, \condbus, cond, \bufnum, ~buffers[rec], \databuf, ~data_buffers[rec]]);
+
+    var tag = (1 << 30).rand.asHexString;
+    "player %".format(tag).postln;
+    ~players.add(tag -> player);
+    ~players_by_loop[rec].add(tag);
     player
 };
 
 // free player `tag`
 ~free_player = {arg tag, fadeTime=0.01; ~players[tag].release(fadeTime)};
 
-// free all players of loop `i`
-~free_loop_players = {arg i, fadeTime=0.01;
-    ~players_by_loop[i].do{arg j; ~players[j].release(fadeTime); ~players.removeAt(j)};
-    "freed players %".format(~players_by_loop[i]);
+// free all players of loop `rec`
+~free_loop_players = {arg rec, fadeTime=0.01;
+    ~players_by_loop[rec].do{arg tag; ~players[tag].release(fadeTime); ~players.removeAt(tag)};
+    "freed players %".format(~players_by_loop[rec]);
 };
 
-// free monitor on bus `i`, if there is one
-~free_monitor = {arg i; ~monitors[i] !? (_.release)};
-
-//TODO: update
-~playc = {arg in, out, cond;
-    var player = Synth.tail(s, \conditional_player, [
-        \outbus, out, \inbus, ~buses[in], \condbus, cond, \bufnum, ~buffers[in]]);
-    var tag = ~players.size;
-    ~recorders[in].set(\stop, 1);
-    "player %".format(tag).postln;
-    ~players.add(tag -> player);
-    ~players_by_loop[in].add(tag);
-    player
-};
-
+// free monitor on bus `out`, if there is one
+~free_monitor = {arg out; ~monitors[out] !? (_.release)};
 
 //remove recorder from the slot, release all its players and then call record on it
 ~free_slot = {arg slot;
     ~slots[slot] !? {arg rec;
         ~free_loop_players.(rec);
-        ~slots[rec] = nil;
+        ~slots[slot] = nil;
         ~record.(rec) //TODO: wait until players freed
     };
 };
 
-// start a loop on slot `slot`:
+// start a loop in slot `slot`:
 // if the slot has a recorder, release it
 // place an available recorder in the slot, and call start on it
 // if `monitor` is not nil, make a monitor on bus `monitor`
 ~start_slot = {arg slot, monitor=nil;
     var new_rec;
     ~free_slot.(slot);
-    new_rec = ~recorder_pool.pop; //this will error of there are no recorders
+    new_rec = ~recorder_pool.pop; //this will error if there are no recorders
     ~start.(new_rec);
     monitor !? ~monitor;
     ~slots[slot] = new_rec;
@@ -344,6 +389,21 @@ var nslot = 2;
         monitor !? ~free_monitor;
         ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set a new end point
         ~play.(rec, out)
+    } {
+        "slot % is empty".format(slot).postln;
+    }
+};
+
+// if slot is empty, do nothing
+// inform loop in `slot` of loop end.
+// create a player on bus `out` for the loop in `slot`, listening to the bus `cond`
+// if `monitor` is not nil, free the monitor on bus `monitor`
+~playc_slot = {arg slot, out, cond, monitor=nil;
+    var rec = ~slots[slot];
+    if (rec.notNil) {
+        monitor !? ~free_monitor;
+        ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set a new end point
+        ~playc.(rec, out, cond)
     } {
         "slot % is empty".format(slot).postln;
     }
@@ -389,6 +449,8 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 
 // actions
 // =======
+~data_buffers[0].plot
+~buffers[0].plot
 
 (
 fork {
@@ -403,10 +465,23 @@ fork {
 fork {
     ~start_slot.(1, monitor:1);
     1.wait;
-    ~play_slot.(1, out:1, monitor:1);
+    ~playc_slot.(1, out:1, cond: 0, monitor:1);
     "slots: %; pool: %".format(~slots, ~recorder_pool).postln
 };
 )
+
+~players.keys
+
+~players
+
+~players["082EFCAF"].set(\rate, -0.5)
+~players["26B326C6"].set(\rate, 1)
+
+
+~play_slot.(0, out:1).set(\rate, 3.5)
+~players["2535EBD4"].set(\rate, 1)
+
+~free_slot.(0)
 
 t = {SinOsc.ar(443, mul:0.2)}.play(s, s.options.numOutputBusChannels)
 t.free

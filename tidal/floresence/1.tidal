@@ -1,10 +1,27 @@
 :set +m
 :script ~/code-music/tidal/floresence/scales.hs
 
--- TODO: inky is really "in-chord". should be `inch`!
---       inky relative to tonic for drones, inch relative to root
+mode (slow 2 "<justaeolian justdorian justlocrian justlydian>")
+root (slow 2 $ scale "justphrygian" ("<0 3 4 1>" - 7 ) + global_transpose)
+-- are aeolian and dorian there just wrong? 
+-- logically would be phrygian, aeolian
+-- the different notes would be flat 1/-6/8 and sharp 5/-2/12
+-- i think this is intentionally implementing a key change actually
+-- so start in minor
+-- then go up a just fourth and to dorian: same key
+-- then go up to the fifth relative to starting point -- so that's 3/2 /(4/3) = 9/8 as the M2
+-- and go to locrian: key change, since fifth above minor would be phrygian. 1 accidental: the flat fifth
+-- finally go to the second relative to start which is 16/15. interval is down a tritone as 3/2 / (16/15) = 45/32
+-- and go to lydian, same key
+-- back to tonic, interval 15/16, key change by 1 accidental
+-- so each of those turns out to be a clean interval and stays clean relative to tonic 
+
+-- TODO: 
+--       `inky` relative to tonic for drones, `inch` relative to root
 --       'root' should be called 'tonic'?
 --       seems i have no "chord root" control, that's why it's hacked by changing the root?
+--       would like to keep tuning relative to the chord root? that's what is happening now manually
+--       requires some organization of modes in scales.hs
 let scale = getScale (scaleTable ++ newscales)
     mode = setS "mode"
     root = setF "root"
@@ -44,7 +61,7 @@ bassacc = accelerate (rangex 0.0001 0.03 rand * (-1))
 global_transpose = 0 -- 0
 
 do
-  setcps 0.63 --0.63 -- 0.54
+  setcps 0.63 --0.6 -- 0.54
   mode (slow 2 "justaeolian")
   root (slow 2 $ scale "justphrygian" ("<0 >" -7 ) + global_transpose)
   swing $ fast 2 $ range 0.03 0 saw
@@ -74,7 +91,7 @@ do
   rr 21 199 $ s "perc" <| n ((1/48) <~ "[[~ 2@11]@4 ~@5 ~@3 ~@6 7@4 <~ 7>]*2") # stack [speed (1/3) # pan 0.95, speed (2/4) # pan 0.6, speed (1/5) # pan 0.8] # legato 1 # shape 0.3 # orbit 1 # groove 1 # lpf 2300 # hpf 200
 --
 
--- after 3 chords (on return to first chord, which is same as 4th chord)
+-- after 3 chords (on to fourth chord, which starts to sound like the first)
 do
   rr 21 23 $ s "supervibe" <| inkyn ("<[~ 0 1 4 6 ~@7]*2!2 [~ -5 -1 0 1 ~@7]*2!2 [~ -5 -2 0 1 ~@7]*2!2 [~ -1 0 2 6 ~@7]*2!2>") # legato 9 # gain 0.85 # detune (-2) # orbit 2 # hpf 300 # groove 1 # pan (range 1 0.5 $ fast 2 saw)
   mono' 21 5 $ inkym ("<[~ 0 1 4 -1!8]*2!2 [~ -5 -1 0 1!8]*2!2 [~ -5 -2 0 1!8]*2!2 [~ -1 0 2 -1!8]*2!2>" + 0) # monogain ("[10 [5 4 3 4 5 7]@2]*2"/99) # groove 1 # monodrive 1.2 # monostretch 1.005 # monolag' (1/0.63/48) # monospread 0.005 # monoratio 1 # monopan 0.4-- # monopan (range 0.75 0.25 $ fast 2 saw)

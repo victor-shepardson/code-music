@@ -2,6 +2,8 @@ Server.default = s = Server("belaServer", NetAddr("192.168.7.2", 57110));
 s.initTree;
 s.startAliveThread;
 
+Quarks.install("https://gitlab.com/rd--/sc3-dot")
+
 Server.allRunningServers
 
 s.boot
@@ -19,33 +21,6 @@ MIDIFunc.noteOn({arg val,num,chan,src; "noteOn %, val:%, chan:%".format(num, val
 MIDIFunc.noteOff({arg val,num,chan,src; "noteOff %, val:%, chan:%".format(num, val, chan).postln});
 MIDIFunc.bend({arg val,num,chan,src; "bend %, val:%, chan:%".format(num, val, chan).postln});
 )
-
-
-//the number of buffers is set before you boot a server
-
-
-//records inputs into buffer.
-// the `run` argument can be used to start/stop
-// `preLevel` is decay factor
-// `trigger` jumps to start of buffer
-// `doneAction` is used when loop=0 and end of buffer is reached
-RecordBuf.ar(inputArray, bufnum: 0, offset: 0.0, recLevel: 1.0, preLevel: 0.0, run: 1.0, loop: 1.0, trigger: 1.0, doneAction: 0)
-// lower-level interface:
-BufRd.ar(numChannels, bufnum: 0, phase: 0.0, loop: 1.0, interpolation: 2)
-
-
-
-//this UGen allocates a local buffer and outputs its address
-//i.e. it replaces an external buffer syntactically within a synth
-LocalBuf.new(numFrames: 1, numChannels: 1)
-
-// Buffer info UGens adapt when Buffer is changed or reallocated:
-BufDur.kr(buf) // gives buffer length
-BufRateScale.kr(buf) // gives buffer/server sample rate ratio
-
-//copy data from one buffer to another
-Buffer.copyData(buf, dstStartAt: 0, srcStartAt: 0, numSamples: -1)
-
 
 
 //method A:
@@ -86,44 +61,6 @@ Buffer.copyData(buf, dstStartAt: 0, srcStartAt: 0, numSamples: -1)
 // verdict: fixed number of maximum-length loops is probably best, will simplify interface and efficiency considerations. does not preclude loop-cloning etc. always-on recording has major appeal.
 //    so method B-III it is
 
-(
-r.free;
-b.free;
-p.free;
-)
-
-// record continously into a buffer
-(
-var nchan = 1;
-b = Buffer.alloc(s, s.sampleRate*50, nchan);
-
-SynthDef(\recordbuf, { arg inbus = 0, bufnum = 0;
-    RecordBuf.ar(In.ar(inbus, nchan), bufnum, loop: 1);
-}).add;
-
-r = Synth.new(\recordbuf, [\inbus, s.options.numOutputBusChannels, \bufnum, b]);
-)
-
-b.plot
-
-// record continuously with write head output
-(
-var nchan = 1, buflen = s.sampleRate*50;
-b = Buffer.alloc(s, buflen, nchan);
-p = Bus.audio(s, 1);
-
-SynthDef(\recordbuf, { arg outbus, inbus, bufnum;
-    var phase = Phasor.ar(0, BufRateScale.kr(bufnum), start:0, end:BufFrames.kr(bufnum));
-    var input = In.ar(inbus, nchan);
-    BufWr.ar(input, bufnum, phase, loop: 1);
-    // phase.poll;
-    // input.poll;
-    Out.ar(outbus, phase)
-}).add;
-
-r = Synth.new(\recordbuf, [\outbus, p, \inbus, s.options.numOutputBusChannels, \bufnum, b]);
-)
-
 // how to store loop points?
 // either bus or buffer;
 // could use one 3-channel bus for write, start, end
@@ -142,7 +79,7 @@ s.options.numAudioBusChannels - s.options.numInputBusChannels - s.options.numOut
 // start: write phase into loop start bus
 // stop: write phase into loop end bus; stop recording
 (
-var nloop = 3, nchan = 1,
+var nloop = 4, nchan = 1,
 buflen = s.sampleRate*50,
 xfadesamps = (s.sampleRate*0.01).floor,
 infadeseconds = 0.01;
@@ -156,33 +93,17 @@ infadeseconds = 0.01;
 // loop synthdefs
 // ==============
 
+// simple monitor
+// assume inbus is mono
+// use balance argument to distribute across outbus channels if applicable
 SynthDef(\monitor, { arg outbus, inbus;
+    // TODO: should mixdown input here?
     EnvGate.new(fadeTime:infadeseconds) * Out.ar(outbus, In.ar(inbus, nchan));
 }).add;
+SynthDef(\monitor2, { arg outbus, inbus, balance=0.5;
+    EnvGate.new(fadeTime:infadeseconds) * Out.ar(outbus, Splay.ar(In.ar([inbus], nchan), center:balance));
+}).add;
 
-//start: begin <- phase, end <- -1
-//stop: end <- phase
-//recording = (begin<0) | (end<0)
-//TODO: after stop, continuously record in the unoccupied part of buffer?
-//reset not needed: it always starts at end of prev loop
-//problem: phase cannot depend directly on begin/end...
-// (Phasor.ar(0, start:0, end:buflen-looplen)+end).wrap(0, buflen)
-
-//currently loop can be re-recorded but this causes a click.
-//could go back to single-use recoders
-//organize recorders in pairs, keep one recording at all times?
-/*SynthDef(\loop_recorder, { arg outbus, inbus, bufnum;
-    var input = In.ar(inbus, nchan);
-    var start = T2A.ar(\start.tr(0)), stop = T2A.ar(\stop.tr(0));
-    var recording = Schmidt.ar(Impulse.ar(0)+start-stop, -0.5, 0.5);
-    var phase = Phasor.ar(
-        0, recording*BufRateScale.kr(bufnum), start:0, end:buflen);
-    var begin = Latch.ar(phase+xfadesamps+1, start)-1;
-    var end = Latch.ar(start.if(0, phase+1), start+stop)-1;//Latch.ar(phase+1, stop)-1;
-    BufWr.ar(input, bufnum, phase, loop: 1);
-    // recording.poll(5, \rec); begin.poll(5, \begin); end.poll(5, \end);
-    Out.ar(outbus, [phase, begin, end])
-}).add;*/
 SynthDef(\loop_recorder, { arg inbus, bufnum, databuf;
     var input = In.ar(inbus, nchan);
     var start = T2A.ar(\start.tr(0)), stop = T2A.ar(\stop.tr(0));
@@ -194,23 +115,7 @@ SynthDef(\loop_recorder, { arg inbus, bufnum, databuf;
     BufWr.ar(input, bufnum, phase, loop: 1);
 }).add;
 
-//note: phasor reset may not be useful; will click
-/*SynthDef(\loop_player, { arg outbus, inbus, bufnum;
-    var in = In.ar(inbus, 3), begin = in[1], end = in[2];
-    var unwrap_end = (end<begin)*buflen + end;
-    var playing = (begin>0)*(end>0);
-    var rate = \rate.ar(1);
-    var phase1 = Phasor.ar(
-        rate:rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end,
-        trig:playing, resetPos:begin
-    );
-    var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
-    var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
-    var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
-    var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
-    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
-    Out.ar(outbus, signal);
-}).add;*/
+
 SynthDef(\loop_player, { arg outbus, bufnum, databuf;
     var begin = BufRd.ar(1, databuf, DC.ar(0), interpolation:1);
     var end = BufRd.ar(1, databuf, DC.ar(1), interpolation:1);
@@ -237,23 +142,6 @@ SynthDef(\listener, { arg outbus, inbus;
     Out.ar(outbus, feat);
 }).add;
 
-/*SynthDef(\conditional_player, { arg outbus, inbus, condbus, bufnum;
-    var in = In.ar(inbus, 3), begin = in[1], end = in[2];
-    var unwrap_end = (end<begin)*buflen + end;
-    var condin = Mix.ar(In.ar(condbus, nchan));
-    var feat = 16*Amplitude.ar(condin, 0.003, 0.5);
-    var playing = (begin>0)*(end>0);
-    var rate = \rate.ar(1) * (1-(feat/(1+feat.abs)));
-    var phase1 = Phasor.ar(0, rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end);
-    var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
-    var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
-    var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
-    var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
-    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
-    signal = FreqShift.ar(signal, feat*100);
-    Out.ar(outbus, signal);
-}).add;
-)*/
 SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
     var begin = BufRd.ar(1, databuf, DC.ar(0), interpolation:1);
     var end = BufRd.ar(1, databuf, DC.ar(1), interpolation:1);
@@ -298,7 +186,7 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
 
 (
 var inbus = s.options.numOutputBusChannels;
-var rec_nslot = 2;
+var rec_nslot = 3;
 var play_nslot = 8;
 
 ~slot_recorders !? ~slot_recorders.do{_!?~free_slot};
@@ -307,11 +195,11 @@ var play_nslot = 8;
 ~players_by_loop = Array.fill(~recorders.size, {Set.new}); //recorder index -> Set[player tag]
 
 ~slot_recorders = Array.newClear(rec_nslot); //Array of recorder index or nil
-~slot_players = Array.newClear(play_nslot); //Array of player tag or nil
+~slot_players = Dictionary.new;//Array.newClear(play_nslot); //player slot index -> player tag
 
 ~recorder_pool = Set.new; //set of recorder index
 
-~input_monitors = Dictionary.new; //input bus index -> monitor synth
+~input_monitors = Dictionary.new; //recorder index -> monitor synth
 
 ~players = Dictionary.new; //player tag -> player synth
 ~player_outputs = Dictionary.new; //player tag -> player output bus
@@ -321,7 +209,6 @@ var play_nslot = 8;
 
 // loop functions
 // ==============
-
 //replace the recorder at index `rec`
 ~record = {arg rec;
     ~recorders[rec] !? (_.free);
@@ -334,13 +221,21 @@ var play_nslot = 8;
 
 // create a monitor from bus `in` to bus `out`
 ~monitor = {arg out, in;
-    Synth.tail(s, \monitor, [\outbus, out, \inbus, in])
+    var balance = (out%1)*2-1;
+    out = out.floor;
+    if(s.options.numOutputBusChannels-1>out) {
+        "monitor bus % to % balance %".format(in, out, balance).postln;
+        Synth.tail(s, \monitor2, [\outbus, out, \inbus, in, \balance, balance]);
+    }{
+        "monitor bus % to %".format(in, out).postln;
+        Synth.tail(s, \monitor, [\outbus, out, \inbus, in]);
+    };
 };
 
 //create an input monitor on bus `out`
-~monitor_input = {arg out;
-    "monitor %".format(out).postln;
-    ~input_monitors.add(out -> ~monitor.(out, inbus));
+// NOTE: currently all recorders have the same input
+~monitor_input = {arg out, rec;
+    ~input_monitors.add(rec -> ~monitor.(out, inbus));
 };
 
 //create an monitor for player `tag` on bus `out`
@@ -391,36 +286,44 @@ var play_nslot = 8;
     tag
 };
 
+//TODO: free player by slot
+
 // free player `tag`
 ~free_player = {
     arg tag, fadeTime=0.01;
     ~players[tag].release(fadeTime);
     ~player_monitors[tag].release(fadeTime);
-    fork {
+    ~player_listeners[tag] !? (_.release(fadeTime));
+    ~slot_players.removeAt(~slot_players.findKeyForValue(tag));
+    ~players.removeAt(tag);
+    ~players_by_loop.do(_.remove(tag));
+    "freeing player %".format(tag).postln
+    /*fork {
         fadeTime.wait;
         //TODO: what what happens when a player is freed which is being listened to?
         // want to free the player's bus, but actually the listener still needs it
         // apparently need to reference-count users of these buses?
         // for now just don't free it
         // ~player_outputs[tag].free;
-        ~listener_outputs[tag] !? (_.free);
-        ~player_listeners[tag] !? (_.free);
-        ~slot_players.replace(tag, nil);
-        "freed player %".format(tag).postln
-    };
+        // ~listener_outputs[tag] !? (_.free);
+    };*/
 };
-
 
 // free all players of loop `rec`
 ~free_loop_players = {arg rec, fadeTime=0.01;
-    ~players_by_loop[rec].do(~free_player);
+    ~players_by_loop[rec].postln.do(~free_player);
 };
 
-// free monitor on bus `out`, if there is one
-~free_input_monitor = {arg out; ~input_monitors[out] !? (_.release)};
+// free monitor for recorder `rec`, if there is one
+// TODO: harmless error, need to delete from ~input_monitors
+~free_input_monitor = {arg rec;
+    ~input_monitors[rec] !? (_.release);
+    "freed monitor for recorder %".format(rec).postln
+};
 
 /*// make a new listener to in_tag and for out_tag
 // NOTE: assuming here listeners output single channel
+// removed this because the listener is actually needed before out_tag is available
 ~listen = {arg out_tag, in_tag;
     var out = Bus.audio(s, 1);
     var listener = Synth.head(s, \listener, [
@@ -451,61 +354,53 @@ var play_nslot = 8;
     ~free_slot.(slot);
     new_rec = ~recorder_pool.pop; //this will error if there are no recorders
     ~start.(new_rec);
-    monitor !? ~monitor_input;
+    monitor !? (~monitor_input.(_, new_rec));
     ~slot_recorders[slot] = new_rec;
+};
+
+//TODO: play a special case of playc
+
+~alloc_player_slot = {arg tag;
+    var slot = (0..play_nslot-1).select({arg i; ~slot_players[i].isNil})[0];
+    ~slot_players.add(slot -> tag);
+    "player % in slot %".format(tag, slot).postln;
 };
 
 // if slot is empty, do nothing
 // inform recorder in `slot` of loop end.
 // create a player for the loop in `slot`
-// if `out` is not nil, create a monitor from the player's bus to the bus `out'
-// if `monitor` is not nil, free the input monitor on bus `monitor`
-~play_slot = {arg slot, out=nil, monitor=nil;
+// if `out` is not nil, create a monitor from the player's bus to the bus `out`
+// if `free_monitor` is true, free the input monitor for the recorder in `slot`
+~play_slot = {arg slot, out=nil, free_monitor=true;
     var tag;
     var player_slot;
     var rec = ~slot_recorders[slot];
     if (rec.notNil) {
-        monitor !? ~free_input_monitor;
+        if(free_monitor) {~free_input_monitor.(rec)} {};
         ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set new endpoint
         tag = ~play.(rec);
         out !? {~monitor_player.(out, tag)};
-        player_slot = ~slot_players.indexOf(nil);
-        ~slot_players[player_slot] = tag;
-        "player % in slot %".format(tag, player_slot).postln;
+        ~alloc_player_slot.(tag);
         ~players[tag]
     } {
         "slot % is empty".format(slot).postln;
     }
 };
-/*// if slot is empty, do nothing
-// inform recorder in `slot` of loop end.
-// create a player on bus `out` for the loop in `slot`
-// if `monitor` is not nil, free the monitor on bus `monitor`
-~play_slot = {arg slot, out, monitor=nil;
-    var rec = ~slot_recorders[slot];
-    if (rec.notNil) {
-        monitor !? ~free_monitor;
-        ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set a new end point
-        ~play.(rec, out)
-    } {
-        "slot % is empty".format(slot).postln;
-    }
-};*/
 
 // if slot is empty, do nothing
 // inform recorder in `slot` of loop end.
 // create a listener to player `cond`
 // create a conditonal_player using the recorder in `slot` and the new listener
 // if `out` is not nil, create a monitor from the player's bus to the bus `out'
-// if `monitor` is not nil, free the input monitor on bus `monitor`
-~playc_slot = {arg slot, out, cond, monitor=nil;
+// if `free_monitor` is true, free the input monitor for the recorder in `slot`
+~playc_slot = {arg slot, out, cond, free_monitor=true;
     var tag;
     var player_slot;
     var listener;
     var listener_out;
     var rec = ~slot_recorders[slot];
     if (rec.notNil) {
-        monitor !? ~free_input_monitor;
+        if(free_monitor) {~free_input_monitor.(rec)} {};
         ~stop.(rec); //NOTE: currently works but may be fragile; don't want to set new endpoint
         listener_out = Bus.audio(s, 1);
         listener = Synth.head(s, \listener, [
@@ -513,9 +408,7 @@ var play_nslot = 8;
         tag = ~playc.(rec, listener_out);
         //TOFO
         out !? {~monitor_player.(out, tag)};
-        player_slot = ~slot_players.indexOf(nil);
-        ~slot_players[player_slot] = tag;
-        "player % in slot %".format(tag, player_slot).postln;
+        ~alloc_player_slot.(tag);
         ~player_listeners.add(tag -> listener);
         ~listener_outputs.add(tag -> listener_out);
         "% listening to %".format(tag, cond).postln;
@@ -535,30 +428,33 @@ var play_nslot = 8;
 
 ~recorders.size.do{arg i; ~record.(i)};
 
-
 // MIDI controls
 // =============
 
-~slot_notes = [71,69]; //slot index -> MIDI note
+~slot_notes = [71,69,67]; //slot index -> MIDI note
+~slot_bal = [0.5, 0, 1];
 
 ~slot_recorders.size.do{arg i;
     var note = ~slot_notes[i];
+    var bal = ~slot_bal[i];
     //start on key down, play on key up
     //here, recorder and player index are tied
-    MIDIdef.noteOn("loop_%_start".format(i), {~start_slot.(i, monitor:nil)}, noteNum:note);
-    MIDIdef.noteOff("loop_%_play".format(i), {~play_slot.(i, out:i, monitor:false)}, noteNum:note);
+    MIDIdef.noteOn("loop_%_start".format(i), {~start_slot.(i, monitor:bal)}, noteNum:note);
+    MIDIdef.noteOff("loop_%_play".format(i), {~play_slot.(i, out:bal, free_monitor:true)}, noteNum:note);
     //reset on adjacent black key
-    MIDIdef.noteOn("loop_%_reset".format(i), {~record.(i); ~free_loop_players.(i)}, noteNum:note-1);
+    MIDIdef.noteOn("loop_%_reset".format(i), {~free_slot.(i)}, noteNum:note-1);
 };
 
 // MIDIdef.noteOn(\loop_1_start, {~start.(1, monitor:1)}, noteNum:71);
 // MIDIdef.noteOff(\loop_1_play, {~play.(1, out:1, monitor:false)}, noteNum:71);
 
-~slot_players.size.do{arg i;
+play_nslot.do{arg i;
     MIDIdef.cc("player_%_rate".format(i),
         {arg val; ~set_slot.(i, \rate, 2**(val/127-0.5*6))},
         ccNum:i+1);
 };
+
+MIDIdef.all.postln;
 
 /*MIDIdef.noteOn(\reset_on, {~reset_modal=true}, noteNum:70);
 MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
@@ -567,6 +463,9 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 // idea: give each player its own bus; add a pan control using Xout
 // use 2d grid of controls for source/conditional for playc
 )
+
+
+//TODO: slot naming off by one
 
 //TODO: condition on slot
 // 1. initially
@@ -583,30 +482,49 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 
 (
 fork {
-    ~start_slot.(0, monitor:0);
+    var bal=0.5;
+    ~start_slot.(0, monitor:bal);
     1.wait;
-    ~play_slot.(0, out:0, monitor:0);
+    ~play_slot.(0, out:bal, free_monitor:true);
     "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
-};
+    };
 )
+
+~players
+~players_by_loop
+~slot_players
+~slot_recorders
+~input_monitors
 
 (
 fork {
-    ~start_slot.(1, monitor:1);
-    1.5.wait;
-    ~playc_slot.(1, out:1, cond:~slot_players[0], monitor:1);
-    // ~play_slot.(1, out:1,  monitor:1);
+    var bal=0;
+    ~start_slot.(1, monitor:bal);
+    2.wait;
+    ~playc_slot.(1, out:bal, cond:~slot_players[0], free_monitor:true);
     "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
 )
 
-~set_slot.(0, \rate, 4)
+
+(
+fork {
+    var bal=1;
+    ~start_slot.(2, monitor:bal);
+    2.wait;
+    ~playc_slot.(2, out:bal, cond:~slot_players[1], free_monitor:true);
+    "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
+};
+)
+~slot_players
+
+~set_slot.(0, \rate, 0.25)
 
 ~set_slot.(1, \rate, 2)
 
-~play_slot.(0, out:1).set(\rate, 4.03125)
+~play_slot.(0, out:0.75).set(\rate, 0.25+0.03125)
 
-~playc_slot.(1, out:0, cond:~slot_players[2]).set(\rate, 2)
+~playc_slot.(2, out:0, cond:~slot_players[2]).set(\rate, 0.5)
 
 ~free_slot.(0)
 ~free_slot.(1)

@@ -1,5 +1,6 @@
-just2semi j = 12 * (log j) / (log 2)
-semi2just s = exp (s * (log 2) / 12)
+-- just2semi j = 12 * (log j) / (log 2)
+rat2semi rat_pat = (log rat_pat) |* (12 / log 2)
+semi2rat semi_pat = exp (semi_pat * (log 2) / 12)
 newscales = [
       ("justionian",     map just2semi [1,   9/8,   5/4,   4/3,   3/2,   5/3, 15/8]),
       ("justdorian",     map just2semi [1,   9/8,   6/5,   4/3,   3/2,   5/3, 16/9]),

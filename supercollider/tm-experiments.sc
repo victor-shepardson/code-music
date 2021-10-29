@@ -37,11 +37,11 @@ Routine {
     loop {
         var symbol = tape[head] ? 0;
         var idx = (state<<symbol_bits) | symbol;
-        var new_state, new_symbol, move;
+        var new_state, new_symbol, move_idx;
         "step: % \t state: % \t symbol: % \t head: %".format(step, state, symbol, head).postln;
-        # new_state, new_symbol, move = get_instruction.(idx);
+        # new_state, new_symbol, move_idx = get_instruction.(idx);
         tape[head] = new_symbol;
-        head = head+move;
+        head = head + movements[move_idx];
         state = new_state;
         step = step + 1;
         // state.yield;

@@ -130,14 +130,15 @@ SynthDef(\loop_player, { arg outbus, bufnum, databuf;
     var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
     var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:4);
     var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:4);
-    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
+    var signal = XFade2.ar(signal2, signal1, ramp*2-1);
     // playing.poll(5, \playing); begin.poll(5, \begin); end.poll(5, \end);
-    Out.ar(outbus, signal);
+    Out.ar(outbus, EnvGate.new(fadeTime:infadeseconds) * signal);
 }).add;
 
 SynthDef(\listener, { arg outbus, inbus;
     var in = InFeedback.ar(inbus, nchan);
-    var feat = ZeroCrossing.ar(Mix.ar(in));
+    var feat = K2A.ar(FluidPitch.kr(Mix.ar(in), algorithm:2, maxFreq:3000)[0]);
+    // var feat = ZeroCrossing.ar(Mix.ar(in));
     // var feat = 16*Amplitude.ar(Mix.ar(in), 0.003, 0.5);
     Out.ar(outbus, feat);
 }).add;
@@ -156,8 +157,10 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
     var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
     var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
     var signal = XFade2.ar(signal2, signal1, ramp*2-1);
-    var freq = ZeroCrossing.ar(signal);
-    signal = FreqShiftAA.ar(signal, condin-freq);
+    var freq = K2A.ar(FluidPitch.kr(signal, algorithm:2, maxFreq:3000)[0]);
+    // var freq = ZeroCrossing.ar(signal);
+    // signal = FreqShift.ar(signal, condin-freq);
+    signal = FreqShiftAA.ar(signal, Lag.ar(Median.ar(5, condin-freq), 0.03));
     Out.ar(outbus, EnvGate.new(fadeTime:infadeseconds) * signal);
 }).add;
 )
@@ -501,15 +504,15 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 ~buffers[0].plot
 
 ~auto_monitor = false;
-~monitor_input(0.5, rec:0);
-~monitor_input(0, rec:1);
-~monitor_input(1, rec:2);
+~monitor_input.(0.5, rec:0);
+~monitor_input.(0, rec:1);
+~monitor_input.(1, rec:2);
 
 (
 fork {
     var bal=0.5;
     ~start_slot.(0, monitor:bal);
-    1.wait;
+    2.wait;
     ~play_slot.(0, out:bal, free_monitor:true);
     "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
     };
@@ -525,7 +528,7 @@ fork {
 fork {
     var bal=0;
     ~start_slot.(1, monitor:bal);
-    2.wait;
+    2.2.wait;
     ~playc_slot.(1, out:bal, cond:~slot_players[0], free_monitor:true);
     "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
@@ -536,24 +539,47 @@ fork {
 fork {
     var bal=1;
     ~start_slot.(2, monitor:bal);
-    2.wait;
+    2.3.wait;
     ~playc_slot.(2, out:bal, cond:~slot_players[1], free_monitor:true);
     "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
 )
 ~slot_players
 
-~set_slot.(0, \rate, 0.25)
+~set_slot.(0, \rate, 0.5)
 
-~set_slot.(1, \rate, 2)
+~set_slot.(1, \rate, 0.375)
 
-~play_slot.(0, out:0.75).set(\rate, 0.25+0.03125)
+~set_slot.(2, \rate, 0.75)
 
-~playc_slot.(2, out:0, cond:~slot_players[2]).set(\rate, 0.5)
+~set_slot.(3, \rate, 1)
+~set_slot.(4, \rate, 0.75)
+
+~set_slot.(5, \rate, 0.25)
+~set_slot.(6, \rate, 0.125)
+
+
+~play_slot.(0, out:0.75).set(\rate, 8)
+~play_slot.(0, out:0.25).set(\rate, 7)
+
+
+~playc_slot.(0, out:0, cond:~slot_players[0]).set(\rate, 1)
+~playc_slot.(0, out:1, cond:~slot_players[0]).set(\rate, 1.25)
+
+~playc_slot.(0, out:0.33, cond:~slot_players[3]).set(\rate, 1)
+~playc_slot.(0, out:0.66, cond:~slot_players[4]).set(\rate, 1.25)
+
+
+
 
 ~free_slot.(0)
 ~free_slot.(1)
+~free_slot.(2)
 
+
+
+t = {SinOsc.ar(400, mul:0.2)}.play(s, s.options.numOutputBusChannels)
+t.free
 
 
 
@@ -581,15 +607,14 @@ fork {
 
 ~free_slot.(0)
 
-~free_player.(~slot_players[4]);
+~free_player.(~slot_players[2]);
 
 
 ~players["2535EBD4"].set(\rate, 1)
 
 ~free_slot.(1)
 
-t = {SinOsc.ar(443, mul:0.2)}.play(s, s.options.numOutputBusChannels)
-t.free
+
 
 ~monitor_input.(1)
 ~input_monitors[0].release

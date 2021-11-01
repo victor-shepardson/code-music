@@ -40,11 +40,13 @@ s.waitForBoot({
             var left_gain = (1-pmax).sqrt;
             var right_gain = (1+pmin).sqrt;
             if (numChannels==1) {signals = [signals[0], signals[0]]*0.71};
+            signals = BLowShelf.ar(signals, 1200, db:[left_gain, right_gain].log10*20);
             DelayC.ar(signals, max_time+min_time,
                 [left_delay, right_delay]*max_time+min_time,
                 mul:[left_gain, right_gain]*mul);
         }
     };
+
 
 	//start SuperDirt
 	d = SuperDirt(~dirtchannels, s);

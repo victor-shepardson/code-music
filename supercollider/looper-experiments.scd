@@ -2,7 +2,7 @@ Server.default = s = Server("belaServer", NetAddr("192.168.7.2", 57110));
 s.initTree;
 s.startAliveThread;
 
-Quarks.install("https://gitlab.com/rd--/sc3-dot")
+// Quarks.install("https://gitlab.com/rd--/sc3-dot")
 
 Server.allRunningServers
 
@@ -137,8 +137,8 @@ SynthDef(\loop_player, { arg outbus, bufnum, databuf;
 
 SynthDef(\listener, { arg outbus, inbus;
     var in = InFeedback.ar(inbus, nchan);
-    // var feat = ZeroCrossing.ar(Mix.ar(in));
-    var feat = 16*Amplitude.ar(Mix.ar(in), 0.003, 0.5);
+    var feat = ZeroCrossing.ar(Mix.ar(in));
+    // var feat = 16*Amplitude.ar(Mix.ar(in), 0.003, 0.5);
     Out.ar(outbus, feat);
 }).add;
 
@@ -148,16 +148,17 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
     var unwrap_end = (end<begin)*buflen + end;
     var condin = In.ar(condbus, 1);
     var playing = (begin>=0)*(end>=0);
-    var rate = \rate.ar(1) * (1-(condin/(1+condin.abs)));
+    var rate = \rate.ar(1) ;//* (1-(condin/(1+condin.abs)));
     var phase1 = Phasor.ar(
         0, rate*playing*BufRateScale.kr(bufnum), start:begin, end:unwrap_end);
     var phase2 = phase1.wrap(begin-xfadesamps, unwrap_end-xfadesamps);
     var ramp = (unwrap_end-phase1 /xfadesamps).clip(0, 1);
     var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
     var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
-    var signal = EnvGate.new(fadeTime:infadeseconds) * XFade2.ar(signal2, signal1, ramp*2-1);
-    signal = FreqShift.ar(signal, condin*100);
-    Out.ar(outbus, signal);
+    var signal = XFade2.ar(signal2, signal1, ramp*2-1);
+    var freq = ZeroCrossing.ar(signal);
+    signal = FreqShiftAA.ar(signal, condin-freq);
+    Out.ar(outbus, EnvGate.new(fadeTime:infadeseconds) * signal);
 }).add;
 )
 
@@ -434,12 +435,16 @@ var play_nslot = 8;
 ~slot_notes = [71,69,67]; //slot index -> MIDI note
 ~slot_bal = [0.5, 0, 1];
 
+~auto_monitor = true;
+
 ~slot_recorders.size.do{arg i;
     var note = ~slot_notes[i];
     var bal = ~slot_bal[i];
     //start on key down, play on key up
     //here, recorder and player index are tied
-    MIDIdef.noteOn("loop_%_start".format(i), {~start_slot.(i, monitor:bal)}, noteNum:note);
+    MIDIdef.noteOn("loop_%_start".format(i), {
+        ~start_slot.(i, monitor:if(~auto_monitor){bal}{nil})
+    }, noteNum:note);
     MIDIdef.noteOff("loop_%_play".format(i), {~play_slot.(i, out:bal, free_monitor:true)}, noteNum:note);
     //reset on adjacent black key
     MIDIdef.noteOn("loop_%_reset".format(i), {~free_slot.(i)}, noteNum:note-1);
@@ -462,9 +467,7 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 
 // idea: give each player its own bus; add a pan control using Xout
 // use 2d grid of controls for source/conditional for playc
-)
 
-(
 // read loop data into a FloatArray
 ~readback = {arg rec, dst;
     var buf = ~buffers[rec], data_buf = ~data_buffers[rec];
@@ -478,65 +481,8 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
     })
 }
 )
-~readback.(0, \data_0)
-~data_0
-
-//TM: state x symbol -> state x symbol x movement
-(
-var state_bits = 3;
-var symbol_bits = 3;
-var move_bits = 1;
-var step = 0;
-var head = 0;
-var state = 0;
-var movements = [-1, 1];
-var program_length = 1<<(state_bits+symbol_bits);
-var program_width = state_bits+symbol_bits+move_bits;
-var program_bits = program_length*program_width;
-var tape = Dictionary.new;
-var program = Int8Array.fill(program_bits.div(8)+1, {256.rand});
-//Int8Array.newClear((program_bits/8).ceil);
-var read_offset = {arg byte, width, offset;
-    var b0 = program[byte];
-    var b1 = program[byte+1];
-    var mask = 0xff >> (8-width);
-    var shift0 = offset+width-8;
-    if (shift0>=0) {b0 << shift0} {b0 >> (0-shift0)}
-     | (b1 >> (16-offset-width)) & mask
-};
-var get_instruction = {arg idx;
-    var first_bit = idx*program_width;
-    var state_byte = first_bit.div(8);
-    var state_offset = first_bit - (state_byte*8);
-    var symbol_byte = (first_bit+state_bits).div(8);
-    var symbol_offset = first_bit + state_bits - (symbol_byte*8);
-    var move_byte = (first_bit+state_bits+symbol_bits).div(8);
-    var move_offset = first_bit + state_bits + symbol_bits - (move_byte*8);
-    var state  = read_offset.(state_byte,  state_bits,  state_offset);
-    var symbol = read_offset.(symbol_byte, symbol_bits, symbol_offset);
-    var move   = read_offset.(move_byte,   move_bits,   move_offset);
-    [state, symbol, move]
-};
-Routine {
-    loop {
-        var symbol = tape[head] ? 0;
-        var idx = (state<<symbol_bits) | symbol;
-        var new_state, new_symbol, move;
-        "step: % \t state: % \t symbol: % \t head: %".format(step, state, symbol, head).postln;
-        # new_state, new_symbol, move = get_instruction.(idx);
-        tape[head] = new_symbol;
-        head = head+move;
-        state = new_state;
-        step = step + 1;
-        // state.yield;
-        0.1.wait;
-    };
-}.play;
-
-// get_instruction.(0)
-// program
-// state * (1<<state_bits) + 0
-)
+// ~readback.(0, \data_0)
+// ~data_0
 
 //TODO: slot naming off by one
 
@@ -553,6 +499,11 @@ Routine {
 // =======
 ~data_buffers[0].plot
 ~buffers[0].plot
+
+~auto_monitor = false;
+~monitor_input(0.5, rec:0);
+~monitor_input(0, rec:1);
+~monitor_input(1, rec:2);
 
 (
 fork {

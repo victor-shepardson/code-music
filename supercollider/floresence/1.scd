@@ -15,6 +15,37 @@ s.waitForBoot({
 	//~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
     ~dirtbusses = Array.fill(~dirtorbits, {Bus.audio(s, ~dirtchannels)});
 
+    DirtPan.defaultPanningFunction = { | signals, numChannels, pan, mul |
+        // var channels, inNumChannels;
+        if(numChannels > 2) {
+            DirtSplayAz.ar(
+                numChannels,
+                signals,
+                \span.ir(1),
+                pan,
+                mul,
+                \splay.ir(1),
+                \panwidth.ir(2),
+                \orientation.ir(0)
+            )
+        } {
+            //DirtSplay2.ar(signals, \span.ir(1), pan, mul)
+            // DirtPanBalance2.ar(signals, \span.ir(1), pan, mul)
+            var max_time = 0.005;
+            var min_time = SampleDur.ir * 4.0;
+            var pmax = pan.max(0);
+            var pmin = pan.min(0);
+            var left_delay = pmax;
+            var right_delay = 0-pmin;
+            var left_gain = (1-pmax).sqrt;
+            var right_gain = (1+pmin).sqrt;
+            if (numChannels==1) {signals = [signals[0], signals[0]]*0.71};
+            DelayC.ar(signals, max_time+min_time,
+                [left_delay, right_delay]*max_time+min_time,
+                mul:[left_gain, right_gain]*mul);
+        }
+    };
+
 	//start SuperDirt
 	d = SuperDirt(~dirtchannels, s);
 	//load samples (path containing a wildcard can be passed in)
@@ -109,31 +140,6 @@ f[\stretch] = {
     arg freq, ratio, osc ...oscargs;
     FreqShift.ar(osc.(freq*ratio, *oscargs), 0-(ratio -1 *freq))
 };
-
-DirtPan.defaultPanningFunction = { | signals, numChannels, pan, mul |
-    // var channels, inNumChannels;
-    if(numChannels > 2) {
-        DirtSplayAz.ar(
-            numChannels,
-            signals,
-            \span.ir(1),
-            pan,
-            mul,
-            \splay.ir(1),
-            \panwidth.ir(2),
-            \orientation.ir(0)
-        )
-    } {
-        //DirtSplay2.ar(signals, \span.ir(1), pan, mul)
-        // DirtPanBalance2.ar(signals, \span.ir(1), pan, mul)
-        var max_time = 0.03;
-        var min_time = SampleDur.ir * 4.;
-        var left_delay = pan.max(min_time) * max_time;
-        var right_delay = 0-pan.min(min_time);
-        if (numChannels==1) {signals = [signals[0], signals[0]]*0.71};
-        DelayC.ar(signals, max_time, [left_delay, right_delay], mul:mul);
-    }
-}
 
 (1..SuperDirt.maxSampleNumChannels).do { |numChannels|
     SynthDef("monosynth"++numChannels, {

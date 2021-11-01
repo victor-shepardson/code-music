@@ -44,7 +44,6 @@ Routine {
         head = head + movements[move_idx];
         state = new_state;
         step = step + 1;
-        // state.yield;
         0.1.wait;
     };
 }.play;
@@ -53,3 +52,5 @@ Routine {
 // program
 // state * (1<<state_bits) + 0
 )
+
+//NOTE: strong bias toward postive movement, why?

@@ -28,9 +28,21 @@ s.waitForBoot({
 });
 )
 
+d.modules
+
 (
 d.loadSoundFiles("~/Music/sample/dirt/*");
 
+d.orbits.do { |x|
+    x.globalEffects = x.globalEffects.addFirst(
+        GlobalDirtEffect(\monosynth, [
+            \monofreq, \monogain, \monolag, \monopan, \monostretch, \monospread,
+            \monodrive, \monoindex, \monoratio
+        ]))
+};
+
+
+//proxyspace
 p.clear;
 p.pop;
 
@@ -59,16 +71,10 @@ r = {
     }
 }.fork;*/
 
-d.orbits.do { |x|
-    x.globalEffects = x.globalEffects.addFirst(
-        GlobalDirtEffect(\monosynth, [
-            \monofreq, \monogain, \monolag, \monopan, \monostretch, \monospread,
-            \monodrive, \monoindex, \monoratio
-        ]))
-};
 )
 
 (
+//synths and patchable effects
 f = Environment.new;
 
 f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
@@ -83,18 +89,18 @@ f[\wiggle] = { |in, amt=0.001, rate=3, rates=#[0.01, 0.1, 1], shape=1, dry=0|
 };
 
 
-// f[\sinsincos] = {
-//     arg freq, ratio;
-//     var phi = LFSaw.ar(freq, iphase:0)*pi,
-//     fold_wave = (phi.sin*ratio*pi).sin,
-//     cos_env = phi.cos +1 /2;
-//     fold_wave * cos_env
-// };
+f[\sinsincos] = {
+    arg freq, ratio;
+    var phi = LFSaw.ar(freq, iphase:0)*pi,
+    fold_wave = (phi.sin*ratio*pi).sin,
+    cos_env = phi.cos +1 /2;
+    fold_wave * cos_env
+    };
 
 f[\sincos] = {
     arg freq, ratio;
     var phi = LFSaw.ar(freq, iphase:0)*pi,
-    fold_wave = phi.sin*ratio*pi),
+    fold_wave = phi.sin*ratio*pi,
     cos_env = phi.cos +1 /2;
     fold_wave * cos_env
 };
@@ -103,6 +109,31 @@ f[\stretch] = {
     arg freq, ratio, osc ...oscargs;
     FreqShift.ar(osc.(freq*ratio, *oscargs), 0-(ratio -1 *freq))
 };
+
+DirtPan.defaultPanningFunction = { | signals, numChannels, pan, mul |
+    // var channels, inNumChannels;
+    if(numChannels > 2) {
+        DirtSplayAz.ar(
+            numChannels,
+            signals,
+            \span.ir(1),
+            pan,
+            mul,
+            \splay.ir(1),
+            \panwidth.ir(2),
+            \orientation.ir(0)
+        )
+    } {
+        //DirtSplay2.ar(signals, \span.ir(1), pan, mul)
+        // DirtPanBalance2.ar(signals, \span.ir(1), pan, mul)
+        var max_time = 0.03;
+        var min_time = SampleDur.ir * 4.;
+        var left_delay = pan.max(min_time) * max_time;
+        var right_delay = 0-pan.min(min_time);
+        if (numChannels==1) {signals = [signals[0], signals[0]]*0.71};
+        DelayC.ar(signals, max_time, [left_delay, right_delay], mul:mul);
+    }
+}
 
 (1..SuperDirt.maxSampleNumChannels).do { |numChannels|
     SynthDef("monosynth"++numChannels, {

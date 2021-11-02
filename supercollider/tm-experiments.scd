@@ -106,28 +106,33 @@ var get_instruction = {arg state, symbol;
 // program[1].asBinaryDigits.postln;
 
 var synth = {Splay.ar(
-        Formant.ar(\freq.kr(100, 0.02), \formant.kr(512, 0.1), mul:\gain.kr(0.1, 0.3)),
+    Formant.ar(\freq.kr(100, 0.02), \formant.kr(512, 0.1), mul:\gain.kr(0.1, 0.3)),
+    center:\center.kr(0.5)
 )}.play;
 
 Routine {
+    0.1.wait;
+    synth.set(\center, 2.0.rand-1);
     loop {
         var symbol = tape[head] ? 0;
         var new_state, new_symbol, move_idx, move;
-        "step: % \t head % \t state: % \t symbol: %".format(step, head, state, symbol).postln;
+        "step: % \t head: % \t state: % \t symbol: %".format(step, head, state, symbol).postln;
         # new_state, new_symbol, move_idx = get_instruction.(state, symbol);
+
         // tricks to get more interesting machines:
-        // symbol zero always moves toward center
-        // 0 is never written
-        move = if(symbol==0){0-head.sign}{movements[move_idx]};  // movements[move_idx];
-        new_symbol = if(new_symbol==0){1}{new_symbol};
+        move = if(symbol==0){0-head.sign}{movements[move_idx]}; //symbol zero move -> center
+        // new_symbol = if(new_symbol==0){1}{new_symbol}; // 0 is never written
+        // move = movements[move_idx];
+
         tape[head] = new_symbol;
         head = head + move;
         state = new_state;
         step = step + 1;
         synth.set(
-            \freq, 100 * [1, 3/2, 5/4, 2, 4/3, 5/3, 9/8, 15/8][symbol>>1] * (2**(symbol&1)),//50*(symbol+1),
+            \freq, 75 * [1, 3/2, 5/4, 2, 4/3, 5/3, 9/8, 15/8][symbol>>1] * (2**(symbol&1)),
+            //\freq, 50*(symbol+1),
             \formant, 2**(head /8 / (head.abs /8 + 1) * 5 + 9),
-            \gain, 0.2/(head.abs/4+1)
+            \gain, 2**(-0.002*head*head)*0.2
         );
         (2**(state>>1) * 0.02 * if((state&1)==0){1.5}{1}).wait;
     };

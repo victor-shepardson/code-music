@@ -1,10 +1,25 @@
+// TODO:
+//   for precise timing:
+//     generate the control signals for a recorder or otherwise set the data buffer;
+//     ensure a player is already created and will start as soon as buffer is set
+//     ^ this is limited to block alignment with buffer endpoints :(
+//       there were good reasons to go to buffer though -- generalizes better
+//       there is prob a way to jump the player ahead a few samples?
+
+//   understand buses as synth parameters -- do you get free crossfade?
+//     InBus works for explcit fade between adjacent buses
+//   use the Monitor class?
+//     my monitor synth splays a mono input to a stereo output
+
+//  patch everything with Ndef?
+//
+
+//  resolve player slot / recorder slot naming confusion
+
+
 Server.default = s = Server("belaServer", NetAddr("192.168.7.2", 57110));
 s.initTree;
 s.startAliveThread;
-
-// Quarks.install("https://gitlab.com/rd--/sc3-dot")
-
-Server.allRunningServers
 
 s.boot
 
@@ -96,12 +111,13 @@ infadeseconds = 0.01;
 // simple monitor
 // assume inbus is mono
 // use balance argument to distribute across outbus channels if applicable
-SynthDef(\monitor, { arg outbus, inbus;
+SynthDef(\monitor, { arg outbus, inbus, gain=1;
     // TODO: should mixdown input here?
-    EnvGate.new(fadeTime:infadeseconds) * Out.ar(outbus, In.ar(inbus, nchan));
+    EnvGate.new(fadeTime:infadeseconds) * gain * Out.ar(outbus, In.ar(inbus, nchan));
 }).add;
-SynthDef(\monitor2, { arg outbus, inbus, balance=0.5;
-    EnvGate.new(fadeTime:infadeseconds) * Out.ar(outbus, Splay.ar(In.ar([inbus], nchan), center:balance));
+SynthDef(\monitor2, { arg outbus, inbus, balance=0.5, gain=1;
+    EnvGate.new(fadeTime:infadeseconds) * Out.ar(
+        outbus, gain * Splay.ar(In.ar([inbus], nchan), center:balance));
 }).add;
 
 SynthDef(\loop_recorder, { arg inbus, bufnum, databuf;
@@ -117,6 +133,7 @@ SynthDef(\loop_recorder, { arg inbus, bufnum, databuf;
 
 
 SynthDef(\loop_player, { arg outbus, bufnum, databuf;
+    // TODO: can these BufRd be kr?
     var begin = BufRd.ar(1, databuf, DC.ar(0), interpolation:1);
     var end = BufRd.ar(1, databuf, DC.ar(1), interpolation:1);
     var unwrap_end = (end<begin)*buflen + end;
@@ -137,8 +154,8 @@ SynthDef(\loop_player, { arg outbus, bufnum, databuf;
 
 SynthDef(\listener, { arg outbus, inbus;
     var in = InFeedback.ar(inbus, nchan);
-    var feat = K2A.ar(FluidPitch.kr(Mix.ar(in), algorithm:2, maxFreq:3000)[0]);
-    // var feat = ZeroCrossing.ar(Mix.ar(in));
+    // var feat = K2A.ar(FluidPitch.kr(Mix.ar(in), algorithm:2, maxFreq:3000)[0]);
+    var feat = ZeroCrossing.ar(Mix.ar(in));
     // var feat = 16*Amplitude.ar(Mix.ar(in), 0.003, 0.5);
     Out.ar(outbus, feat);
 }).add;
@@ -157,10 +174,10 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
     var signal1 = BufRd.ar(nchan, bufnum, phase1.wrap(0, buflen), loop:1, interpolation:3);
     var signal2 = BufRd.ar(nchan, bufnum, phase2.wrap(0, buflen), loop:1, interpolation:3);
     var signal = XFade2.ar(signal2, signal1, ramp*2-1);
-    var freq = K2A.ar(FluidPitch.kr(signal, algorithm:2, maxFreq:3000)[0]);
-    // var freq = ZeroCrossing.ar(signal);
+    // var freq = K2A.ar(FluidPitch.kr(signal, algorithm:2, maxFreq:3000)[0]);
+    var freq = ZeroCrossing.ar(signal);
     // signal = FreqShift.ar(signal, condin-freq);
-    signal = FreqShiftAA.ar(signal, Lag.ar(Median.ar(5, condin-freq), 0.03));
+    signal = Lag.ar(condin>0, 0.03) * FreqShiftAA.ar(signal, Lag.ar(Median.ar(5, condin-freq), 0.03));
     Out.ar(outbus, EnvGate.new(fadeTime:infadeseconds) * signal);
 }).add;
 )
@@ -169,17 +186,12 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
 //     acoustic source: no monitor
 //     intermittent source: always monitor? (to where?)
 //     continuous source: monitor while recording
-
-// 'monitor' was originally for monitoring the single input bus, and it was enforced that there could be 1 monitor per output bus.
-// however with the move to player/listener buses, a monitor is needed for players
-// this means arbitrary number of monitors per output
-// can keep the old system, just rename to 'input monitors'
-// and add a new 'player attribute' monitor
+//         manually start monitor, auto stop monitor on record end
 
 // 'true' looping:
 //  fade source instead of playback, overdub immediately
 //  works for silenceable sources
-//  approach taken here is better for continous sources
+//  approach taken here is better for continuous sources
 
 // buses for player outputs / conditional inputs:
 // every player should be able to listen to every other
@@ -193,7 +205,7 @@ var inbus = s.options.numOutputBusChannels;
 var rec_nslot = 3;
 var play_nslot = 8;
 
-~slot_recorders !? ~slot_recorders.do{_!?~free_slot};
+~slot_recorders !? ~slot_recorders.do{_!?~free_rec_slot};
 
 ~recorders = ~buffers.collect{nil}; //Array of recorders
 ~players_by_loop = Array.fill(~recorders.size, {Set.new}); //recorder index -> Set[player tag]
@@ -238,11 +250,13 @@ var play_nslot = 8;
 
 //create an input monitor on bus `out`
 // NOTE: currently all recorders have the same input
-~monitor_input = {arg out, rec;
-    ~input_monitors.add(rec -> ~monitor.(out, inbus));
+// rec_slot is used to associate a monitor with a recorder slot so it can be freed
+// when the recorder is freed or stopped
+~monitor_input = {arg out, rec_slot;
+    ~input_monitors.add(rec_slot -> ~monitor.(out, inbus));
 };
 
-//create an monitor for player `tag` on bus `out`
+//create n monitor for player `tag` on bus `out`
 ~monitor_player = {arg out, tag;
     // "monitor %".format(out).postln;
     ~player_monitors.add(tag -> ~monitor.(out, ~player_outputs[tag]));
@@ -315,13 +329,15 @@ var play_nslot = 8;
 
 // free all players of loop `rec`
 ~free_loop_players = {arg rec, fadeTime=0.01;
-    ~players_by_loop[rec].postln.do(~free_player);
+    var players = ~players_by_loop[rec].asArray.postln;
+    players.do(~free_player);
 };
 
 // free monitor for recorder `rec`, if there is one
 // TODO: harmless error, need to delete from ~input_monitors
 ~free_input_monitor = {arg rec;
     ~input_monitors[rec] !? (_.release);
+    ~input_monitors.removeAt(rec);
     "freed monitor for recorder %".format(rec).postln
 };
 
@@ -338,7 +354,7 @@ var play_nslot = 8;
 };*/
 
 //remove recorder from the slot, release all its players and then call record on it
-~free_slot = {arg slot;
+~free_rec_slot = {arg slot;
     ~slot_recorders[slot] !? {arg rec;
         ~free_loop_players.(rec);
         ~slot_recorders[slot] = nil;
@@ -349,20 +365,38 @@ var play_nslot = 8;
     };
 };
 
+// free player in slot
+~free_slot = {arg slot;
+    var player = ~slot_players[slot];
+    ~free_player.(player);
+};
+
+// TODO: gain is not remembered
+~mute_slot = {arg slot;
+    var player = ~slot_players[slot];
+    ~player_monitors[player].set(\gain, 0);
+};
+~unmute_slot = {arg slot;
+    var player = ~slot_players[slot];
+    ~player_monitors[player].set(\gain, 1);
+};
+// TODO: pause slot?
+
+
 // start a loop in slot `slot`:
 // if the slot has a recorder, release it
 // place an available recorder in the slot, and call start on it
 // if `monitor` is not nil, make a monitor on bus `monitor`
 ~start_slot = {arg slot, monitor=nil;
     var new_rec;
-    ~free_slot.(slot);
+    ~free_rec_slot.(slot);
     new_rec = ~recorder_pool.pop; //this will error if there are no recorders
     ~start.(new_rec);
-    monitor !? (~monitor_input.(_, new_rec));
+    if(monitor.notNil && ~auto_monitor) {~monitor_input.(monitor, slot)};
     ~slot_recorders[slot] = new_rec;
 };
 
-//TODO: play a special case of playc
+//TODO: make play* a special case of playc*
 
 ~alloc_player_slot = {arg tag;
     var slot = (0..play_nslot-1).select({arg i; ~slot_players[i].isNil})[0];
@@ -445,12 +479,10 @@ var play_nslot = 8;
     var bal = ~slot_bal[i];
     //start on key down, play on key up
     //here, recorder and player index are tied
-    MIDIdef.noteOn("loop_%_start".format(i), {
-        ~start_slot.(i, monitor:if(~auto_monitor){bal}{nil})
-    }, noteNum:note);
+    MIDIdef.noteOn("loop_%_start".format(i), {~start_slot.(i, monitor:bal)}, noteNum:note);
     MIDIdef.noteOff("loop_%_play".format(i), {~play_slot.(i, out:bal, free_monitor:true)}, noteNum:note);
     //reset on adjacent black key
-    MIDIdef.noteOn("loop_%_reset".format(i), {~free_slot.(i)}, noteNum:note-1);
+    MIDIdef.noteOn("loop_%_reset".format(i), {~free_rec_slot.(i)}, noteNum:note-1);
 };
 
 // MIDIdef.noteOn(\loop_1_start, {~start.(1, monitor:1)}, noteNum:71);
@@ -498,31 +530,35 @@ MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 // could manage handoff of bus maybe when one player replaces another?
 
 
+// TODO before jack demo:
+// mixer input
+// check monitoring / MIDI to start monitor
+// clicks?
+// use zero crossing / audition fsaa
+
 // actions
 // =======
 ~data_buffers[0].plot
 ~buffers[0].plot
 
-~auto_monitor = false;
-~monitor_input.(0.5, rec:0);
-~monitor_input.(0, rec:1);
-~monitor_input.(1, rec:2);
 
+// input monitoring
+~auto_monitor = false;
+~monitor_input.(0.5, rec_slot:0);
+~monitor_input.(0, rec_slot:1);
+~monitor_input.(1, rec_slot:2);
+
+
+// record with approximate timing
 (
 fork {
     var bal=0.5;
     ~start_slot.(0, monitor:bal);
     2.wait;
     ~play_slot.(0, out:bal, free_monitor:true);
-    "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
+    // "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
     };
 )
-
-~players
-~players_by_loop
-~slot_players
-~slot_recorders
-~input_monitors
 
 (
 fork {
@@ -530,10 +566,9 @@ fork {
     ~start_slot.(1, monitor:bal);
     2.2.wait;
     ~playc_slot.(1, out:bal, cond:~slot_players[0], free_monitor:true);
-    "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
+    // "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
 )
-
 
 (
 fork {
@@ -541,125 +576,74 @@ fork {
     ~start_slot.(2, monitor:bal);
     2.3.wait;
     ~playc_slot.(2, out:bal, cond:~slot_players[1], free_monitor:true);
-    "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
+    // "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
 )
-~slot_players
 
-~set_slot.(0, \rate, 0.5)
+// free recorders and all connected players
+~free_rec_slot.(0)
+~free_rec_slot.(1)
+~free_rec_slot.(2)
 
-~set_slot.(1, \rate, 0.375)
-
-~set_slot.(2, \rate, 0.75)
-
-~set_slot.(3, \rate, 1)
-~set_slot.(4, \rate, 0.75)
-
-~set_slot.(5, \rate, 0.25)
-~set_slot.(6, \rate, 0.125)
-
-
-~play_slot.(0, out:0.75).set(\rate, 8)
-~play_slot.(0, out:0.25).set(\rate, 7)
-
-
-~playc_slot.(0, out:0, cond:~slot_players[0]).set(\rate, 1)
-~playc_slot.(0, out:1, cond:~slot_players[0]).set(\rate, 1.25)
-
-~playc_slot.(0, out:0.33, cond:~slot_players[3]).set(\rate, 1)
-~playc_slot.(0, out:0.66, cond:~slot_players[4]).set(\rate, 1.25)
-
-
-
-
+// free players
 ~free_slot.(0)
 ~free_slot.(1)
 ~free_slot.(2)
+~free_slot.(3)
+~free_slot.(4)
+~free_slot.(5)
+~free_slot.(6)
+~free_slot.(7)
 
+// new player for an existing recorder
+~play_slot.(0, out:0.75).set(\rate, 0.25)
+~play_slot.(0, out:0.25).set(\rate, 1.0625)
+~play_slot.(0, out:0).set(\rate, 0.5)
+~play_slot.(0, out:1).set(\rate, 0.75)
+
+// new conditional player for an existing recoder
+~playc_slot.(0, out:0, cond:~slot_players[0]).set(\rate, 1)
+~playc_slot.(0, out:1, cond:~slot_players[0]).set(\rate, 1.25)
+
+// player rate
+~set_slot.(0, \rate, 0.25)
+~set_slot.(1, \rate, 0.25)
+~set_slot.(2, \rate, 1.0625)
+~set_slot.(3, \rate, 1)
+~set_slot.(4, \rate, 1)
+~set_slot.(5, \rate, 1)
+~set_slot.(6, \rate, 1)
+~set_slot.(7, \rate, 1)
+
+~mute_slot.(1)
+~unmute_slot.(1)
+
+
+
+s.record
+s.stopRecording
+
+// ===========
+// debug
+
+~players
+~players_by_loop
+~slot_players
+~slot_recorders
+~input_monitors
 
 
 t = {SinOsc.ar(400, mul:0.2)}.play(s, s.options.numOutputBusChannels)
 t.free
 
 
-
+// verbose set_slot
 ~players[~slot_players[2]].set(\rate, 1.5)
 
-
-~play_slot.(1, out:0).set(\rate, 1.75)
-
-~play_slot.(0, out:1).set(\rate, 2.03125)
-~players[~slot_players[5]].set(\rate, 4.03125)
-
-~playc_slot.(1, out:0, cond:~slot_players[5]);
-~players[~slot_players[6]].set(\rate, 2)
-
-
-
+// player by tag
 ~players["1B17DC7A"].set(\rate, 0.0125)
-
-
-~playc_slot.(1, out:0, cond:"1B17DC7A", monitor:1);
-~players["13C1FE0E"].set(\rate, 0.003125)
-
-~free_player.("2B9E1D65")
-
-
-~free_slot.(0)
-
-~free_player.(~slot_players[2]);
-
-
-~players["2535EBD4"].set(\rate, 1)
-
-~free_slot.(1)
-
-
-
-~monitor_input.(1)
-~input_monitors[0].release
-
-~buffers[0].plot
-
-~start.(0, monitor:0)
-
-~play.(0, out:0, monitor:false)
-
-~play.(0, 1).set(\rate, 1.01)
-
-~players[0].set(\rate, 2.5)
-
-~players[1].set(\rate, 3)
-
-~play.(1,0).set(\rate, 0.751)
-
-~playc.(in:0, out:1, cond:0).set(\rate, 0.5)
-
-~playc.(in:0, out:0, cond:1).set(\rate, 0.5)
-
-~free_slot.(0);
 
 s.freeAll
 
-// (
-// ~recorders[0].set(\start, 1);
-// ~recorders[1].set(\start, 1)
-// )
-//
-// ~recorders[0].set(\stop, 1)
-// ~recorders[1].set(\stop, 1)
-
 s.queryAllNodes
 s.numSynthDefs
-
-~recorders
-~slot_recorders
-~recorder_pool
-~input_monitors
-~players
-~players_by_loop
-
-~player_outputs
-~player_listeners
-~listener_outputs
-~player_monitors 

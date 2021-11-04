@@ -103,6 +103,22 @@ do
 --     # orbit 1 
 
 do
+  t "taps" $ 
+    s "perc" <| n ("[6@4 7_ 6@3 7@3]*2") 
+    # legato 0.33 # groove 1
+    # stack [ speed (9/4) # gain 0.7, speed (2/3) # gain 0.8, speed (3/3) # gain 0.5] 
+    # lpf 5000 # pan (range 0.25 0.55 $ fast 3 sine) 
+    |+ shape (range 0.1 0.6 $ fast 2 cosine) 
+    # orbit 2
+  mono 4 $ 
+    monospread ("1*32" |* (rangex 0.03125 0.25 $ slow 1.16 sine)) 
+    |> (monofreq $ (semi2rat <$> (scale (cS "major" "mode") ("[7@4 7_ 7@6]*2" + 0))) * 261.63 ) 
+    # monolag' (1/0.63/48) # groove 0.5 
+    # monogain ("[10@4 6_ 5@3 2@3]*2"/99) # monopan "0.6 0.9" 
+    # monodrive 0.2 # monostretch 1.01 
+
+
+do
   t "perc1" $ 
     s "perc" <| n ("[[0 7@2]/3 ~@8 <[2 7] 7 ~ ~ > ~ 7]*2") 
     # legato 1 # groove 0.5 
@@ -116,24 +132,6 @@ do
     # speed (stack [1/8, 7/48, 9/24]) # shape 0.1 
     # orbit 1 
 
--- do
---   t "perc1" $ 
---     s "perc" <| n "[[0 2@11]@4 ~@12 7@4 <~ 7>]*2" 
---     # legato 1 # groove 0 -- "<0 0.5>"
---     # stack [speed (1/3) # pan 0.5, speed (1/4) # pan 0.9, speed (1/5) # pan 0.1] 
---     # lpf 3300 # hpf 200
---     # shape 0.3
---     # orbit 2
-
--- -- immediately
--- do
---   t "perc2" $ 
---     s "perc" <| n ((1/48) <~ "[[~ 2@11]@4 ~@12 7@4 <~ 7>]*2") 
---     # legato 2 # groove 0.5
---     # stack [speed (1/3) # pan 0.95, speed (1/2) # pan 0.6, speed (1/5) # pan 0.83] 
---     # lpf 2300 # hpf 200
---     # shape 0.3
---     # orbit 1  
 --
 -- TODO: simplify patterns with ply-like fns?
 -- need a ply which operates on top-level groups instead of events...
@@ -163,20 +161,6 @@ hush
 
 -- after another chord cycle
 -- maybe this before drums?
-do
-  t "taps" $ 
-    s "perc" <| n ("[6@4 7_ 6@3 7@3]*2") 
-    # legato 0.33 # groove 1
-    # stack [ speed (9/4) # gain 0.7, speed (2/3) # gain 0.8, speed (3/3) # gain 0.5] 
-    # lpf 5000 # pan (range 0.25 0.55 $ fast 3 sine) 
-    |+ shape (range 0.1 0.6 $ fast 2 cosine) 
-    # orbit 2
-  mono 4 $ 
-    monospread ("1*32" |* (rangex 0.03125 0.25 $ slow 1.16 sine)) 
-    |> (monofreq $ (semi2rat <$> (scale (cS "major" "mode") ("[7@4 7_ 7@6]*2" + 0))) * 261.63 ) 
-    # monolag' (1/0.63/48) # groove 0.5 
-    # monogain ("[10@4 6_ 5@3 2@3]*2"/99) # monopan "0.6 0.9" 
-    # monodrive 0.2 # monostretch 1.01 
 
 
 hush
@@ -194,7 +178,8 @@ do
     # detune (-2) 
     # orbit 0  
   t "strum" $
-    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 3 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") |+ note 12 
+    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 3 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") 
+    |+ note 12 
     # legato 4.5 # groove 1
     # pan (range 0.1 0.4 $ fast 2 cosine) 
     # shape 0.2
@@ -213,6 +198,36 @@ do
   t "accent" $ 
     s ("kick:7") <| speed "<~ ~ 1 ~>" # groove 1 
     # shape 0.85 # orbit 1
+
+do
+  t "perc1" $ 
+    s "perc" <| n "[[0 2@11]@4 ~@5 ~@3 ~@6 <7 ~>@4 <~ 7>]*2" 
+    # legato 1 # groove 0
+    # stack [speed (1/3) # pan 0.4, speed (1/4) # pan 0.15, speed (1/5) # pan 0.3] 
+    # shape 0.5 # lpf 3300 # hpf 200
+    # orbit 1
+  t "perc2" $ 
+    s "perc" <| n ((1/48) <~ "[[0 2@11]@4 ~@5 ~@3 ~@6 7@4 <~ 7>]*2") 
+    # stack [speed (1/3) # pan 0.95, speed (2/4) # pan 0.6, speed (1/5) # pan 0.8] 
+    # legato 1 # groove 0.5
+    # shape 0.2 # lpf 2300 # hpf 200 
+    # orbit 1
+
+-- do
+--   t "perc1" $ 
+--     s "perc" <| n "[[0 2@11]@4 ~@12 7@4 <~ 7>]*2" 
+--     # legato 1 # groove 0 -- "<0 0.5>"
+--     # stack [speed (1/3) # pan 0.5, speed (1/4) # pan 0.9, speed (1/5) # pan 0.1] 
+--     # lpf 3300 # hpf 200
+--     # shape 0.3
+--     # orbit 2
+--   t "perc2" $ 
+--     s "perc" <| n ((1/48) <~ "[[~ 2@11]@4 ~@12 7@4 <~ 7>]*2") 
+--     # legato 2 # groove 0.5
+--     # stack [speed (1/3) # pan 0.95, speed (1/2) # pan 0.6, speed (1/5) # pan 0.83] 
+--     # lpf 2300 # hpf 200
+--     # shape 0.3
+--     # orbit 1  
 
 do
   t "microperc2" $ 
@@ -239,12 +254,15 @@ do
   mode (slow 2 "<justaeolian justdorian justlocrian justlydian>")
   root (slow 2 $ scale "justphrygian" ("<0 3 4 1>" - 7 ) + global_transpose)
   t "strum" $ 
-    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") |+ note 12 
+    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 2 6 8 ~@2]*2!2 [0 4 6 8 ~@2]*2!2>") 
+    |+ note 12 
     # legato 5.5 # groove 1
-    # pan (range 0.9 0.1 $ fast 4 sine) # shape 0.2 
-    # orbit 2 
+    # hpf 250 # pan (range 0.9 0.1 $ fast 4 sine) # shape 0.2 
+    # orbit 2
   t "bass" $ 
-    s "matrix_bass:1" <| inkyn (slow 2 "<[[0, 7, 14]@3 11] [[0, -7, 7]@3 <9 2>] <[[0, -7, 7]@3 9] [[0, -7, 7]@5 2@3]> [[0, 7, 14]@3 9]>") # bassacc 
+    s "matrix_bass:1" 
+    <| inkyn (slow 2 "<[[0,7,14]@3 11] [[0,-7,7]@3 <9 2>] <[[0,-7,7]@3 9] [[0,-7,7]@5 2@3]> [[0,7,14]@3 9]>") 
+    # bassacc 
     # legato 1 # groove 1
     # gain 0.9 # shape 0.7 
     # orbit 1 
@@ -259,7 +277,8 @@ do
   --   # detune (-2)
   --   # orbit 2  
   t "vibe" $ 
-    s "supervibe" <| inkyn ("<[~ 0 1 <4 ~> 6 ~@7]*2!2 [~ -5 -1 <0 ~> 1 ~@7]*2!2 [~ -5 -2 <0 ~> 1 ~@7]*2!2 [~ -1 0 <2 ~> 6 ~@7]*2!2>") 
+    s "supervibe" 
+    <| inkyn ("<[~ 0 1 <4 ~ 4 4> 6 ~@7]*2!2 [~ -5 -1 <0 ~ 0 0> 1 ~@7]*2!2 [~ -5 -2 <0 ~ 0 0> 1 ~@7]*2!2 [~ -1 0 <2 ~ 2 2> 6 ~@7]*2!2>") 
     # legato 9 # groove 0.5
     # gain 0.85 # hpf 300 # pan (range 0.45 0.7 $ fast 2 saw)
     # detune (-2)
@@ -276,24 +295,24 @@ do
     # pan (range 0.3 0.55 $ fast 3 sine) # lpf 5000 
     |+ shape (range 0.1 0.6 $ fast 2 cosine) 
     # orbit 2 
-  t "perc1" $ 
-    s "perc" <| n "[[0 2@11]@4 ~@5 ~@3 ~@6 <7 ~>@4 <~ 7>]*2" 
-    # legato 1 # groove 0
-    # stack [speed (1/3) # pan 0.4, speed (1/4) # pan 0.15, speed (1/5) # pan 0.3] 
-    # shape 0.5 # lpf 3300 # hpf 200
-    # orbit 1
-  t "perc2" $ 
-    s "perc" <| n ((1/48) <~ "[[0 2@11]@4 ~@5 ~@3 ~@6 7@4 <~ 7>]*2") 
-    # stack [speed (1/3) # pan 0.95, speed (2/4) # pan 0.6, speed (1/5) # pan 0.8] 
-    # legato 1 # groove 0.5
-    # shape 0.2 # lpf 2300 # hpf 200 
-    # orbit 1
+  -- t "perc1" $ 
+  --   s "perc" <| n "[[0 2@11]@4 ~@5 ~@3 ~@6 <7 ~>@4 <~ 7>]*2" 
+  --   # legato 1 # groove 0
+  --   # stack [speed (1/3) # pan 0.4, speed (1/4) # pan 0.15, speed (1/5) # pan 0.3] 
+  --   # shape 0.5 # lpf 3300 # hpf 200
+  --   # orbit 1
+  -- t "perc2" $ 
+  --   s "perc" <| n ((1/48) <~ "[[0 2@11]@4 ~@5 ~@3 ~@6 7@4 <~ 7>]*2") 
+  --   # stack [speed (1/3) # pan 0.95, speed (2/4) # pan 0.6, speed (1/5) # pan 0.8] 
+  --   # legato 1 # groove 0.5
+  --   # shape 0.2 # lpf 2300 # hpf 200 
+  --   # orbit 1
   mono 4 $ 
     monospread ("1*32" |* (rangex 0.0625 0.25 $ slow ("<1!6 0.5!2>"*1.16) sine)) 
-    # inkym (slow 2 "<4 0 0 4>") 
+    # inkym (slow 2 "<4 0 0 4>" |+ 7) 
     # groove 0.5 # monolag' (0.5/0.6/48)
     # monogain ("<[10@4 6_ 5@3 2@3]*2!6>"/77) # monopan "0.7 0.9" 
-    # monodrive 0.2 # monostretch 1.01 
+    # monodrive 0.2 # monostretch 0.51
   mono 3 $ 
     inkym ("<[0 4 6 0 0 0]*2!2 [0 2 6 0 0 0]*2!2 [0 2 6 0 0 0]*2!2 [0 4 6 0 0 0]*2!2>" - 7) 
     # groove 1 # monolag' 0.04
@@ -394,25 +413,29 @@ do
     s "matrix_bass:1" <| inkyn (slow 2 "<[[7, 14]@3 11] [[0, -7, 7]@3 9]!7>") 
     # legato 1 # groove 0.5 
     # bassacc |+ accelerate (-0.02)
-    # gain 0.9 # shape 0.7 
+    # gain 0.9 # shape 0.65
     # orbit 1
+  let strum_fade = slow 160 saw
   t "strum" $ 
-    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 4 5 6 ~@2]*2!4>") |+ note 12 
+    s "matrix_bass:2" <| inkyn ("<[0 4 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 2 6 8 ~@2]*2!4 [0 4 5 6 ~@2]*2!4>") 
+    |+ note 12 
     # legato 5.5 # groove 1 
-    # lpf (slow 160 $ rangex 20000 80 saw) # pan (range 0.9 0.1 $ fast 4 sine) # shape 0.2 
-    # orbit 2 
+    # hpf 200 # lpf (rangex 20000 80 strum_fade) # pan (range 0.9 0.1 $ fast 4 sine) # shape (range 0.2 0 strum_fade) 
+    # orbit 2
     -- # delay 0.7 # delaytime (1/12) # delayfb 0.8 # lock 1
   
 hush
-monokill 5
+monokill 3
 
 do
   t "bass" $ 
-    s "matrix_bass:1" <| inkyn (slow 2 "<[7__ 0 <0 2 4 [~ ~ 8 6 4 2 0] 0 2 6 4>_ 9_] <[[0, -7, 7]@5 11]!3 [0, -7, 7]>>") 
+    s "matrix_bass:1" 
+    <| inkyn (slow 2 "<[7__ 0 <0 2 4 [~ ~ 8 6 4 2 0] 0 2 6 4>_ 9_] <[[0, [~ -7@1000], [~ 7@1001]]@5 11]!3 [0, [~ -7@1000], [~ 7@1001]]>>") 
+    -- <| inkyn (slow 2 "<[7__ 0 <0 2 4 [~ ~ 8 6 4 2 0] 0 2 6 4>_ 9_] <[[0, -7, 7]@5 11]!3 [0, -7, 7]>>") 
     # legato 1 # groove 0.5 
     # bassacc |+ accelerate (-0.02) |+ accelerate (slow 2 "<0!3 [<0.3 0> 0@5] 0!4>" - 0.02)
-    # gain 0.9 # shape 0.7 
-    # orbit 1 
+    # gain 0.9 # shape 0.6
+    # orbit 1 # pan (range 0.45 0.55 rand)
 
 do
   t "taps" $ 
@@ -422,20 +445,16 @@ do
     # lpf 3000 # pan (range 0.3 0.75 $ fast 3 sine) 
     |+ shape (range 0 0.5 $ fast 2 cosine) 
     # orbit 2 
---   mono 4 $ 
---     monospread ("1*32" |* (rangex 0.0625 0.125 $ slow ("<1!6 2!2>"*1.16) sine)) 
---     # inkym (slow 2 "<4 2 2 0>" + 7) 
---     # groove 0.5 # monolag' (4/0.6/48)
---     # monogain ("[10 5]*<2@5 [2@5 1] 1@2>"/99) # monopan "0.3 0.7" 
---     # monodrive 0.1 # monostretch 1.01 
 
 do 
   t "bass" $ 
-    s "matrix_bass:1" <| inkyn (slow 2 "<[[0,7]_____ <9 4 [6 4 0_]>_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") 
+    s "matrix_bass:1" 
+     <| inkyn (slow 2 "<[[0,7]_____ <9 4 [6 4 0_]>_] <[[0, [~ -7@1000], [~ 7@1001]]@5 11] [0, [~ -7@1000], [~ 7@1001]]>>")
+    -- <| inkyn (slow 2 "<[[0,7]_____ <9 4 [6 4 0_]>_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") 
     # legato 1 # groove 0.5 
     # bassacc |+ accelerate (-0.02) |+ accelerate (slow 2 "<0 [<0.3 0> 0@5] 0 0>")
-    # gain 0.9 # lpf 5000 # shape 0.7 
-    # orbit 1 
+    # gain 0.9 # lpf 5000 # shape 0.5
+    # orbit 1 # pan (range 0.4 0.6 rand)
 
 do
   t "vibe" $ 
@@ -455,13 +474,15 @@ do
     s "perc" <| n ("[[0 2@5]/4 ~@8 <7 7 ~@6> ~ ~]*2") 
     # speed (stack [1/4, 9/48]) 
     # legato 1 # groove 0.5 
-    # lpf 3000 # shape 0.4 # pan (fast 2 $ range 0.3 0.7 sine) 
+    # hpf 150 # lpf 3000 # shape 0.4 # pan (fast 2 $ range 0.3 0.7 sine) 
     # orbit 1 
+
+do
   t "perc2" $ 
     s "perc" <| n ((1/24) <~ "[[0 2@2]/4 ~@8 <[2 7] 7 ~ ~ > ~ 7]*2") 
     # speed (stack [1/8, 9/48]) 
     # legato 1 # groove 1 
-    # lpf 2000 # shape 0.2 # pan (fast 2 $ range 0.9 0.4 sine) 
+    # hpf 150 # lpf 2000 # shape 0.2 # pan (fast 2 $ range 0.9 0.4 sine) 
     # orbit 1 
 
 do
@@ -477,8 +498,6 @@ do
     # monogain ("10 [3 2 1 0 0 0]@2"/88) # monopan 0.5
     # monodrive 0.5 # monostretch 1 # monospread 0.00003
   
--- some anticipation/connector for vibe changes?
-
 do
   t "taps" $ 
     s "perc" <| n "[7 6]*<2@5 [2@5 6] 6@2>" 
@@ -490,11 +509,13 @@ do
 
 do
   t "bass" $ 
-    s "matrix_bass:1" <| inkyn (slow 2 "<[[0,7]_____ 4_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") 
+    s "matrix_bass:1" 
+    <| inkyn (slow 2 "<[[0,7]_____ 4_] <[[0, [~ -7@1000], [~ 7@1001]]@5 11] [0, [~ -7@1000], [~ 7@1001]]>>") 
+    -- <| inkyn (slow 2 "<[[0,7]_____ 4_] <[[0, -7, 7]@5 11] [0, -7, 7]>>") 
     # legato 1 # groove 0.5 
     # bassacc |+ accelerate (-0.02) -- |+ accelerate (slow 2 "<0 [0.075 0@5] 0 0>")
-    # gain 0.9 # lpf 5000 # shape 0.7 
-    # orbit 1 
+    # gain 0.9 # lpf 5000 # shape 0.4
+    # orbit 1 # pan (range 0.45 0.55 rand)
   t "vibe" $ 
     s "supervibe" <| inkyn (slow 2 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>") 
     # legato 10 # groove 0.7 
@@ -513,14 +534,14 @@ do
   t "perc1" $ 
     s "perc" <| n ("[0 2@8 7@3]") <| inkyn (slow 3 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>" - 21) 
     # legato 2 # groove 0.5 
-    # lpf 2000 # shape 0.4 # pan 0.2 
+    # hpf 250 # lpf 2000 # shape 0.3 # pan 0.2 
     # orbit 1 
     -- # delay 0.9 # delaytime (1/12) # delayfb 0.9 # lock 1
   t "perc2" $ 
     s "perc" <| n ((1/24) <~ "[0 2@8 7@3]") 
     <| inkyn (slow 3 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>" - 21)
     # legato 2 # groove 1 
-    # lpf 1500 # shape 0.2 # pan 0.8 
+    # hpf 250 # lpf 1500 # shape 0.15 # pan 0.8 
     # orbit 1 
     -- # delay 0.9 # delaytime (1/12) # delayfb 0.9 # lock 1
 
@@ -528,7 +549,7 @@ do
   t "bass" $ 
     s "matrix_bass:1" <| inkyn (slow 2 "<[0,7] [0, -7]>") 
     # legato 1 # groove 0.5
-    # gain 0.9 # lpf 4000 # shape 0.4 
+    # gain 0.9 # lpf 4000 # shape 0.3
     # orbit 1 
   t "vibe" $ 
     s "supervibe" <| inkyn (slow 3 "<[~ 0 1 4 6 ~@7]!4 [~ -5 -1 0 1 ~@7]!4 [~ -5 -2 0 1 ~@7]!4 [~ -1 0 2 -1 ~@7]!4>") 
@@ -602,49 +623,57 @@ expl runs = do
 
 expl "{0}%24"
 expl "{0 -6}%24"
+expl "{ -6 0}%24"
 expl "{0 1 2}%24"
 expl "{0 1 2 3}%24"
 expl "{0 1 2 3 4}%24"
 expl "{0 1 2 3 4 5}%24"
--- expl "{0 1 2 3 4 5 6}%24"
+-- expl "{0 -2 2 0 4 0}%24"
+expl "{0 1 2 3 4 5 7}%24"
 
 t "chimes" $ s "noise:2*4" # pan rand # shape 0.7 # speed (rangex 0.5 2 rand)
 
 do
+  let slow_cycles = 32
+  tempo $ "1*32" |* (slow slow_cycles $ rangex 1 (1/16) envL) * 0.61
   p "vibe" silence
   p "strum" silence
   p "strings" silence
   p "accent" silence
-  monokill 5
-  t "chimes" $ s "noise:3*4" # pan rand # shape 0.8 # speed (rangex 0.5 2 rand)
+  -- monokill 5
+  t "chimes" $ s "noise:3*4" # pan rand # shape 0.6 # speed (rangex 0.5 2 rand)
+  t "microperc1" $ 
+    s "supervibe" <| inkyn "14" +| note (fast 4 $ rat2semi' ("65 33 15"/"64 32 16"))
+    # legato (1/2) 
+    # gain 0.8 # lpf (slow (slow_cycles+16) $ rangex 10000 20 envL) # hpf 200 # pan (range 0.9 0.6 saw) 
+    # orbit 2 
+  t "microperc2" $ 
+    s "supervibe" <| inkyn "14*12" 
+    # legato (1/2) # nudge 0.03
+    # gain 0.8 # lpf (slow (slow_cycles+16) $ rangex 10000 20 envL) # hpf 300 # pan (range 0.5 0.1 saw) 
+    # orbit 2 
+  mono 5 $ 
+    inkym (slow 3 "<[~ 0 1 4 6!8]!4 [~ <-5 2> -1 0 1!8]!4 [~ <-5 2> -2 0 1!8]!4 [~ -1 0 2 -1!8]!4>" + 7) 
+    # groove 1 # monolag (1/0.6/12) 
+    # monogain (slow 3 $ "6 [4 3 2 1 0 0]@2"/88) # monopan 0.5
+    # monodrive 0.5 # monostretch 1 # monospread 0.00003 
   
 do
+  p "chimes" silence
   let slow_cycles = 32
-  tempo $ "1*32" |* (slow slow_cycles $ rangex 1 (1/16) envL) * 0.61
+  -- tempo $ "1*32" |* (slow slow_cycles $ rangex 1 (1/16) envL) * 0.61
   let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]" 
   t "plucks" $ 
     s "harp:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3 4 5}%24")) |- note 12 
     # nudge (slow slow_cycles $ rangex (1/1024) (8/16) envL / 0.61)
-    # gain 0.9 # shape 0.5 # pan 0.9
+    # gain 0.9 # shape 0.4 # pan 0.9
     # orbit 0
-  p "chimes" silence
-  -- p "accent" silence
   t "plucks2" $ 
     s "harp:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3}%24")) |- note 12 
-    # gain 0.9 # shape 0.4 # pan 0.6
+    # gain 0.9 # shape 0.3 # pan 0.6
     # orbit 1
   -- t "microperc1" silence
   -- t "microperc2" silence
-  t "microperc1" $ 
-    s "supervibe" <| inkyn "7" +| note (fast 4 $ rat2semi' ("65 33 15"/"64 32 16"))
-    # legato (1/2) 
-    # gain 0.8 # lpf (slow (slow_cycles+32) $ rangex 20000 20 envL) # hpf 200 # pan (range 0.9 0.6 saw) 
-    # orbit 2 
-  t "microperc2" $ 
-    s "supervibe" <| inkyn "7*12" 
-    # legato (1/2) # nudge 0.03
-    # gain 0.8 # lpf (slow (slow_cycles+32) $ rangex 20000 20 envL) # hpf 300 # pan (range 0.5 0.1 saw) 
-    # orbit 2 
   t "strings" $ 
     s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones + "{0 2 4 8}%24" - 7) <| legato ((1/6) ~> slow 2 "24 23 22 21 20 19 18 17 16 15 14 13 12 11 10 9 ~@8" + 1) 
     # hpf (300+rand*300) # ((1/6) ~> slow 2 (accelerate (range (0) (-0.03) rand) # lpf (600+rand*600)))
@@ -657,8 +686,18 @@ do
   t "bass" $ 
     s "matrix_bass:2" <| inkyn (slow 2 "<[0,-7] [-14, -7]>") 
     # legato 1 # groove 0.5
-    # gain 0.9 # lpf 4000 # shape 0.4 
+    # gain 0.9 # lpf 4000 # shape 0.3
     # orbit 1 
+  mono 4 $ 
+    monospread ("1*32" |* (rangex 0.0625 0.125 $ slow ("<1!6 2!2>"*1.16) sine)) 
+    # inkym (slow 2 "<4 2 2 0>" + 7) 
+    # groove 0.5 # monolag' (4/0.61/12)
+    # monogain ("[10 5]*<2@5 [2@5 1] 1@2>"/111) # monopan "0.3 0.7" 
+    # monodrive 0.1 # monostretch 0.51
+
+monokill 4
+
+monokill 5
 
 do
   p "taps" silence
@@ -668,6 +707,7 @@ do
   p "perc1" silence
   p "perc2" silence
   p "kick" silence
+  p "strings" silence
 
 hush
 monokill 3
@@ -677,3 +717,4 @@ monokill 5
 setcps 0.61
 
 ----
+

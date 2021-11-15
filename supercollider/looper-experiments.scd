@@ -1,4 +1,7 @@
 // TODO:
+
+// is it possible to just reduce the length of a buffer and actually free the extra memory?
+
 //   for precise timing:
 //     generate the control signals for a recorder or otherwise set the data buffer;
 //     ensure a player is already created and will start as soon as buffer is set
@@ -7,12 +10,11 @@
 //       there is prob a way to jump the player ahead a few samples?
 
 //   understand buses as synth parameters -- do you get free crossfade?
-//     InBus works for explcit fade between adjacent buses
+//     InBus works for explicit fade between adjacent buses
 //   use the Monitor class?
 //     my monitor synth splays a mono input to a stereo output
 
 //  patch everything with Ndef?
-//
 
 //  resolve player slot / recorder slot naming confusion
 
@@ -21,6 +23,7 @@ Server.default = s = Server("belaServer", NetAddr("192.168.7.2", 57110));
 s.initTree;
 s.startAliveThread;
 
+s.options.numInputBusChannels = 8
 s.boot
 
 s.reboot
@@ -36,6 +39,13 @@ MIDIFunc.noteOn({arg val,num,chan,src; "noteOn %, val:%, chan:%".format(num, val
 MIDIFunc.noteOff({arg val,num,chan,src; "noteOff %, val:%, chan:%".format(num, val, chan).postln});
 MIDIFunc.bend({arg val,num,chan,src; "bend %, val:%, chan:%".format(num, val, chan).postln});
 )
+
+(
+~osc_source = NetAddr("localhost");
+OSCFunc.trace;
+)
+
+n.sendMsg("/test", 1.0);
 
 
 //method A:
@@ -54,7 +64,11 @@ MIDIFunc.bend({arg val,num,chan,src; "bend %, val:%, chan:%".format(num, val, ch
 
 //method C:
 // just use one long buffer for all recording memory; manually track loop points.
-// limits total recording to 2**24 samples, though ofc multiple can be used
+// eviction policy: oldest material which is not explicitly in a loop gets recorded over
+// would allow each loop to record every player for conditioning on,
+// without the quadratic complexity that would imply for option B.
+// would require some complicated linked-list scheme though?
+// probably lose the ability to use the loop buffer normally, need a custom reader...
 
 
 // consideration: loop crossfade
@@ -176,8 +190,8 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
     var signal = XFade2.ar(signal2, signal1, ramp*2-1);
     // var freq = K2A.ar(FluidPitch.kr(signal, algorithm:2, maxFreq:3000)[0]);
     var freq = ZeroCrossing.ar(signal);
-    // signal = FreqShift.ar(signal, condin-freq);
-    signal = Lag.ar(condin>0, 0.03) * FreqShiftAA.ar(signal, Lag.ar(Median.ar(5, condin-freq), 0.03));
+    signal = FreqShift.ar(signal, condin-freq);
+    // signal = Lag.ar(condin>0, 0.03) * FreqShiftAA.ar(signal, Lag.ar(Median.ar(5, condin-freq), 0.03));
     Out.ar(outbus, EnvGate.new(fadeTime:infadeseconds) * signal);
 }).add;
 )
@@ -201,7 +215,7 @@ SynthDef(\conditional_player, { arg outbus, condbus, bufnum, databuf;
 // so that's 2 buses per player
 
 (
-var inbus = s.options.numOutputBusChannels;
+var inbus = s.options.numOutputBusChannels+4;
 var rec_nslot = 3;
 var play_nslot = 8;
 
@@ -466,6 +480,7 @@ var play_nslot = 8;
 
 ~recorders.size.do{arg i; ~record.(i)};
 
+
 // MIDI controls
 // =============
 
@@ -500,8 +515,21 @@ MIDIdef.all.postln;
 MIDIdef.noteOff(\reset_off, {~reset_modal=false}, noteNum:70);*/
 
 
-// idea: give each player its own bus; add a pan control using Xout
-// use 2d grid of controls for source/conditional for playc
+// OSC controls
+// =============
+
+~slot_recorders.size.do{arg i;
+    var bal = ~slot_bal[i];
+    var path = "rec_%".format(i);
+    OSCdef(path, { |msg, time, addr, recvPort|
+        "msg: % \t time: % \t addr: % \t recvPort: %".format(msg, time, addr, recvPort).postln;
+        ~start_slot.(i, monitor:bal);
+    }, path, ~osc_source, argTemplate:[1.0]);
+};
+
+
+//
+// ============
 
 // read loop data into a FloatArray
 ~readback = {arg rec, dst;
@@ -564,7 +592,7 @@ fork {
 fork {
     var bal=0;
     ~start_slot.(1, monitor:bal);
-    2.2.wait;
+    2.wait;
     ~playc_slot.(1, out:bal, cond:~slot_players[0], free_monitor:true);
     // "slots: %; pool: %".format(~slot_recorders, ~recorder_pool).postln
 };
@@ -596,21 +624,23 @@ fork {
 ~free_slot.(7)
 
 // new player for an existing recorder
-~play_slot.(0, out:0.75).set(\rate, 0.25)
-~play_slot.(0, out:0.25).set(\rate, 1.0625)
+~play_slot.(0, out:0.75).set(\rate, 1.25)
+~play_slot.(0, out:0.25).set(\rate, 1.125)
 ~play_slot.(0, out:0).set(\rate, 0.5)
 ~play_slot.(0, out:1).set(\rate, 0.75)
+~play_slot.(1, out:0.75).set(\rate, 0.5)
+
 
 // new conditional player for an existing recoder
-~playc_slot.(0, out:0, cond:~slot_players[0]).set(\rate, 1)
-~playc_slot.(0, out:1, cond:~slot_players[0]).set(\rate, 1.25)
+~playc_slot.(0, out:0, cond:~slot_players[0]).set(\rate, 0.5)
+~playc_slot.(0, out:1, cond:~slot_players[0]).set(\rate, 0.5)
 
 // player rate
-~set_slot.(0, \rate, 0.25)
-~set_slot.(1, \rate, 0.25)
-~set_slot.(2, \rate, 1.0625)
-~set_slot.(3, \rate, 1)
-~set_slot.(4, \rate, 1)
+~set_slot.(0, \rate, 0.35)
+~set_slot.(1, \rate, 0.33)
+~set_slot.(2, \rate, 3)
+~set_slot.(3, \rate, 0.03)
+~set_slot.(4, \rate, 0.01)
 ~set_slot.(5, \rate, 1)
 ~set_slot.(6, \rate, 1)
 ~set_slot.(7, \rate, 1)

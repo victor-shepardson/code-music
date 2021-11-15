@@ -15,8 +15,9 @@ s.waitForBoot({
 	//~dirtbusses = all {:Bus.audio(s, ~dirtchannels), i <- (1..~dirtorbits)};
     ~dirtbusses = Array.fill(~dirtorbits, {Bus.audio(s, ~dirtchannels)});
 
+    // the extra pandopp and panbal params are not working for dirt_sample_ synths...
+    // also too expensive
     DirtPan.defaultPanningFunction = { | signals, numChannels, pan, mul |
-        // var channels, inNumChannels;
         if(numChannels > 2) {
             DirtSplayAz.ar(
                 numChannels,
@@ -31,7 +32,27 @@ s.waitForBoot({
         } {
             //DirtSplay2.ar(signals, \span.ir(1), pan, mul)
             // DirtPanBalance2.ar(signals, \span.ir(1), pan, mul)
-            var max_time = 0.005;
+            var path_dist = 0.3;
+            var max_dist = 10;
+            var head_radius = 0.1;
+            var sound_speed = 100;
+            var min_time = SampleDur.ir * 4.0;
+            var mpan = pan + Sweep.ar(1, \pandopp.ir(0));
+            var disps = [0-head_radius, head_radius]-mpan;
+            var dists = (path_dist*path_dist + (disps*disps)).sqrt;
+            var gains = 1/(1+dists);
+            // var bal = \panbal.ir(0.5);
+            if (numChannels==1){
+                signals = [signals[0], signals[0]]*0.71
+            }{
+                // signals = signals * [1-bal, bal].sqrt
+                // signals = Balance2.ar(signals[0], signals[1], \balance.ir*2-1)
+            };
+            signals = BLowShelf.ar(signals, 1200, db:gains.log10*20);
+            DelayC.ar(signals, max_dist/sound_speed+min_time,
+                dists/sound_speed+min_time,
+                mul:gains*mul);
+            /*var max_time = 0.005;
             var min_time = SampleDur.ir * 4.0;
             var pmax = pan.max(0);
             var pmin = pan.min(0);
@@ -43,7 +64,7 @@ s.waitForBoot({
             signals = BLowShelf.ar(signals, 1200, db:[left_gain, right_gain].log10*20);
             DelayC.ar(signals, max_time+min_time,
                 [left_delay, right_delay]*max_time+min_time,
-                mul:[left_gain, right_gain]*mul);
+                mul:[left_gain, right_gain]*mul);*/
         }
     };
 
@@ -218,8 +239,21 @@ d.orbits.do({ |x| x.initNodeTree });
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )
 
+~preout = ~orbit0;
+
 thisProcess.platform.recordingsDir
 s.record
 s.stopRecording
 
 s.quit
+
+d.orbits[0].group.
+s.defaultGroup.dumpTree(true)
+
+p.pop
+
+e = DirtEvent.new
+e.getMsgFunc("supervibe").dump
+
+s.queryAllNodes
+s.plotTree

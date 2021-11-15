@@ -1,5 +1,12 @@
 s.boot
 
+// TODO:
+//    recording interface
+//    program features
+//      tape features
+//    sampler
+
+
 (
 var state_bits = 3;
 var symbol_bits = 4;
@@ -82,6 +89,7 @@ Routine {
 
 s.record
 s.stopRecording
+
 
 // this version with Int32Array should be more elegant
 // but +>> is broken? https://github.com/supercollider/supercollider/issues/5607

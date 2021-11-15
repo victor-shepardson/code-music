@@ -8,6 +8,9 @@ s.quit
 //    OO refactor
 //    master compressor / auto ducking mixer?
 //    fancy pans?
+//    synth start
+//    way to have silences? state/symbol gain?
+//    better filter: center moves with head, bandwidth decreases with vis, abs(head)
 
 //    visualizer (for finding loops especially?)
 //    more program features?
@@ -50,7 +53,7 @@ var databuf = Buffer.alloc(s, 1);
 var featbuf = ~lastfeatbuf = Buffer.new;
 var statsbuf = ~laststatsbuf = Buffer.new;
 var state_bits = 5;
-var symbol_bits = 5;
+var symbol_bits = 4;
 var move_bits = 1;
 var step = 0;
 var head = 0;
@@ -61,10 +64,11 @@ var program_width = state_bits+symbol_bits+move_bits;
 var program_bits = (program_length*program_width);//.postln;
 var program_bytes = (program_bits/8).ceil.div(1);
 var tape = Dictionary.new;
+var visits = Dictionary.new;
 var program;
 
-var mel_bands = 100;
-var n_moments = 7; // max 4 (7)
+var mel_bands = 64;
+var n_moments = 4; // max 4 (7)
 var n_derivs = 2;
 
 // start recording
@@ -258,6 +262,7 @@ Routine {
     // s.makeBundle(1, {rec.free});
 
     loop {
+        var vis, vis_key;
         var symbol = tape[head] ? 0;
         var new_state, new_symbol, move_idx, move;
         // "step: % \t head: % \t state: % \t symbol: %".format(step, head, state, symbol).postln;
@@ -270,12 +275,18 @@ Routine {
 
         if (new_symbol!=0) {tape[head] = new_symbol};
         head = head + move;
+
+        vis_key = [head, state, symbol];
+        vis = (visits[vis_key] ? 0) + 1;
+        visits[vis_key] = vis;
+
         state = new_state;
         step = step + 1;
         synth.set(
-            \rate, intervals[symbol>>2] * (2**(symbol&3)) / 3,
+            \rate, intervals[symbol>>2] * (2**(symbol&3)) / 2,
             \formant, 2**(head /8 / (head.abs /8 + 1) * 5 + 9),
-            \gain, 2**(-0.002*head*head)*0.1
+            // \gain, 2**(-0.002*head*head)*0.1 * (vis** -0.5)
+            \gain, 0.1 * ((head.abs+1) ** -0.25) / vis;//* (vis ** -0.75)
         );
         // (2**(state>>1) * 0.02 * if((state&1)==0){1.5}{1}).wait;
         ((state>>1 + 1) * 0.02 / if((state&1)==0){1.5}{1}).wait;

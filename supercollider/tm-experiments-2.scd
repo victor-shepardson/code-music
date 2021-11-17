@@ -45,8 +45,6 @@ OSCdef(\record_length, { arg msg, time;
 },'/tr', s.addr);
 )
 
-// OSCFunc.trace;
-
 (
 var soundbuf = ~lastsoundbuf = Buffer.alloc(s, ~max_frames, ~n_channels);
 var databuf = Buffer.alloc(s, 1);

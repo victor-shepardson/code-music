@@ -1,4 +1,8 @@
+(
+s.options.memSize = 8192 * 64;
 s.boot
+)
+
 s.quit
 
 // TODO:
@@ -6,16 +10,37 @@ s.quit
 //    pitch/rhythm features
 //    cmd .
 //    OO refactor
-//    master compressor / auto ducking mixer?
-//    fancy pans?
-//    synth start
 //    way to have silences? state/symbol gain?
-//    better filter: center moves with head, bandwidth decreases with vis, abs(head)
+//    performance; maybe turn off expander; stop distant seeds
+//       4 band 300-3000 ? 200 - 4000 ?
+
+//    intervals:
+//       FluidBufChroma; FluidBufPitch for weights
+//       weighted mean chroma / weighted pitch clusters?
+//       enumerate ratios in order of prominence
+
+//    synth ideas:
+//      cepstral decomp / spectral eveloping - vary timbre and pitch-speed separately
+//      narrower register for pitched sounds, wider for percussive, no speed change for noise?
+//      segment sound, and sync TM delay with sound duration (i.e. segment duration / rate)
+//        more elegant than getting some rhythmic features and mapping to delays
+//        lang/synth sync could be hard. would need to switch from looper to sampler-style synth?
+//    FluidBufHPSS;
+//    FluidBuf*Slice on percussive part;
+//    GrainBuf to trigger percussive segments as the looper reaches them
 
 //    visualizer (for finding loops especially?)
-//    more program features?
-//      tape features?
-//    better sampler?
+
+//    temporal features -> program: fill instructions in the order first visited
+//    better discretization:
+//      clustering? would want the clusters to be general, not specific to each utterance
+//        (at least deterministic)
+//      discrete neural embedding (wav2vec?) could be ideal
+//      need to A. adapt to seed length and B. adapt to instruction width
+//      A: could loop with an offset
+//         (i.e. shorter seed has smaller hop size, but ordered so sound prefix = program prefix)
+//      B: could increase width using N-grams;
+//         decrease width by truncating bits (making some classes the same)
 
 (
 // SOUND SEED GARDEN
@@ -86,22 +111,25 @@ OSCdef(\record_length, { arg msg, time;
     var path_dist = 0.3;
     var max_dist = 10;
     var head_radius = 0.1;
-    var sound_speed = 100;
-    var min_time =  0;//SampleDur.ir * 4.0;
+    var sound_speed = 300;
+    var min_time = 0;//SampleDur.ir * 4.0;
     var disps = [0-head_radius, head_radius]-pan;
     var dists = (path_dist*path_dist + (disps*disps)).sqrt;
-    var gains = 1/(1+dists);
+    var gains = 1/(1+dists); // inverse square instead?
     var signals = [signal, signal]*0.71;
+    var max_time = max_dist/sound_speed+min_time;
     signals = BLowShelf.ar(signals, 1200, db:gains.log10*20);
-    DelayN.ar(signals, max_dist/sound_speed+min_time,
-        dists/sound_speed+min_time,
+    DelayC.ar(signals, max_time,
+        (dists/sound_speed+min_time).min(max_time),
         mul:gains);
 };
 
 // one synth runs for each input, reduces to buses
 ~reduce = { arg input, sharpness=3, rms_cutoff=100,  attack=3e-3, decay=1e-1, distance=0;
     var delay = 8/SampleDur.ir + attack;
-    var distanced = input*(2**(0-distance));
+    var edist = 2**distance;
+    var distanced = LPF.ar(HPF.ar(input,
+        (20*edist).min(20000)), (20000/edist).max(40))/edist;
     var to_send = input*(1+distance);
     var bands_l = ~crossover.(distanced[0], n:log_n_bands);
     var bands_r = ~crossover.(distanced[1], n:log_n_bands);
@@ -115,23 +143,6 @@ OSCdef(\record_length, { arg msg, time;
     Out.ar(~exp_bus, expanded); // multiband stereo
     Out.ar(~max_bus, (envs-In.ar(~max_bus)).max(0)); //multiband mono
 };
-/*SynthDef(\reduce, { arg inbus, sharpness=3, rms_cutoff=100,  attack=3e-3, decay=1e-1, distance=0;
-    var delay = 8/SampleDur.ir + attack;
-    var input = In.ar(inbus, 2);
-    var distanced = input*(2**(0-distance));
-    var to_send = input*(1+distance);
-    var bands_l = ~crossover.(distanced[0], n:log_n_bands);
-    var bands_r = ~crossover.(distanced[1], n:log_n_bands);
-    var bands = bands_l+bands_r;
-    var envs = Amplitude.ar(BLowPass4.ar(bands*bands, rms_cutoff).sqrt, attack, decay);
-    var delayed = DelayN.ar(bands_l++bands_r, 0.1, delay);
-    var exp_envs = (envs*sharpness).exp;
-    var expanded = delayed * exp_envs;
-    Out.ar(send_bus, to_send); // singleband stereo
-    Out.ar(sum_bus, delayed); // multiband stereo
-    Out.ar(exp_bus, expanded); // multiband stereo
-    Out.ar(max_bus, (envs-In.ar(max_bus)).max(0)); //multiband mono
-}).add;*/
 
 // another synth combines the buses into final mixdown
 SynthDef(\mixdown, { arg outbus=0,
@@ -144,7 +155,8 @@ SynthDef(\mixdown, { arg outbus=0,
     var bands_exp_l = In.ar(~exp_bus, n_bands);
     var bands_exp_r = In.ar(~exp_bus.index+n_bands, n_bands);
     var bands_exp  = bands_exp_l + bands_exp_r;
-    var env_max = In.ar(~max_bus, n_bands);
+    // crackling with large number of seeds: might be fixed by filtering env_max?
+    var env_max = BLowPass4.ar(In.ar(~max_bus, n_bands), rms_cutoff);
     var env_raw = Amplitude.ar(BLowPass4.ar(bands_raw*bands_raw, rms_cutoff).sqrt, 0.001, 0.1);
     var env_exp = Amplitude.ar(BLowPass4.ar(bands_exp*bands_exp, rms_cutoff).sqrt, 0.001, 0.1);
     var thresh = env_max.min(max_thresh).max(min_thresh);
@@ -164,16 +176,20 @@ SynthDef(\soundseed, { arg soundbuf, databuf;
     var phase = Phasor.ar(0, (frames>0)*\rate.kr(0, 0.02)*BufRateScale.kr(soundbuf), 0, frames);
     var sound = BufRd.ar(1, soundbuf, phase);
     ~reduce.(~pan.(
-        Formlet.ar(
-            sound,
-            \formant.kr(512, 0.1),
-            0.001, 0.005,
-            mul: \gain.kr(0.1, 0.3)),
-        \center.kr(0.5)
+        sound * \gain.kr(0.5, 0.3),
+        // Formlet.ar(
+        // sound,
+        // \formant.kr(512, 0.1),
+        // 0.001, 0.005,
+        // mul: \gain.kr(0.1, 0.3)),
+        \center.kr(0, 0.03)
     ))
 }).add;
 
 ~mixdown = Synth.tail(s, \mixdown, []);
+~ambience = {MiVerb.ar(In.ar(~send_bus, 2),
+    mul:0.05, drywet:1, time:0.1)
+}.play(addAction:'addToTail');
 )
 
 (
@@ -300,7 +316,7 @@ var get_program = {
                     var idx = coef + (mel_bands*(moment + 7*deriv));
                     var stat = arr[idx];
                     if(pidx < program_bits.div(8)){
-                        program[pidx] = quantize.(stat.abs, 256, floor:0, range:60);//.postln;
+                        program[pidx] = quantize.(stat.abs, 256, floor:0, range:60).bitXor(0xf0);//.postln;
                     };
                     pidx = pidx+1;
                 }}
@@ -327,7 +343,7 @@ var get_program = {
 };
 
 var synth = Synth(\soundseed, [
-    soundbuf:soundbuf, databuf:databuf, center:0.gaussian/2, distance:5.0.linrand
+    soundbuf:soundbuf, databuf:databuf//, center:0.gaussian/2, distance:5.0.linrand
 ]);
 var intervals = [1, 3/2, 5/4, 2, 4/3, 5/3, 9/8, 15/8];
 
@@ -335,18 +351,13 @@ var intervals = [1, 3/2, 5/4, 2, 4/3, 5/3, 9/8, 15/8];
 
 Routine {
     //  record for 1 second. TODO: instead wait for a control
-    0.5.wait;
+    1.wait;
     rec.set(\stop, 1);
     ~node_cond[node_id].wait;
     sound_length = ~node_data[node_id];
     rec.free;
 
     \stopped.postln;
-
-    // databuf.get(0, {arg val; l=val});
-    // l.postln;
-    // ~node_data.postln;
-
 
     //TODO: fluidbufchroma - for scale
     //      fluidbufampslice (noveltyslice? onsetslice?) - for sampler and timing
@@ -386,9 +397,9 @@ Routine {
         # new_state, new_symbol, move_idx = get_instruction.(state, symbol);
 
         // tricks to get more interesting machines:
-        move = if(symbol==0){0-head.sign}{movements[move_idx]}; //symbol zero move -> center
+        // move = if(symbol==0){0-head.sign}{movements[move_idx]}; //symbol zero move -> center
         // new_symbol = if(new_symbol==0){1}{new_symbol}; // 0 is never written
-        // move = movements[move_idx];
+        move = movements[move_idx];
 
         if (new_symbol!=0) {tape[head] = new_symbol};
         head = head + move;
@@ -400,14 +411,17 @@ Routine {
         state = new_state;
         step = step + 1;
         synth.set(
-            \rate, intervals[symbol>>2] * (2**(symbol&3)) / 2,
-            \formant, 2**(head /8 / (head.abs /8 + 1) * 5 + 9),
+            \rate, intervals[symbol>>1] * (2**(symbol&1)) / 2,
+            \center, head/100,
+            \distance, head.abs/30 + (vis/3),
+            // \formant, 2**(head /8 / (head.abs /8 + 1) * 5 + 9),
             // \gain, 2**(-0.002*head*head)*0.1 * (vis** -0.5)
-            \gain, 0.1 * ((head.abs+1) ** -0.25) / vis;//* (vis ** -0.75)
+            // \gain, 0.1 * ((head.abs+1) ** -0.25) / vis;//* (vis ** -0.75)
+            // \gain, 0.5 / vis//* (vis ** -0.75)
+
         );
         // (2**(state>>1) * 0.02 * if((state&1)==0){1.5}{1}).wait;
-        ((state>>1 + 1) * 0.02 / if((state&1)==0){1.5}{1}).wait;
-
+        ((state>>1 + 1) * 0.03 / if((state&1)==0){1.5}{1}).wait;
     };
 }.play;
 )

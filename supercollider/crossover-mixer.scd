@@ -1,5 +1,7 @@
+(
+s.options.memSize = 8192 * 64;
 s.boot
-
+)
 
 //crossover tree, 2**n bands, log spaced filters from lo to hi
 // problem?: at n>3, there are 'inversions', ex:

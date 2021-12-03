@@ -3,7 +3,52 @@ s.options.memSize = 8192 * 64;
 s.boot
 )
 
+(
+~ssa = SoundSeedAutomata.new(s, SoundSeedGarden.new(s));
+// ~ssa = SoundSeedAutomata.new(s, 0);
+)
+
+~ssa.garden.send_bus.scope
+~ssa.garden.sum_bus.scope
+~ssa.garden.exp_bus.scope
+~ssa.garden.max_bus.scope
+
+(
+var fn = if (~ssa.garden.class==Integer) {
+    Out.ar(~ssa.garden, _)
+}{
+    // {arg sig; garden.reduce(sig, distance:distance)}
+    ~ssa.garden.reduce.(_)
+};
+fn.(DC.ar([0,1]))
+)
+
+~ssa.garden.mixdown_synth.trace
+
+~ssa.garden.ambience_synth.trace
+
+~ssa.seeds[1].synth.trace
+
+~ssa.seeds[1].soundbuf.plot
+
+(
+var tag;
+Routine {
+    tag = ~ssa.plant;
+    1.wait;
+    ~ssa.sprout(tag);
+}.play
+)
+
+~ssa.sprout
+
+~ssa.seeds
+
+s.queryAllNodes
+
 s.quit
+
+OSCFunc.trace
 
 // TODO:
 //    recording interface
@@ -46,7 +91,7 @@ s.quit
 // SOUND SEED GARDEN
 var log_n_bands = 3;
 var n_bands = 1<<log_n_bands;
-~send_bus = Bus.audio(s, 2);  // raw, multi-band, mixdown
+~send_bus = Bus.audio(s, 2);  // raw, single-band, mixdown
 ~sum_bus = Bus.audio(s, n_bands*2);  // raw, multi-band, mixdown
 ~exp_bus = Bus.audio(s, n_bands*2);  // expanded, multi-band, mixdown
 ~max_bus = Bus.audio(s, n_bands);  // rms, multi-band, reduce-max
@@ -198,6 +243,8 @@ var soundbuf = ~lastsoundbuf = Buffer.alloc(s, ~max_frames, ~n_channels);
 var databuf = Buffer.alloc(s, 1);
 var featbuf = ~lastfeatbuf = Buffer.new;
 var statsbuf = ~laststatsbuf = Buffer.new;
+var chromabuf = ~lastchromabuf = Buffer.new;
+
 var state_bits = 5;
 var symbol_bits = 4;
 var move_bits = 1;
@@ -216,6 +263,9 @@ var program;
 var mel_bands = 64;
 var n_moments = 4; // max 4 (7)
 var n_derivs = 2; //  max 2
+var chroma_window_ms = 40;
+var chroma_window = (chroma_window_ms/1000*s.sampleRate).div(1);
+var n_chroma = 17;
 
 // start recording
 var rec = Synth(\recorder, [inbus: ~sound_in, soundbuf:soundbuf, databuf:databuf]);
@@ -372,6 +422,14 @@ Routine {
         numDerivs:n_derivs, action:{~node_cond[node_id].signalOne});
     ~node_cond[node_id].wait;
 
+    FluidBufChroma.process(s, soundbuf, 0, sound_length, 0, -2, chromabuf,
+        numChroma:n_chroma, ref:440, minFreq:40, maxFreq: 4096,
+        windowSize:chroma_window, hopSize:chroma_window.div(2), fftSize:4096,
+        // normalize:1,
+        action:{~node_cond[node_id].signalOne});
+    ~node_cond[node_id].wait;
+
+
     \features.postln;
 
     //ok is this really the best way to wait on the server, using condvar:
@@ -426,11 +484,56 @@ Routine {
 }.play;
 )
 
+(
+{Saw.ar(440, mul:100)}.play(s, outbus:2);
+)
+
+(
+p = Plotter("the plot", Rect(600, 30, 600, 400));
+)
+
+
+
 ~lastsoundbuf.plot
 ~lastfeatbuf.plot
 ~laststatsbuf.plot//(separately:true)
 
 ~laststatsbuf.numFrames * ~laststatsbuf.numChannels
+
+~lastchromabuf.plot
+
+(
+i=0;
+~lastchromabuf.getToFloatArray(i*17, 10*17, action:{arg val; a = val});
+)
+
+(
+// sort by descending bin amplitude;
+// convert bin idx to chroma;
+// get first N pairs, ignoring same bin
+var n_chroma = 17;
+var n_frames = 10;
+
+var frames = a.keep(n_chroma*n_frames);
+var bin_prom = frames.clump(n_chroma).reduce('max');
+var hnc = n_chroma.div(2);
+var score_interval = (all {:
+    [bin_prom[i]*bin_prom[j], (i-j).wrap(0-hnc, hnc).abs], //n_chroma should be odd
+    i <- (0..n_chroma-2), j <- (i..n_chroma-1) }
+);//.sort{arg a,b; a[0] > b[0]}.postln;
+var reduced = Array.fill(hnc+1, {0});
+score_interval.do{arg pair;
+    var weight = pair[0], idx = pair[1]; reduced[idx] = reduced[idx]+weight};
+reduced.order.reverse.postln
+
+
+
+)
+
+
+p.value = a;
+
+
 
 s.record
 s.stopRecording

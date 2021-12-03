@@ -29,7 +29,9 @@ MIDIFunc.trace
 // stereo room + 3 pickups + out to tranducer
 ~record_bus = Bus.audio(s, ~rec_channels);
 
-~monitor_mappings = (~room_buses ++ ~pup_buses ++ [~output_bus]).collect{
+~monitor_mappings = (
+    (~room_buses ++ ~pup_buses) + s.options.numOutputBusChannels
+    ++ [~output_bus]).collect{
     arg bus, idx; bus -> (idx + ~record_bus.index)
 };
 ~monitors = ~monitor_mappings.collect{
@@ -37,15 +39,22 @@ MIDIFunc.trace
 )
 
 s.record(bus:~record_bus, numChannels:~rec_channels);
-
+s.stopRecording
 
 (
-~synth = SynthDef(\langspil2, { arg
-    shift_hz = 7,//-3e-2,
-    low_pass = 5000,
+~synth = SynthDef(\langspil_combined, { arg
+    shift_onsets = 7,
+    shift_hz = 0,
+    shift_ratio = 0,
+    hz_mix = 0,
+    ratio_mix = 0,
+    onsets_mix = 1,
+    center_freqs = #[100, 200, 400],
+    pitch_lag = 3,
+    low_pass = 1500,
     drive = 1,
-    thresh = 1e-1,
-    gain = 1,
+    thresh = 1e-2,
+    gain = 0,
     comp_exponent = 1;
 
     var att = 3e-2;
@@ -55,7 +64,12 @@ s.record(bus:~record_bus, numChannels:~rec_channels);
     var pup2 = SoundIn.ar(~pup_buses[1]);
     var pup3 = SoundIn.ar(~pup_buses[2]);
 
-    var pups = [pup1, pup2/6, pup3] * drive;
+    var pups = [pup1, pup2/4, pup3] * drive;
+    var f0_raw = Pitch.kr(pups, 200, 30, 3000,
+        clar:1, ampThreshold:1e-4, execFreq:200).flop;
+    var f0s = Lag.ar(K2A.ar(f0_raw[0].log), pitch_lag).exp;
+
+    var purity = f0_raw[1];
 
     var filt = LPF.ar(pups, low_pass);
 
@@ -68,124 +82,52 @@ s.record(bus:~record_bus, numChannels:~rec_channels);
     ), 3).pow(0.25);
 
     var comp = filt / ((amps/thresh).pow(comp_exponent) + thresh) * 3e-2;
-    // var comp = filt;
 
-    var shift_up = FreqShift.ar(comp, shift_hz*onsets);
-    var shift_down = FreqShift.ar(comp, 0-shift_hz*2.log*onsets);
+    var ratio_shift = FreqShiftAA.ar(comp,
+        shift_ratio*f0s
+        *(f0s - center_freqs / center_freqs * 10).clip(-1, 1));
 
-    var premix = shift_up + shift_down / 2 * onsets;
+    var hz_shift = FreqShift.ar(comp, shift_hz);
 
+    var up_shift = FreqShift.ar(comp, shift_onsets*onsets);
+    var down_shift = FreqShift.ar(comp, 0-shift_onsets*2.log*onsets);
+    var onsets_shift = up_shift + down_shift / 2 * onsets;
+
+    var premix = (
+        (ratio_shift*ratio_mix) +
+        (hz_shift*hz_mix) +
+        (onsets_shift* onsets_mix));
 
     var mix = HPF.ar(Mix.ar(premix), 20) * gain;
 
-    /*f0s[0].poll(5, \f1);
-    f0s[1].poll(5, \f2);
-    f0s[2].poll(5, \f3);
-
-    purity[0].poll(5, \p1);
-    purity[1].poll(5, \p2);
-    purity[2].poll(5, \p3);
-
-    amps.poll(5, \amp);*/
-
+    f0s.poll(5, \f0);
+    purity.poll(5, \purity);
+    amps.poll(5, \amp);
     onsets.poll(5, \onsets);
-
-    comp.poll(5, \comp);
-
 
     Out.ar(~output_bus, mix);
 }).play;
 )
 
 
-(
-~synth = SynthDef(\langspil, { arg
-    shift_hz = 0,//-3e-2,
-    shift_ratio = 0.0,//3.3333e-1,
-    shift_mix = 0.5,
-    center_freqs = #[100, 200, 400],
-    pitch_lag = 3,
-    low_pass = 1500,
-    drive = 1,
-    thresh = 1e-2,
-    gain = 1,
-    comp_exponent = 1;
-
-    var att = 3e-2;
-    var rel = 1e-1;
-
-    var pup1 = SoundIn.ar(~pup_buses[0]);
-    var pup2 = SoundIn.ar(~pup_buses[1]);
-    var pup3 = SoundIn.ar(~pup_buses[2]);
-
-    var pups = [pup1, pup2/4, pup3] * drive;
-    // var f0s = Lag.ar(ZeroCrossing.ar(pups).min(1000).max(30).log, 300e-3).exp;
-    var f0_raw = Pitch.kr(pups, 200, 30, 3000,
-        clar:1, ampThreshold:1e-4, execFreq:200).flop;
-    var f0s = Lag.ar(K2A.ar(f0_raw[0].log), pitch_lag).exp;
-    // var f0s = f0_raw[0];
-    // var f0s = ZeroCrossing.ar(pups);
-
-    var purity = f0_raw[1];
-
-    // var filt = pups;
-    // var filt =  LPF.ar(pups, f0s) + BPF.ar(pups, f0s/2);
-    var filt = LPF.ar(pups, low_pass);
-
-    var amps = Amplitude.ar(pups, att, rel);
-
-    var onsets = Decay.ar(FluidAmpSlice.ar(pups,
-        fastRampUp: 30, fastRampDown: 9600, slowRampUp: 19200,
-        slowRampDown: 19200, onThreshold: 10, offThreshold: 5,
-        floor: -50, minSliceLength: 4410, highPassFreq: 100
-    ), 1);
-
-    var comp = filt / ((amps/thresh).pow(comp_exponent) + thresh) * 3e-2;
-
-    // var shift = FreqShift.ar(comp, -3e-2);
-    // var shift = FreqShiftAA.ar(comp, 300-f0s);
-    // var shift = FreqShiftAA.ar(comp, 0-f0s*3/4);
-    var shift = FreqShiftAA.ar(comp,
-        shift_ratio*f0s*(f0s - center_freqs / center_freqs * 10).clip(-1, 1));
-
-    var shift2 = FreqShift.ar(comp, shift_hz);
-
-    var premix = shift * shift_mix + (shift2 * (1-shift_mix));
-
-    var mix = HPF.ar(Mix.ar(premix), 20) * gain * onsets.sqrt;
-
-    /*f0s[0].poll(5, \f1);
-    f0s[1].poll(5, \f2);
-    f0s[2].poll(5, \f3);
-
-    purity[0].poll(5, \p1);
-    purity[1].poll(5, \p2);
-    purity[2].poll(5, \p3);
-
-    amps.poll(5, \amp);*/
-
-    onsets.poll(5, \onsets);
-
-
-    Out.ar(~output_bus, mix);
-}).play;
-)
-
-// ~synth.set(\low_pass, 1500)
+~synth.set(\gain, 0)
 
 (
 //autonomy 0
 // no feedback
 // reacts to playing
 ~synth.set(
-    \shift_hz, -1,
+    \shift_onsets, 7,
+    \shift_hz, 0,
     \shift_ratio, 0,
-    \shift_mix, 0,
+    \hz_mix, 0,
+    \ratio_mix, 0,
+    \onsets_mix, 1,
     \pitch_lag, 1,
     \drive, 2,
-    \gain, 1,
+    \gain, 6,
     \thresh, 1e-1,
-    \comp_exponent, 2,
+    \comp_exponent, 1,
     \low_pass, 5000
 ))
 
@@ -193,14 +135,18 @@ s.record(bus:~record_bus, numChannels:~rec_channels);
 //autonomy 1
 //transparent feedback
 ~synth.set(
+    \shift_onsets, 5,
     \shift_hz, 0,
     \shift_ratio, 0,
-    \shift_mix, 0,
+    \hz_mix, 1,
+    \ratio_mix, 0,
+    \onsets_mix, 0.5,
     \pitch_lag, 3,
     \drive, 1,
-    \gain, 0.7,
+    \gain, 6,
     \thresh, 1e-1,
-    \comp_exponent, 0.7
+    \comp_exponent, 0.7,
+    \low_pass, 1500
 )
 )
 
@@ -208,14 +154,18 @@ s.record(bus:~record_bus, numChannels:~rec_channels);
 //autonomy 2
 // plays itself but can be influenced and controlled to a degree
 ~synth.set(
+    \shift_onsets, 3,
     \shift_hz, -1e-2,
     \shift_ratio, 1/2,
-    \shift_mix, 0.3,
+    \hz_mix, 0.5,
+    \ratio_mix, 0.5,
+    \onsets_mix, 0.2,
     \pitch_lag, 3,
     \drive, 1,
-    \gain, 0.7,
+    \gain, 6,
     \thresh, 3e-2,
-    \comp_exponent, 1
+    \comp_exponent, 1,
+    \low_pass, 1500
 ))
 
 (
@@ -226,10 +176,13 @@ s.record(bus:~record_bus, numChannels:~rec_channels);
 ~synth.set(
     \shift_hz, 1e-1,
     \shift_ratio, 1/3,
-    \pitch_mix, 0.5,
+    \hz_mix, 0.5,
+    \ratio_mix, 0.5,
+    \onsets_mix, 0,
     \pitch_lag, 0.1,
     \drive, 1e1,
-    \gain, 1,
+    \gain, 6,
     \thresh, 1e-2,
-    \comp_exponent, 2
+    \comp_exponent, 2,
+    \low_pass, 1500
 ))

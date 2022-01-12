@@ -52,12 +52,14 @@ hush
 --   tempo $ ((run 6 + 1)/2) |* (slow 24 $ rangex 0.075 0.6 envL)
 -- tempo $ ((run 6 + 1)/2) * 0.6
 
+hush
+
 do
   t "test" $ 
     s "supervibe" <| n "2*24"
     # legato 1 -- # groove 0.25
     # speed (1) 
-    # pan (range 0 1 $ slow 1 sine)
+    # pan (range 0 1 $ slow 2 tri)
     -- # lpf 5000 -- # hpf 200
     -- # shape 0.2
     # orbit 0
@@ -186,7 +188,8 @@ do
   t "microperc1" silence
   r "microperc2" silence
   t "countervibe" $ 
-    s "supervibe" <| inkyn ((slow 8 $ "<7 1 3 5>"/8) ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 4 6 ~@7]*2!2>") 
+    s "supervibe" <| inkyn ((slow 8 $ "<7 1 3 5>"/8) 
+    ~> "<[~ 0 1 4 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 2 6 ~@7]*2!2 [~ 0 1 4 6 ~@7]*2!2>") 
     # legato "[9@11 ~]" # groove 1.5
     # gain 0.8 # hpf 300 # lpf 3000 # pan (range 0.75 0.4 saw) 
     # detune (-2) 
@@ -647,61 +650,74 @@ t "chimes" $ s "noise:5*2" # pan rand # shape 0.5 # speed (rangex 0.667 1.5 rand
 t "chimes" $ s "noise:5*4" # pan rand # shape 0.6 # speed (rangex 0.5 2 rand) # begin 0.02
 t "chimes" $ s "noise:5*8" # pan rand # shape 0.7 # speed (rangex 0.333 2.5 rand) # begin 0.02
 
+hush
+
 do
   t "accent" $ 
     s ((1/6) ~> "<crash:2 _>") 
     # shape 0.3
   let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]"
   t "plucks" $ 
-    s "harp:1" <| legato ((1/6) ~> slow 2 "0.9!15 8.9 ~@8") 
-    # gain 0.9 # shape 0.4 
-    # stack [pan (range 0.5 1 rand) # note (-12) # orbit 0, pan 0.5 # orbit 1]
+    s "harp_mono:1" <| legato ((1/6) ~> slow 2 "0.9!15 8.9 ~@8") 
+    # gain 0.93 # shape 0.4 # hpf 150
+    # stack [pan 0.4 # note (-12) # orbit 0, pan 0.6 # orbit 1]
     |+ inkyn ( (1/6) ~> slow 2 tones)
-  t "pluxvibe"  $
-    s "supervibe" <| legato ((1/6) ~> slow 2 "[~ 2]!14 [~ 9.4] ~@9") 
-      # gain (range 0.5 0.8 $ slow 2 saw) # shape 0.3 # lpf 700
-      # pan 0.5 # note (-12) # orbit 0 # pandopp 0.1
-      |+ inkyn ( (1/6) ~> slow 2 tones)
+  -- t "pluxvibe" $
+  --   s "supervibe" <| legato ((1/6) ~> slow 2 "[~ 2]!14 [~ 9.4] ~@9") 
+  --     # gain (range 0.5 0.8 $ slow 2 saw) # shape 0.3 # lpf 700
+  --     # pan 0.5 # note (-12) # orbit 0 # pandopp 0.1
+  --     |+ inkyn ( (1/6) ~> slow 2 tones)
   t "strings" $ 
     s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) <| legato ((1/6) ~> slow 2 "1.05@15 1 ~@8") 
-    # ((1/6) ~> slow 2 (accelerate "0@15 -1 ~@8" # lpf "20000@15 1000 ~@8")) # hpf 150
-    # stack [ orbit 1 # n "2" # gain 0.9, orbit 2 # n "3" # gain 0.8 # pan 0.3 ]
+    # ((1/6) ~> slow 2 (accelerate "0@15 -1 ~@8" # lpf "20000@15 1000 ~@8")) # hpf 300
+    # stack [ orbit 1 # n "2" # gain 0.9, orbit 2 # n "3" # gain 0.9 # pan 0.3 ]
+  t "kick" $ 
+    s "kick" <| n "[[< ~ 2 2 2> ~ <11 9 10> ~]*2]" 
+    # groove 1
+    # gain 0.9 # lpf 5000 
+    # orbit 2
 
 hush
+-- do
+--   t "kick" $ 
+--     s "kick" <| n (slow 2 "[~ 11!4 [11] ~]")
+--     # groove 0.5
+--     # gain 0.9 # lpf 5000 
+--     # orbit 2 
 
 do
   t "microperc1" $ 
     s "supervibe" <| inkyn "14" +| note (fast 4 $ rat2semi' ("65 33 15"/"64 32 16"))
     # legato (1/2) 
-    # gain 0.8 # hpf 200 # pan (range 1 0.5 saw) 
+    # gain 0.8 # hpf 200 # pan (range 1 0.7 saw) 
     # orbit 2 
 
 do
   t "microperc2" $ 
     s "supervibe" <| inkyn "14*12" 
     # legato (1/2) # nudge 0.03
-    # gain 0.8 # hpf 300 # pan (range 0.0 0.5 saw) 
+    # gain 0.8 # hpf 300 # pan (range 0.0 0.3 saw) 
     # orbit 2 
 
 t "chimes" $ s "noise:4*8" # pan rand # shape 0.7 # speed (rangex 0.5 2 rand)
 
 expl runs = do
   let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]" + runs
-  -- t "pluxvibe silence"
-  t "pluxvibe"  $
-    s "supervibe" <| legato ((1/6) ~> slow 2 "[~ 2]!14 [~ 9.4] ~@9") 
-      # gain (range 0.5 0.8 $ slow 2 saw) # shape 0.3 # lpf 700
-      # pan 0.5 # note (-12) # orbit 0 # pandopp 0.1
-      |+ inkyn ( (1/6) ~> slow 2 tones)
+  -- t "pluxvibe" silence
+  -- t "pluxvibe" $
+  --   s "supervibe" <| legato ((1/6) ~> slow 2 "[~ 2]!14 [~ 9.4] ~@9") 
+  --     # gain (range 0.5 0.8 $ slow 2 saw) # shape 0.3 # lpf 700
+  --     # pan 0.5 # note (-12) # orbit 0 # pandopp 0.1
+  --     |+ inkyn ( (1/6) ~> slow 2 tones)
   t "plucks" $ 
-    s "harp:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") 
+    s "harp_mono:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") 
     # gain 0.9 # shape 0.4 
     # stack [pan 0.8 # note (-12) # orbit 0, pan 0.5 # orbit 1]
     |+ inkyn ( (1/6) ~> slow 2 tones) 
   t "strings" $ 
     s "cz_violin" <| inkyn ( (1/6) ~> slow 2 tones) <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") 
     # hpf 150
-    # stack [ orbit 1 # n "2" # gain 0.9 # pan rand, orbit 2 # n "3" # gain 0.8 # pan 0.3 ]
+    # stack [ orbit 1 # n "2" # gain 0.9 # pandopp rand, orbit 2 # n "3" # gain 0.8 # pan 0.3 ]
 
 expl "{0}%24"
 expl "{0 -6}%24"
@@ -740,21 +756,21 @@ do
     # legato (1/2) # nudge 0.03
     # gain 0.8 # lpf (slow (slow_cycles+16) $ rangex 10000 80 envL) # hpf 300 # pan (range 0.5 0.1 saw) 
     # orbit 2 
-  mono 5 $ 
-    inkym (slow 3 "<[~ 0 1 4 -1!8]!4 [~ <-5 2> -1 0 1!8]!4 [~ <-5 2> -2 0 1!8]!4 [~ -1 0 2 -1!8]!4>" + 7) 
-    # groove 1 # monolag (1/0.6/12) 
-    # monogain (slow 3 $ "6 [4 3 2 1 0 0]@2"/88) # monopan 0.5
-    # monodrive 0.5 # monostretch 1 # monospread 0.00003 
+  -- mono 5 $ 
+  --   inkym (slow 3 "<[~ 0 1 4 -1!8]!4 [~ <-5 2> -1 0 1!8]!4 [~ <-5 2> -2 0 1!8]!4 [~ -1 0 2 -1!8]!4>" + 7) 
+  --   # groove 1 # monolag (1/0.6/12) 
+  --   # monogain (slow 3 $ "6 [4 3 2 1 0 0]@2"/88) # monopan 0.5
+  --   # monodrive 0.5 # monostretch 1 # monospread 0.00003 
   let tones = "[<1 ~ 1 1>,<2 2 ~ 2>,< ~ 3 3 3>,< ~ 5 5 5>,<6 6 6 ~ >,<9 9 ~ 9>,<10 ~ 10 10>,<12 ~ 12 12>]" 
   t "plucks" $ 
-    s "harp:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3 4 5}%24")) |- note 12 
+    s "harp_mono:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3 4 5}%24")) |- note 12 
     # nudge (slow slow_cycles $ rangex (1/1024) (8/16) envL / 0.61)
     # gain 0.9 # shape 0.4 # pan 0.9
     # orbit 0
   t "plucks2" $ 
-    s "harp:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3}%24")) 
+    s "harp_mono:1" <| legato ((1/6) ~> slow 2 "1!15 9 ~@8") # inkyn ( (1/6) ~> slow 2 (tones + "{0 1 2 3}%24")) 
     |- note 12 
-    # gain 0.9 # shape 0.3 # pan 0.6
+    # gain 0.9 # shape 0.3 # pan 0.4
     # orbit 1
   t "bass" $ 
     s "matrix_bass:2" <| inkyn (slow 2 "<[0,-7] [-14, -7]>") 
@@ -800,10 +816,11 @@ do
   p "strings" silence
   p "chimes" silence
 
-hush
-monokill 3
-monokill 4
-monokill 5
+do
+  hush
+  monokill 3
+  monokill 4
+  monokill 5
 
 setcps 0.61
 

@@ -3,6 +3,7 @@ include("SuperDirt")
 (
 n = NetAddr.new("127.0.0.1", 6010);
 
+// Server.supernova;
 s.options.numBuffers = 1024 * 16; // increase this if you need to load more samples
 s.options.memSize = 8192 * 64; // increase this if you get "alloc failed" messages
 s.options.maxNodes = 1024 * 32; // increase this if you are getting drop outs and the message "too many nodes"
@@ -32,14 +33,15 @@ s.waitForBoot({
         } {
             //DirtSplay2.ar(signals, \span.ir(1), pan, mul)
             // DirtPanBalance2.ar(signals, \span.ir(1), pan, mul)
-            var path_dist = 0.3;
+            var path_dist = 1;//0.3;
             var max_dist = 10;
             var head_radius = 0.1;
-            var sound_speed = 100;
+            var sound_speed = 300;
             var min_time = SampleDur.ir * 4.0;
             var mpan = pan + Sweep.ar(1, \pandopp.ir(0));
             var disps = [0-head_radius, head_radius]-mpan;
-            var dists = (path_dist*path_dist + (disps*disps)).sqrt;
+            // var dists = (path_dist*path_dist + (disps*disps)).sqrt;
+            var dists = hypot(path_dist, disps);
             var gains = 1/(1+dists);
             // var bal = \panbal.ir(0.5);
             if (numChannels==1){
@@ -48,7 +50,8 @@ s.waitForBoot({
                 // signals = signals * [1-bal, bal].sqrt
                 // signals = Balance2.ar(signals[0], signals[1], \balance.ir*2-1)
             };
-            signals = BLowShelf.ar(signals, 1200, db:gains.log10*20);
+            // signals = BHiShelf.ar(signals, 1200, db:0-gains.log10*20);
+            signals = signals - (BHiPass.ar(signals, 1200)*(1-gains));
             DelayC.ar(signals, max_dist/sound_speed+min_time,
                 dists/sound_speed+min_time,
                 mul:gains*mul);
@@ -191,7 +194,7 @@ f[\stretch] = {
 
         snd = DirtPan.ar(snd, numChannels, pan);
 
-        Out.ar(effectBus, snd+in);
+        Out.ar(effectBus, snd+in); //in needed here?
     }, [\ir, \ir]).add;
 
 };
@@ -201,11 +204,11 @@ d.orbits.do({ |x| x.initNodeTree });
 
 
 (
-~fx0 = {f[\wiggle].(~orbit0, rate:3, amt:0.0003)};
-~fx1 = {f[\wiggle].(~orbit1, rate:2, amt:0.003, dry:0.5)};
+~fx0 = {f[\wiggle].(~orbit0+~orbit3, rate:3, amt:0.0003)};
+~fx1 = {f[\wiggle].(~orbit1+~orbit4, rate:2, amt:0.003, dry:0.5)};
 ~fx2 = {f[\wiggle].(~orbit2, rate:5, amt:0.001, dry:0.2)};
-~fx3 = ~orbit3;
-~fx4 = ~orbit4;
+~fx3 = 0;//~orbit3;
+~fx4 = 0;//~orbit4;
 ~fx5 = ~orbit5;
 
 ~amb0 = {
@@ -221,10 +224,18 @@ d.orbits.do({ |x| x.initNodeTree });
 		HPF.ar(Mix.new(~orbit1.ar+~orbit4.ar), freq:300),
 		roomsize:100, revtime:1.5, damping:0.7, spread:5,
 		earlyreflevel: 0.0,
-		drylevel:0, mul:0.05
+		drylevel:0, mul:0.03
 )};
 
 ~amb2 = {
+    f[\wiggle].(
+        MiVerb.ar(
+            HPF.ar(Mix.new(~orbit2.ar+~orbit5.ar), freq:60),
+            time:0.7, drywet:1, damp:0.7, hp:0.1
+        )*0.03, dry:0.0, rate:1/3, amt:0.003
+)};
+
+/*~amb2 = {
     f[\wiggle].(
         GVerb.ar(
             HPF.ar(Mix.new(~orbit2.ar+~orbit5.ar), freq:60),
@@ -232,9 +243,15 @@ d.orbits.do({ |x| x.initNodeTree });
             earlyreflevel: 0.2,
             drylevel:0, mul:0.08
         ), dry:0.0, rate:1/3, amt:0.003
-)};
+)};*/
 
-~preout = ~fx0 + ~fx1 + ~fx2 + ~fx3 + ~fx4 + ~fx5 + ~amb0 + ~amb1 + ~amb2;
+
+~comp1 = {Compander.ar(~fx1.ar, Mix.ar(~fx1.ar), 0.1, slopeAbove: 1/6, clampTime:0.045, relaxTime:0.055)};
+~comp2 = {Compander.ar(~fx2.ar+~fx5.ar, Mix.ar(~fx2.ar), 0.1, slopeAbove: 1/2, clampTime:0.02, relaxTime:1.1)};
+
+
+~preout = ~fx0 + ~amb0 + ~comp1 + ~amb1 + ~comp2 + ~amb2;
+// ~preout = ~fx0 + ~fx1 + ~fx2 + ~fx3 + ~fx4 + ~fx5 + ~amb0 + ~amb1 + ~amb2;
 // ~preout = ~orbit0 + ~orbit1 + ~orbit2;
 ~out = {Limiter.ar(0.7*~preout.ar)};
 )

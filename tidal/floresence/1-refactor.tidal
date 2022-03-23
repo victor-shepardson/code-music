@@ -391,9 +391,9 @@ do
   t "bass" $ 
     -- s "matrix_bass:1" <| inkyn (slow 2 "<[[0, -7, 7]@3 ~] [[0, -7, 7]@3 ~] [[0, -7, 7]] [[0, <-5 -7 -5 2>, <9 7 9 9>]@3 2]>") 
     s "matrix_bass:1" <| stack [
-      inkyn (slow 2 "<[[-7]@3 ~] [[-7]@3 ~] [-7] [<-5 -7 -5 ~>@3 2]>") # hpf 50 # shape 0.7
-      ,inkyn (slow 2 "<[0@3 ~] [0@3 ~] 0 [0@3 ~]>") # shape 0.6 # hpf 150
-      ,inkyn (slow 2 "<[7@3 ~] [7@3 ~] 7 [<9 7 9 9>@3 ~]>") # shape 0.8 # gain 0.9
+      inkyn (slow 2 "<[[-7]@3 ~] [[-7]@3 ~] [-7] [<-5 -7 -5 ~>@3 2]>") # hpf 50 # shape 0.6
+      ,inkyn (slow 2 "<[0@3 ~] [0@3 ~] 0 [0@3 ~]>") # shape 0.7 # hpf 150
+      ,inkyn (slow 2 "<[7@3 ~] [7@3 ~] 7 [<9 7 9 9>@3 ~]>") # shape 0.7 # gain 0.99
       ] 
     # bassacc |+ accelerate (slow 2 "<0!15 [-0.15 0 ]>")
     # legato 1 # groove 0.5
@@ -630,7 +630,6 @@ do
 hush
 
 do
-  do
   t "taps" $ 
     s "perc" <| n "[7 6]*<1@5 [1@5 6] 6@2>" 
     # stack [ inkyn (slow 2 "9 8 6 4 2 0") # hpf 300 # gain 0.8, inkyn "2" # gain 0.9] 

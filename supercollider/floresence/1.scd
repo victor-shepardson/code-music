@@ -246,8 +246,8 @@ d.orbits.do({ |x| x.initNodeTree });
 )};*/
 
 
-~comp1 = {Compander.ar(~fx1.ar, Mix.ar(~fx1.ar), 0.1, slopeAbove: 1/6, clampTime:0.045, relaxTime:0.055)};
-~comp2 = {Compander.ar(~fx2.ar+~fx5.ar, Mix.ar(~fx2.ar), 0.1, slopeAbove: 1/2, clampTime:0.02, relaxTime:1.1)};
+~comp1 = {Compander.ar(~fx1.ar, Mix.ar(~fx1.ar), 0.3, slopeAbove: 1/6, clampTime:0.045, relaxTime:0.055)};
+~comp2 = {Compander.ar(~fx2.ar+~fx5.ar, Mix.ar(~fx2.ar), 0.2, slopeAbove: 1/2, clampTime:0.02, relaxTime:1.1)};
 
 
 ~preout = ~fx0 + ~amb0 + ~comp1 + ~amb1 + ~comp2 + ~amb2;

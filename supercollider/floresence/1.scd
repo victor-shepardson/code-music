@@ -1,5 +1,8 @@
 include("SuperDirt")
 
+("/usr/bin/xattr -d -r com.apple.quarantine"+Platform.userExtensionDir.quote++"/mi-UGens/").runInTerminal
+
+
 (
 n = NetAddr.new("127.0.0.1", 6010);
 
@@ -71,7 +74,6 @@ s.waitForBoot({
         }
     };
 
-
 	//start SuperDirt
 	d = SuperDirt(~dirtchannels, s);
 	//load samples (path containing a wildcard can be passed in)
@@ -97,7 +99,6 @@ d.orbits.do { |x|
             \monodrive, \monoindex, \monoratio
         ]))
 };
-
 
 //proxyspace
 p.clear;
